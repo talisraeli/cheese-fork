@@ -1,6 +1,6 @@
 'use strict';
 
-/* global moment, BootstrapDialog, gtag */
+/* global moment, BootstrapDialog, gtag, CheeseI18n */
 
 // eslint-disable-next-line no-unused-vars
 var CourseCalendar = (function () {
@@ -34,8 +34,11 @@ var CourseCalendar = (function () {
             maxTime: '18:30:00',
             height: 'auto',
             contentHeight: 'auto',
-            columnFormat: 'dddd',
-            locale: 'he',
+            columnFormat: getColumnFormat(element),
+            slotLabelFormat: 'HH:mm',
+            locale: CheeseI18n.getLocale(),
+            isRTL: CheeseI18n.isRTL(),
+            firstDay: 0,
             slotEventOverlap: false,
             displayEventTime: false,
             selectable: !that.readonly,
@@ -490,7 +493,7 @@ var CourseCalendar = (function () {
             if (staffLines.length > 3) {
                 var staffLinesCount = staffLines.length;
                 staffLines = staffLines.slice(0, 2);
-                staffLines.push('ועוד ' + (staffLinesCount - 2) + ' אחרים');
+                staffLines.push(CheeseI18n.t('calendar.moreStaff', {count: staffLinesCount - 2}));
             }
 
             title += '\n' + staffLines.join('\n');
@@ -632,8 +635,8 @@ var CourseCalendar = (function () {
         var calendar = that.element;
 
         BootstrapDialog.show({
-            title: 'הוספת אירוע מותאם אישית',
-            message: $('<textarea class="form-control" placeholder="תיאור האירוע"></textarea>'),
+            title: CheeseI18n.t('calendar.addCustomEvent'),
+            message: $('<textarea>', {class: 'form-control', placeholder: CheeseI18n.t('calendar.eventDescription'), 'aria-label': CheeseI18n.t('calendar.eventDescription'), dir: 'auto'}),
             onshown: function (dialog) {
                 dialog.getModalBody().find('textarea').focus();
             },
@@ -641,7 +644,7 @@ var CourseCalendar = (function () {
                 calendar.fullCalendar('unselect');
             },
             buttons: [{
-                label: 'הוסף',
+                label: CheeseI18n.t('calendar.add'),
                 cssClass: 'btn-primary',
                 action: function (dialog) {
                     dialog.close();
@@ -701,17 +704,16 @@ var CourseCalendar = (function () {
 
             var courseTitle = that.courseManager.getTitle(event.courseNumber);
             var lesson = event.lessonData;
-            var lessonType = that.courseManager.getLessonType(lesson);
+            var lessonType = that.courseManager.getLessonTypeLabel(that.courseManager.getLessonType(lesson));
 
-            var title = 'הסתרת אירועים מסוג ' + lessonType;
-            var message = 'הפעולה תסתיר אירועים מסוג ' + lessonType + ' עבור הקורס ' + courseTitle + '. ' +
-                'ניתן לבטל את ההסתרה על ידי ביטול בחירת הקורס ובחירתו מחדש.';
+            var title = $('<span>').text(CheeseI18n.t('calendar.hideTypeTitle', {type: lessonType}));
+            var message = $('<div>').text(CheeseI18n.t('calendar.hideTypeMessage', {type: lessonType, course: courseTitle}));
 
             BootstrapDialog.show({
                 title: title,
                 message: message,
                 buttons: [{
-                    label: 'הסתר',
+                    label: CheeseI18n.t('calendar.hide'),
                     cssClass: 'btn-primary',
                     action: function (dialog) {
                         gtag('event', 'calendar-hide-proceed');
@@ -738,7 +740,7 @@ var CourseCalendar = (function () {
                         that.onLessonTypesHidden(event.courseNumber, lessonTypesHidden, event.layerId);
                     }
                 }, {
-                    label: 'סגור',
+                    label: CheeseI18n.t('calendar.close'),
                     action: function (dialog) {
                         dialog.close();
                     }
@@ -765,13 +767,13 @@ var CourseCalendar = (function () {
 
         if (event.courseNumber === null) {
             BootstrapDialog.show({
-                title: 'עריכת אירוע מותאם אישית',
-                message: $('<textarea class="form-control" placeholder="תיאור האירוע"></textarea>').val(event.title),
+                title: CheeseI18n.t('calendar.editCustomEvent'),
+                message: $('<textarea>', {class: 'form-control', placeholder: CheeseI18n.t('calendar.eventDescription'), 'aria-label': CheeseI18n.t('calendar.eventDescription'), dir: 'auto'}).val(event.title),
                 onshown: function (dialog) {
                     dialog.getModalBody().find('textarea').focus();
                 },
                 buttons: [{
-                    label: 'ערוך',
+                    label: CheeseI18n.t('calendar.edit'),
                     cssClass: 'btn-primary',
                     action: function (dialog) {
                         dialog.close();
@@ -792,7 +794,7 @@ var CourseCalendar = (function () {
                         }, event.layerId);
                     }
                 }, {
-                    label: 'הסר',
+                    label: CheeseI18n.t('calendar.remove'),
                     action: function (dialog) {
                         dialog.close();
 
@@ -928,18 +930,27 @@ var CourseCalendar = (function () {
                 }
 
                 if (!this.readonly && !event.temporary) {
-                    element.append('<div class="calendar-item-unselected-hide-button">הסתר</div>');
+                    element.append($('<div>', {class: 'calendar-item-unselected-hide-button', text: CheeseI18n.t('calendar.hide')}));
                 }
             }
         }
 
         if (!this.readonly && !event.temporary) {
-            element.append('<div class="calendar-item-color-button" title="בחירת צבע"><i class="fas fa-palette"></i></div>');
+            element.append($('<div class="calendar-item-color-button"><i class="fas fa-palette"></i></div>')
+                .attr('title', CheeseI18n.t('calendar.chooseColor')));
         }
+    }
+
+    function getColumnFormat(element) {
+        return CheeseI18n.getLocale() === 'en' && element.width() < 700 ? 'ddd' : 'dddd';
     }
 
     function onWindowResize() {
         var that = this;
+        var format = getColumnFormat(that.element);
+        if (that.element.fullCalendar('option', 'columnFormat') !== format) {
+            that.element.fullCalendar('option', 'columnFormat', format);
+        }
 
         updateDynamicSizes(that);
     }

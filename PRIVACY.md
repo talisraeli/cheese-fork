@@ -22,6 +22,7 @@ When you are not signed in, the schedule you build (selected courses, chosen les
 The site also stores small preference values in local storage, such as:
 
 - the last semester you viewed;
+- your selected interface language;
 - whether you dismissed the intro tour, tips, and reminder popups (weekly graph, histogram sharing, Technion scans);
 - your light/dark mode choice.
 
@@ -61,7 +62,7 @@ If you are signed in, the file is uploaded to Firebase Cloud Storage and made av
 
 ## 6. Course feedback
 
-CheeseFork² does not collect or show course feedback (reviews). In a course's details, the "הצג חוות דעת בחלון חדש" button opens that course's feedback on the original CheeseFork at https://cheesefork.cf/, a separate site run by Michael Maltsev under its own privacy policy. The old embeddable feedback widget address redirects there too.
+CheeseFork² does not collect or show course feedback (reviews). In a course's details, the "הצג חוות דעת בחלון חדש" ("Show reviews in a new window") button opens that course's feedback on the original CheeseFork at https://cheesefork.cf/, a separate site run by Michael Maltsev under its own privacy policy. The old embeddable feedback widget address redirects there too.
 
 ## 7. Sharing histograms
 
