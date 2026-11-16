@@ -992,7 +992,7 @@ var CourseButtonList = (function () {
 
         var item = $('<li class="list-group-item active course-button-list-item course-button-list-custom-event"></li>')
             .attr('data-custom-event-id', eventId)
-            .css('background-color', that.colorGenerator(title))
+            .css('background-color', that.colorGenerator(title, 'custom_event_' + eventId))
             .hover(function () {
                 $(this).addClass('course-button-list-item-hovered');
                 that.onCustomEventHoverIn($(this).attr('data-custom-event-id'));
@@ -1011,7 +1011,7 @@ var CourseButtonList = (function () {
     CourseButtonList.prototype.updateCustomEvent = function (eventId, title) {
         var item = findCustomEventItem(this, eventId);
         item.find('.content-absolute, .content-bold-hidden').text(title);
-        item.css('background-color', this.colorGenerator(title));
+        item.css('background-color', this.colorGenerator(title, 'custom_event_' + eventId));
     };
 
     CourseButtonList.prototype.removeCustomEvent = function (eventId) {
@@ -1055,6 +1055,23 @@ var CourseButtonList = (function () {
             listGroupTextItem.removeClass('course-button-list-content-has-hidden')
                 .tooltip('dispose');
         }
+    };
+
+    // Re-applies colorGenerator to the selected items, call after a custom color changes.
+    CourseButtonList.prototype.updateColors = function () {
+        var that = this;
+
+        getAllLists(that).find('li.list-group-item.active').each(function () {
+            var item = $(this);
+            var color;
+            if (item.hasClass('course-button-list-custom-event')) {
+                color = that.colorGenerator(item.find('.content-absolute').text(),
+                    'custom_event_' + item.attr('data-custom-event-id'));
+            } else {
+                color = that.colorGenerator(item.attr('data-course-number'));
+            }
+            item.css('background-color', color);
+        });
     };
 
     CourseButtonList.prototype.isCourseInList = function (course, layerId) {
