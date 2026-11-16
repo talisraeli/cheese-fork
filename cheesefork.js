@@ -170,6 +170,11 @@
             courseManager: courseManager,
             colorGenerator: courseColorGenerator,
             onHoverIn: function (course) {
+                // The exam info is pinned to the bottom of the sidebar, which stretches with the
+                // calendar. Keep it in place so that a preview doesn't move it from under the pointer.
+                var wrapper = $('#course-exam-info-wrapper');
+                wrapper.css('flex', '0 0 ' + wrapper.outerHeight() + 'px');
+
                 layerPanel.setHovered(course);
                 if (previewingFromSelectControl) {
                     courseCalendar.unpreviewCourse(previewingFromSelectControl);
@@ -182,6 +187,8 @@
                 if (previewingFromSelectControl) {
                     courseCalendar.previewCourse(previewingFromSelectControl);
                 }
+
+                $('#course-exam-info-wrapper').css('flex', '1');
             }
         });
 

@@ -55,6 +55,10 @@ var CourseCalendar = (function () {
             hiddenDays: [5, 6]
         });
 
+        element.on('mouseleave', function () {
+            updateCalendarMaxDayAndTime(element, true);
+        });
+
         initTouchScalingSupport(that);
 
         updateDynamicSizes(that);
@@ -319,13 +323,17 @@ var CourseCalendar = (function () {
         return Object.keys(lessonTypesHidden);
     }
 
-    function updateCalendarMaxDayAndTime(calendar) {
+    function updateCalendarMaxDayAndTime(calendar, ignoreHover) {
         var minTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T08:30:00');
         var maxTime = calendar.fullCalendar('getCalendar').moment('2017-01-01T18:30:00');
         var maxDay = 4;
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (!isEventVisible(event)) return false;
+            // Only displayed events determine the visible range.
+            // Events of hidden layers are moved out of the first week, so they're skipped too.
+            if (event.start.week() !== 1) {
+                return false;
+            }
 
             // Subtract one minute to treat 24:00 as the previous day.
             var endDay = event.end.clone().add(-1, 'minute').day();
@@ -376,18 +384,37 @@ var CourseCalendar = (function () {
             hiddenDays.push(i);
         }
 
+        var currentMinTime = calendar.fullCalendar('option', 'minTime');
+        var currentMaxTime = calendar.fullCalendar('option', 'maxTime');
+        var currentHiddenDays = calendar.fullCalendar('option', 'hiddenDays');
+
+        // Shrinking the range shifts the layout under the pointer, wait until it leaves.
+        if (!ignoreHover && calendar.is(':hover')) {
+            if (minTime > currentMinTime) {
+                minTime = currentMinTime;
+            }
+
+            if (maxTime < currentMaxTime) {
+                maxTime = currentMaxTime;
+            }
+
+            if (hiddenDays.length > currentHiddenDays.length) {
+                hiddenDays = currentHiddenDays;
+            }
+        }
+
         // Only apply options that changed, avoids re-rendering if not needed, which is very slow.
         var newOptions = {};
 
-        if (minTime !== calendar.fullCalendar('option', 'minTime')) {
+        if (minTime !== currentMinTime) {
             newOptions.minTime = minTime;
         }
 
-        if (maxTime !== calendar.fullCalendar('option', 'maxTime')) {
+        if (maxTime !== currentMaxTime) {
             newOptions.maxTime = maxTime;
         }
 
-        if (JSON.stringify(hiddenDays) !== JSON.stringify(calendar.fullCalendar('option', 'hiddenDays'))) {
+        if (JSON.stringify(hiddenDays) !== JSON.stringify(currentHiddenDays)) {
             newOptions.hiddenDays = hiddenDays;
         }
 
@@ -697,6 +724,7 @@ var CourseCalendar = (function () {
                         });
 
                         updateLessonEvents(calendar, targetLessonTypeEvents);
+                        updateCalendarMaxDayAndTime(calendar);
 
                         that.onLessonSelected(event.courseNumber, '-', getEventLessonType(event), event.layerId);
 
@@ -794,6 +822,7 @@ var CourseCalendar = (function () {
         });
 
         updateLessonEvents(calendar, sameLessonTypeEvents);
+        updateCalendarMaxDayAndTime(calendar);
 
         Object.keys(conflictedCourses).forEach(function (conflictedCourse) {
             var conflicted = getCourseConflictedStatus(calendar, conflictedCourse);
