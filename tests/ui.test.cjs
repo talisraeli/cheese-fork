@@ -163,6 +163,10 @@ test('the API dialog creates a key, shows it once and revokes it', async () => {
         assert.deepEqual(calls, ['apiKeyStatus']);
         assert.equal(status(), "You don't have an API key yet.");
         assert.equal(dialog.getButton('api-key-create').text(), 'Create API key');
+        const baseUrl = dialog.getModalBody().find('code');
+        assert.equal(baseUrl.text(), 'https://api.cf.talisrae.li/v1');
+        assert.ok(baseUrl.hasClass('d-block'));
+        assert.equal(baseUrl.parent().contents().first().text(), 'API address:');
         const prompt = dialog.getModalBody().find('.api-key-prompt textarea').val();
         assert.match(prompt, /^Help me manage my CheeseFork² course schedule/);
         assert.ok(prompt.includes('Base URL: https://api.cf.talisrae.li/v1'));

@@ -2787,8 +2787,8 @@
         var content = $('<div class="api-key-dialog">');
         var docsLink = $('<a target="_blank" rel="noopener">').attr('href', docsUrl).text(CheeseI18n.t('shell.api.docs'));
         $('<p>').text(CheeseI18n.t('shell.api.intro') + ' ').append(docsLink).appendTo(content);
-        $('<p>').text(CheeseI18n.t('shell.api.baseUrl') + ' ')
-            .append($('<code dir="ltr">').text(apiBaseUrl)).appendTo(content);
+        $('<p>').text(CheeseI18n.t('shell.api.baseUrl'))
+            .append($('<code class="d-block text-left" dir="ltr">').text(apiBaseUrl)).appendTo(content);
         var status = $('<p class="api-key-status">').text(CheeseI18n.t('shell.api.loading')).appendTo(content);
         var newKey = $('<div class="api-key-new d-none">').appendTo(content);
 
