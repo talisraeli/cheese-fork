@@ -25,7 +25,7 @@ Authorization: Bearer cf2_...
 Base URL: `https://api.cf.talisrae.li/v1`
 
 - Request and response bodies are JSON. Send `Content-Type: application/json`.
-- Semesters are written as `YYYYSS`, for example `202601` for winter 2026-2027, `202602`
+- Semesters are written as `YYYYSS`, for example `202601` for winter 2026–2027, `202602`
   for spring 2027 and `202603` for summer 2027.
 - Course numbers are written as in the catalog, such as `02340114`.
 - Errors return the matching HTTP status and a body like

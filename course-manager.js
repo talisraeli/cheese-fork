@@ -211,7 +211,7 @@ CourseManager.prototype.getSchedule = function (course) {
 
 CourseManager.prototype.getTitle = function (course) {
     var general = this.coursesHashmap[course].general;
-    return general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+    return general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
 };
 
 CourseManager.prototype.getFieldLabel = function (key) {
@@ -352,7 +352,7 @@ CourseManager.prototype.getFrameworkLabel = function (value) {
 CourseManager.prototype.getDescription = function (course, options) {
     var that = this;
     var general = that.coursesHashmap[course].general;
-    var header = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+    var header = general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
     var headerHtml = options.html ? sourceHtml(header) : '';
     var content = '';
     var contentHtml = '';
@@ -447,7 +447,7 @@ CourseManager.prototype.getDescription = function (course, options) {
                         return line.replace(/^בתאריך (\d+)\.(\d+)\.(\d+)(?: יום ([א-ו]) משעה (\d+(?::\d+)?) עד השעה (\d+(?::\d+)?))?/, function (match, day, month, year, weekday, start, end) {
                             var label = day + '/' + month + '/' + year;
                             if (weekday) {
-                                label += ' ' + that.getDayLabel(weekday) + ' ' + start + ' - ' + end;
+                                label += ' ' + that.getDayLabel(weekday) + ' ' + start + '–' + end;
                             }
                             return label;
                         });

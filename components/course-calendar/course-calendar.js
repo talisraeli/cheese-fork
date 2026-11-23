@@ -1264,7 +1264,7 @@ var CourseCalendar = (function () {
                     var lesson = event.lessonData;
 
                     subject = that.courseManager.getLessonTypeAndNumber(lesson);
-                    subject += ' - ' + general['שם מקצוע'];
+                    subject += ' – ' + general['שם מקצוע'];
 
                     description = '';
                     if (lesson['מרצה/מתרגל']) {

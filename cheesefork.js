@@ -893,7 +893,7 @@
                         if (general[moed]) {
                             var parsedDate = courseManager.parseExamDateTime(general[moed]);
                             if (parsedDate) {
-                                var title = courseManager.getFieldLabel(moed) + ' - ' + general['שם מקצוע'];
+                                var title = courseManager.getFieldLabel(moed) + ' – ' + general['שם מקצוע'];
                                 icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
                             }
                         }
@@ -1902,7 +1902,7 @@
                 $('#sharing-user-name').text(displayName);
                 $('#sharing-user-known').removeClass('d-none');
                 $('#sharing-user-unknown').addClass('d-none');
-                setPageTitle(displayName + ' - ' + CheeseI18n.t('shell.meta.title'));
+                setPageTitle(displayName + ' – ' + CheeseI18n.t('shell.meta.title'));
             } else {
                 $('#sharing-user-unknown').removeClass('d-none');
                 $('#sharing-user-known').addClass('d-none');
@@ -2615,7 +2615,7 @@
                 var general, courseTitle;
                 if (courseDiff.exists) {
                     general = courseManager.getGeneralInfo(course);
-                    courseTitle = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+                    courseTitle = general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
                     result.append(sourceText(courseTitle, '<h3>'));
 
                     courseDiff.changes.forEach(function (diff) {
@@ -2635,7 +2635,7 @@
                     });
                 } else {
                     general = courseDiff.general;
-                    courseTitle = general['מספר מקצוע'] + ' - ' + general['שם מקצוע'];
+                    courseTitle = general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
                     result.append(sourceText(courseTitle, '<h3>')).append($('<span>').text(CheeseI18n.t('shell.changes.removed')));
                 }
             });
@@ -2774,7 +2774,7 @@
             'Full documentation: ' + docsRawUrl,
             '',
             'Key facts:',
-            '- Semesters are YYYYSS: YYYY01 is winter YYYY-YYYY+1, YYYY02 spring, YYYY03 summer. My current semester is ' + semester + '.',
+            '- Semesters are YYYYSS: YYYY01 is winter YYYY–YYYY+1, YYYY02 spring, YYYY03 summer. My current semester is ' + semester + '.',
             '- GET /semesters/{semester}/schedule returns my whole schedule, GET /semesters/{semester}/courses my courses.',
             '- POST /semesters/{semester}/courses with {"course": "02340114"} adds a course; DELETE /semesters/{semester}/courses/{course} removes it.',
             '- GET /semesters/{semester}/catalog/{course} lists the lessons of a course. Choose one with PUT /semesters/{semester}/courses/{course}/lessons/{type} and {"number": 11}, where type is lecture, tutorial, lab, seminar, project or workshop.',
@@ -2997,27 +2997,27 @@
         if (courseParameter !== null) {
             if (courseManager.doesExist(courseParameter)) {
                 crawlersMakeCourseContent(content, courseParameter);
-                title = courseManager.getTitle(courseParameter) + ' - ' + title;
+                title = courseManager.getTitle(courseParameter) + ' – ' + title;
             } else {
                 crawlersMakeListHeader(content, 'course');
                 crawlersMakeCourseListContent(content);
-                title = CheeseI18n.t('shell.crawler.courses') + ' - ' + title;
+                title = CheeseI18n.t('shell.crawler.courses') + ' – ' + title;
             }
         } else if (staffParameter !== null) {
             if (crawlersMakeStaffContent(content, staffParameter)) {
-                title = staffParameter + ' - ' + title;
+                title = staffParameter + ' – ' + title;
             } else {
                 crawlersMakeListHeader(content, 'staff');
                 crawlersMakeStaffListContent(content);
-                title = CheeseI18n.t('shell.crawler.staff') + ' - ' + title;
+                title = CheeseI18n.t('shell.crawler.staff') + ' – ' + title;
             }
         } else { // if (roomParameter !== null)
             if (crawlersMakeRoomContent(content, roomParameter)) {
-                title = roomParameter + ' - ' + title;
+                title = roomParameter + ' – ' + title;
             } else {
                 crawlersMakeListHeader(content, 'room');
                 crawlersMakeRoomListContent(content);
-                title = CheeseI18n.t('shell.crawler.rooms') + ' - ' + title;
+                title = CheeseI18n.t('shell.crawler.rooms') + ' – ' + title;
             }
         }
 
@@ -3213,7 +3213,7 @@
             }
         }).forEach(function (item) {
             if (item.time) {
-                content.append($('<span>').text(item.displayTime + ' - '));
+                content.append($('<span>').text(item.displayTime + ' – '));
             }
 
             var url = crawlerUrl({course: item.course});
@@ -3318,7 +3318,7 @@
             }
         }).forEach(function (item) {
             if (item.time) {
-                content.append($('<span>').text(item.displayTime + ' - '));
+                content.append($('<span>').text(item.displayTime + ' – '));
             }
 
             var url = crawlerUrl({course: item.course});
