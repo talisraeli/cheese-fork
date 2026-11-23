@@ -366,3 +366,28 @@ html[dir="ltr"] .introjs-bullets ul li {
         display: none;
     }
 }
+
+/* CheeseFork² additions */
+
+html[dir="ltr"] .whats-new-item {
+    padding-right: 0;
+    padding-left: 3.25rem;
+}
+
+html[dir="ltr"] .whats-new-icon {
+    right: auto;
+    left: 0;
+}
+
+html[dir="ltr"] .course-button-list-layer-header {
+    border-right: 0;
+    border-left: 3px solid transparent;
+}
+
+html[dir="ltr"] .course-button-list-layer-active {
+    border-left-color: #007bff;
+}
+
+html[dir="ltr"] .course-button-list-layer-menu .dropdown-menu {
+    text-align: left !important;
+}
