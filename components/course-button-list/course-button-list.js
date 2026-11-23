@@ -1,6 +1,6 @@
 'use strict';
 
-/* global HistogramBrowser, CourseFeedback, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag, currentSemester */
+/* global HistogramBrowser, BootstrapDialog, showBootstrapDialogWithModelessButton, firebase, gtag, currentSemester */
 
 // eslint-disable-next-line no-unused-vars
 var CourseButtonList = (function () {
@@ -957,8 +957,24 @@ var CourseButtonList = (function () {
 
         modalBody.find('.course-information').html(courseInfo);
 
-        var courseFeedback = new CourseFeedback(modalBody.find('.course-feedback'), {});
-        courseFeedback.loadFeedback(courseManager.toNewCourseNumber(course));
+        // Course feedback is shown only on the original CheeseFork.
+        var originalFeedbackLink = $('<a>', {
+            class: 'btn btn-primary',
+            href: 'https://cheesefork.cf/course-widget-comments.html?course=' +
+                encodeURIComponent(courseManager.toNewCourseNumber(course)),
+            target: '_blank',
+            rel: 'noopener',
+            role: 'button',
+            text: 'הצג חוות דעת בחלון חדש'
+        }).click(function () {
+            gtag('event', 'course-feedback-original-site-click');
+        });
+        var originalFeedbackNote = $('<div>', {
+            class: 'small text-muted mt-1',
+            text: 'קישור חיצוני לאתר CheeseFork המקורי'
+        });
+        modalBody.find('.course-feedback').addClass('text-center mb-4').empty()
+            .append(originalFeedbackLink, originalFeedbackNote);
 
         var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
         histogramBrowser.loadHistograms(courseManager.toNewCourseNumber(course));
