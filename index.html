@@ -140,14 +140,14 @@
                     <div class="dropdown-menu" aria-labelledby="top-navbar-dropdown-semester"></div>
                 </li>
             </ul>
-        </div>
-        <div class="language-selector">
-            <i class="fas fa-globe" aria-hidden="true"></i>
-            <label class="sr-only" for="site-language" data-i18n="shell.language">שפה</label>
-            <select id="site-language" class="language-switch" data-language-switch data-i18n-aria-label="shell.language" aria-label="שפה">
-                <option value="en" lang="en" dir="ltr">English</option>
-                <option value="he" lang="he" dir="rtl">עברית</option>
-            </select>
+            <div class="language-selector">
+                <i class="fas fa-globe" aria-hidden="true"></i>
+                <label class="sr-only" for="site-language" data-i18n="shell.language">שפה</label>
+                <select id="site-language" class="language-switch" data-language-switch data-i18n-aria-label="shell.language" aria-label="שפה">
+                    <option value="en" lang="en" dir="ltr">English</option>
+                    <option value="he" lang="he" dir="rtl">עברית</option>
+                </select>
+            </div>
         </div>
         <button class="navbar-toggler unread-count-badge-container" type="button" data-toggle="collapse" data-target="#top-navbar-supported-content" aria-controls="top-navbar-supported-content" aria-expanded="false" data-i18n-aria-label="shell.nav.toggle" aria-label="הצג או הסתר את התפריט">
             <span class="navbar-toggler-icon"></span>
@@ -324,7 +324,6 @@
             <span data-i18n="shell.footer.maintainedBy">CheeseFork² מתוחזק על ידי</span> <a href="https://github.com/talisraeli" target="_blank" rel="noopener" data-i18n="shell.footer.maintainerName">טל ישראלי</a><span data-i18n="shell.footer.basedOn">, ומבוסס על</span>
             <a href="https://cheesefork.cf/" target="_blank" rel="noopener">CheeseFork</a> <span data-i18n="shell.footer.original">המקורי מאת</span>
             <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener" data-i18n="shell.footer.authorName">מיכאל מלצב</a>.
-            <dark-mode-toggle permanent data-i18n-aria-label="shell.theme.label" aria-label="מצב תצוגה"></dark-mode-toggle>
         </p>
         <!-- Links and settings -->
         <p class="mb-1">
@@ -333,6 +332,8 @@
             <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener" data-i18n="shell.footer.privacy">מדיניות פרטיות</a>
             <span class="mx-1" aria-hidden="true">·</span>
             <span data-i18n="shell.footer.license">רישיון</span> <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL v3</a>
+            <span class="mx-1" aria-hidden="true">·</span>
+            <dark-mode-toggle permanent data-i18n-aria-label="shell.theme.label" aria-label="מצב תצוגה"></dark-mode-toggle>
         </p>
     </footer>
 </div>
