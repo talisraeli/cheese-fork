@@ -163,6 +163,12 @@ test('the API dialog creates a key, shows it once and revokes it', async () => {
         assert.deepEqual(calls, ['apiKeyStatus']);
         assert.equal(status(), "You don't have an API key yet.");
         assert.equal(dialog.getButton('api-key-create').text(), 'Create API key');
+        const prompt = dialog.getModalBody().find('.api-key-prompt textarea').val();
+        assert.match(prompt, /^Help me manage my CheeseFork² course schedule/);
+        assert.ok(prompt.includes('Base URL: https://api.cf.talisrae.li/v1'));
+        assert.ok(prompt.includes('My current semester is 202601.'));
+        assert.ok(prompt.includes('Authorization: Bearer YOUR_API_KEY'));
+        assert.equal(dialog.getModalBody().find('.api-key-prompt button').text(), 'Copy prompt');
         assert.ok(dialog.getButton('api-key-revoke').hasClass('d-none'));
 
         dialog.getButton('api-key-create').trigger('click');
@@ -170,6 +176,8 @@ test('the API dialog creates a key, shows it once and revokes it', async () => {
         assert.deepEqual(calls, ['apiKeyStatus', 'apiKeyCreate']);
         assert.deepEqual(confirmations, []);
         assert.equal(dialog.getModalBody().find('.api-key-new input').val(), results.apiKeyCreate.key);
+        // The prompt never includes the key.
+        assert.ok(!dialog.getModalBody().find('.api-key-prompt textarea').val().includes(results.apiKeyCreate.key));
         assert.match(status(), /^Your key starts with cf2_aaaaaa…\. Created: .+\. Last used: never\.$/);
         assert.equal(dialog.getButton('api-key-create').text(), 'Replace key');
         assert.ok(!dialog.getButton('api-key-revoke').hasClass('d-none'));
