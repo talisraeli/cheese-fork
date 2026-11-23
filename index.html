@@ -125,7 +125,7 @@
                 <li id="top-navbar-semester" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="top-navbar-dropdown-semester" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-calendar-alt"></i>
-                        סמסטר
+                        סמסטר <span id="top-navbar-dropdown-semester-name"></span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="top-navbar-dropdown-semester"></div>
                 </li>
@@ -301,16 +301,20 @@
     <a href="?course=all" class="d-none">לרשימת הקורסים</a>
 
     <footer class="pt-4 text-muted text-center text-small">
+        <!-- Credits -->
         <p class="mb-1">
-            <span id="footer-semester" class="d-none">מציג מידע עבור סמסטר <span id="footer-semester-name"></span>.</span>
-            תוכנת על ידי <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener">מיכאל מלצב</a>.
-            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener">מדיניות פרטיות</a>.
+            CheeseFork² מתוחזק על ידי <a href="https://github.com/talisraeli" target="_blank" rel="noopener">טל ישראלי</a>,
+            ומבוסס על <a href="https://cheesefork.cf/" target="_blank" rel="noopener">CheeseFork</a> המקורי
+            מאת <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener">מיכאל מלצב</a>.
             <dark-mode-toggle permanent></dark-mode-toggle>
         </p>
+        <!-- Links and settings -->
         <p class="mb-1">
-            מתוחזק על ידי <a href="https://github.com/talisraeli" target="_blank" rel="noopener">טל ישראלי</a>.
-            <a href="https://github.com/talisraeli/cheese-fork" target="_blank" rel="noopener">קוד המקור ב-GitHub</a>.
-            מופץ תחת רישיון <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL v3</a>.
+            <a href="https://github.com/talisraeli/cheese-fork" target="_blank" rel="noopener">קוד המקור ב-GitHub</a>
+            <span class="mx-1" aria-hidden="true">·</span>
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener">מדיניות פרטיות</a>
+            <span class="mx-1" aria-hidden="true">·</span>
+            רישיון <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL v3</a>
         </p>
     </footer>
 </div>
