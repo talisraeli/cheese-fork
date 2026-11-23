@@ -532,7 +532,7 @@ var CourseButtonList = (function () {
         var badge = $('<span class="badge badge-secondary float-right">' +
             '<span class="course-button-list-badge-text">i</span>' +
             '</span>');
-        var color = that.colorGenerator(course);
+        var color = that.colorGenerator(course, null, layerId);
         button.css('background-color', color)
             .click(function () {
                 if (!that.readonly) {
@@ -658,7 +658,7 @@ var CourseButtonList = (function () {
                 that.onDisableCourse(course, getListLayerId(button.parent()));
             } else {
                 button.addClass('active');
-                var color = that.colorGenerator(course);
+                var color = that.colorGenerator(course, null, getListLayerId(button.parent()));
                 button.css('background-color', color);
                 that.onEnableCourse(course, getListLayerId(button.parent()));
             }
@@ -1071,7 +1071,7 @@ var CourseButtonList = (function () {
             var customEventId = item.attr('data-custom-event-id');
             var color = customEventId !== undefined ?
                 customEventColor(that, customEventId, item.find('.content-bold-hidden').text()) :
-                that.colorGenerator(item.attr('data-course-number'));
+                that.colorGenerator(item.attr('data-course-number'), null, getListLayerId(item.parent()));
             item.css('background-color', color);
         });
     };

@@ -161,7 +161,11 @@
 
         courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
             courseManager: courseManager,
-            colorGenerator: courseColorGenerator,
+            // The exam info shows each course once, so use the color of its first visible layer.
+            colorGenerator: function (course) {
+                var layerIds = getLayerIdsOfCourse(course).filter(isLayerVisible);
+                return courseColorGenerator(course, null, layerIds[0] || '');
+            },
             onHoverIn: function (course) {
                 // The exam info is pinned to the bottom of the sidebar, which stretches with the
                 // calendar. Keep it in place so that a preview doesn't move it from under the pointer.
@@ -234,7 +238,9 @@
                 courseButtonList.removeCustomEvent(eventId);
                 customEventUnsave(eventId, layerId);
             },
-            onColorPickerClick: showColorPicker
+            onColorPickerClick: function (course, customEventId, layerId) {
+                showColorPicker(customEventId || courseColorKey(course, layerId));
+            }
         });
 
         $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
@@ -277,9 +283,17 @@
         }
     }
 
+    // The key of a course's custom color. The same course can be in several layers,
+    // and each layer has its own color. The first layer uses the plain course number,
+    // same as a schedule without layers.
+    function courseColorKey(course, layerId) {
+        return layerId ? layerId + '_' + course : course;
+    }
+
     // For custom events, course is the event title and customEventId is the event id.
-    function courseColorGenerator(course, customEventId) {
-        var customColor = customColors[customEventId || course];
+    // For courses, customEventId is null and layerId is the layer of the course.
+    function courseColorGenerator(course, customEventId, layerId) {
+        var customColor = customColors[customEventId || courseColorKey(course, layerId)];
         if (customColor) {
             return customColor;
         }
@@ -323,7 +337,7 @@
         courseExamInfo.renderCourses(getVisibleCourseNumbers());
     }
 
-    // colorKey is a course number or a custom event id.
+    // colorKey is a course color key (see courseColorKey) or a custom event id.
     function showColorPicker(colorKey) {
         // Same saturation as the middle value of the automatic colors, with white text in mind.
         var palette = [];
@@ -1430,6 +1444,32 @@
         var fromKey = layerLessonsKey(course, fromLayerId);
         session[layerLessonsKey(course, toLayerId)] = session[fromKey] || {};
         delete session[fromKey];
+
+        // The color moves with the course.
+        sessionCourseColorMove(session, course, fromLayerId, toLayerId);
+    }
+
+    function sessionCourseColorMove(session, course, fromLayerId, toLayerId) {
+        var colors = session[currentSemester + '_colors'];
+        var fromColorKey = courseColorKey(course, fromLayerId);
+        var toColorKey = courseColorKey(course, toLayerId);
+        if (colors[fromColorKey]) {
+            colors[toColorKey] = colors[fromColorKey];
+        } else {
+            delete colors[toColorKey];
+        }
+        delete colors[fromColorKey];
+    }
+
+    // Removes the remaining course colors of a removed layer, including of courses which were
+    // unselected earlier. Layer ids aren't reused, so these colors are no longer needed.
+    function sessionLayerCourseColorsRemove(session, layerId) {
+        var colors = session[currentSemester + '_colors'];
+        Object.keys(colors).forEach(function (colorKey) {
+            if (colorKey.indexOf(layerId + '_') === 0) {
+                delete colors[colorKey];
+            }
+        });
     }
 
     function layerCourseMove(course, fromLayerId, toLayerId) {
@@ -1547,14 +1587,15 @@
                 delete session[layerLessonsKey(course, layerId)];
             });
 
-            // Course colors are kept, same as when unselecting a course, but the colors of
-            // the removed custom events are no longer needed.
+            // The colors of the removed custom events are no longer needed. Course colors of the
+            // first layer are kept, same as when unselecting a course, since its keys are reused.
             var layerCustomEvents = layerId ? layers[layerId].customEvents : session[semesterCustomEventsKey];
             Object.keys(layerCustomEvents || {}).forEach(function (eventId) {
                 delete session[currentSemester + '_colors']['custom_event_' + eventId];
             });
 
             if (layerId) {
+                sessionLayerCourseColorsRemove(session, layerId);
                 delete layers[layerId];
             } else {
                 // The first layer can't be removed, since it's the layer of the keys
@@ -1567,7 +1608,9 @@
                     var nextLayerKey = layerLessonsKey(course, nextLayerId);
                     session[layerLessonsKey(course, '')] = session[nextLayerKey] || {};
                     delete session[nextLayerKey];
+                    sessionCourseColorMove(session, course, nextLayerId, '');
                 });
+                sessionLayerCourseColorsRemove(session, nextLayerId);
 
                 session[semesterCustomEventsKey] = nextLayer.customEvents;
 
@@ -1854,7 +1897,8 @@
         onSavedSessionChange();
     }
 
-    // colorKey is a course number or a custom event id. Pass null as color to remove the custom color.
+    // colorKey is a course color key (see courseColorKey) or a custom event id.
+    // Pass null as color to remove the custom color.
     function customColorSave(colorKey, color) {
         var semesterColorsKey = currentSemester + '_colors';
 
