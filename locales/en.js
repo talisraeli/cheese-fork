@@ -244,6 +244,8 @@ CheeseI18n.addMessages('en', {
     "shell.api.loading": "Loading…",
     "shell.api.never": "never",
     "shell.api.none": "You don't have an API key yet.",
+    "shell.api.promptCopy": "Copy prompt",
+    "shell.api.promptIntro": "Want an AI assistant to manage your schedule? Copy this prompt into it, and give it your API key when it asks:",
     "shell.api.replace": "Replace key",
     "shell.api.replaceConfirm": "Replacing your key stops the current key from working immediately. Continue?",
     "shell.api.revoke": "Revoke key",
