@@ -915,7 +915,7 @@
 
             // Generate a unique UID every time to avoid overriding old events.
             // https://github.com/michael-maltsev/cheese-fork/issues/19
-            var icsCal = ics('cheesefork.cf-' + Date.now(), 'CheeseFork', extraCalendarHeaders, 'Asia/Jerusalem');
+            var icsCal = ics('cheesefork.cf-' + Date.now(), 'CheeseFork²', extraCalendarHeaders, 'Asia/Jerusalem');
 
             // Schedule.
             var dateFrom = availableSemesters[currentSemester].start;
@@ -974,7 +974,7 @@
 
                 var exportCalendarDialog = BootstrapDialog.show({
                     title: ' ייצוא לקובץ iCalendar',
-                    message: 'קובץ ה-iCalendar נשמר בשרת של CheeseFork ומסתנכרן אוטומטית עם המערכת שבניתם בכל פתיחה של חלון זה. ' +
+                    message: 'קובץ ה-iCalendar נשמר בשרת של CheeseFork² ומסתנכרן אוטומטית עם המערכת שבניתם בכל פתיחה של חלון זה. ' +
                         'הקישור קבוע פר משתמש וסמסטר, כך שניתן לייבא את הקישור עצמו לכלי שתומך בכך. ' +
                         'עבור כל עדכון נוסף מספיק לפתוח את החלון פעם נוספת, במקום הורדה וייבוא בכל פעם של הקובץ. ' +
                         'שימו לב שהעדכון לא מיידי, ברוב שירותי לוח השנה הסנכרון מתבצע אחת למספר שעות.<br>' +
@@ -1914,11 +1914,11 @@
                 $('#sharing-user-name').text(displayName);
                 $('#sharing-user-known').removeClass('d-none');
                 $('#sharing-user-unknown').addClass('d-none');
-                document.title = displayName + ' - CheeseFork - Your Cheesy Scheduler';
+                document.title = displayName + ' - CheeseFork² - Your Cheesy Scheduler';
             } else {
                 $('#sharing-user-unknown').removeClass('d-none');
                 $('#sharing-user-known').addClass('d-none');
-                document.title = 'CheeseFork - Your Cheesy Scheduler';
+                document.title = 'CheeseFork² - Your Cheesy Scheduler';
             }
 
             if (!firstDataLoaded) {
@@ -2647,7 +2647,7 @@
         } else {
             result = $('<div>');
 
-            var explanation = 'מעכשיו תוכלו להתעדכן בכל השינויים שקורים בקורסים שלכם דרך CheeseFork! ' +
+            var explanation = 'מעכשיו תוכלו להתעדכן בכל השינויים שקורים בקורסים שלכם דרך CheeseFork²! ' +
                 'לחצו על הכפתור <b>אשר שינויים</b>, ובכל פעם שיהיו שינויים באחד הקורסים שאתם רשומים אליו, אתם תראו אותם פה בחלון השינויים.';
 
             result.html(explanation);
@@ -2815,7 +2815,7 @@
         }
 
         var content = $('<div class="col-md-12"></div>');
-        var title = semesterFriendlyName(currentSemester) + ' - CheeseFork';
+        var title = semesterFriendlyName(currentSemester) + ' - CheeseFork²';
 
         if (courseParameter !== null) {
             if (courseManager.doesExist(courseParameter)) {
