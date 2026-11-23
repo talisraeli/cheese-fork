@@ -32,6 +32,20 @@ Base URL: `https://api.cf.talisrae.li/v1`
   `{"error": {"code": "course_not_found", "message": "..."}}`.
 - Successful deletions return `204 No Content`.
 
+### Rate limits
+
+Each user can make up to 60 requests per minute, counted across all of their requests.
+Responses include these headers:
+
+- `RateLimit-Limit`: the number of requests allowed per minute.
+- `RateLimit-Remaining`: the requests left in the current minute.
+- `RateLimit-Reset`: the seconds until the count resets.
+
+Requests over the limit get `429 Too Many Requests` with the error code `rate_limited` and
+a `Retry-After` header with the seconds to wait. Rejected requests change nothing, so it's
+safe to retry them after that time. The API may run on several servers, each counting on
+its own, so don't rely on getting exactly 60 requests or on being stopped at exactly 60.
+
 ### Layers
 
 Schedules with layers (alternative plans) keep separate courses, lessons and custom events

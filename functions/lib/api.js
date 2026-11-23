@@ -7,6 +7,7 @@ const { ApiError } = require('./errors');
 const { hashApiKey, looksLikeApiKey, apiKeyFromHeaders } = require('./keys');
 const schedule = require('./schedule');
 const { lessonTypeCandidates } = require('./catalog');
+const { createRateLimiter, rateLimitHeaders } = require('./rate-limit');
 
 const SEMESTER_RE = /^\d{6}$/;
 const COURSE_RE = /^\d{6,8}$/;
@@ -254,22 +255,44 @@ function matchRoute(routes, method, pathname) {
     throw new ApiError(404, 'not_found', 'No such endpoint. See the API documentation.');
 }
 
+// Requests per user, whichever of their keys is used. There's deliberately no limit per IP
+// address: the client IP comes from X-Forwarded-For, which clients can fake, so it could be
+// used to lock out other users. Keys are 256-bit random values, so guessing them is hopeless.
+const DEFAULT_USER_LIMIT = { limit: 60, windowMs: 60 * 1000 };
+
+function tooManyRequests(message) {
+    return new ApiError(429, 'rate_limited', message);
+}
+
 // Returns async (request) => response, where request is { method, path, query, headers, body }
-// and response is { status, body }.
+// and response is { status, body, headers }.
 function createApi(deps) {
     const routes = createRoutes(deps);
+    const userLimiter = createRateLimiter(Object.assign({ now: deps.now }, DEFAULT_USER_LIMIT, deps.userLimit));
+
+    async function authenticate(request) {
+        const key = apiKeyFromHeaders(request.headers);
+        if (!key) {
+            throw new ApiError(401, 'missing_api_key', 'Send your API key in the Authorization header: "Bearer <key>".');
+        }
+        const uid = looksLikeApiKey(key) ? await deps.store.findKeyOwner(hashApiKey(key)) : null;
+        if (!uid) {
+            throw new ApiError(401, 'invalid_api_key', 'The API key is invalid or was revoked.');
+        }
+        return uid;
+    }
 
     return async function handle(request) {
+        let headers = {};
         try {
             const route = matchRoute(routes, request.method, request.path);
+            const uid = await authenticate(request);
 
-            const key = apiKeyFromHeaders(request.headers);
-            if (!key) {
-                throw new ApiError(401, 'missing_api_key', 'Send your API key in the Authorization header: "Bearer <key>".');
-            }
-            const uid = looksLikeApiKey(key) ? await deps.store.findKeyOwner(hashApiKey(key)) : null;
-            if (!uid) {
-                throw new ApiError(401, 'invalid_api_key', 'The API key is invalid or was revoked.');
+            const usage = userLimiter.take(uid);
+            headers = rateLimitHeaders(usage);
+            if (!usage.allowed) {
+                throw tooManyRequests('Rate limit of ' + usage.limit + ' requests per minute exceeded, try again in ' +
+                    usage.resetSeconds + ' seconds.');
             }
 
             const ctx = {
@@ -283,15 +306,19 @@ function createApi(deps) {
             }
 
             const response = await route.handler(ctx);
-            return { status: response.status || 200, body: response.body };
+            return { status: response.status || 200, body: response.body, headers: headers };
         } catch (e) {
             if (e instanceof ApiError) {
-                return { status: e.status, body: { error: { code: e.code, message: e.message } } };
+                return {
+                    status: e.status,
+                    body: { error: { code: e.code, message: e.message } },
+                    headers: headers
+                };
             }
             if (deps.logError) {
                 deps.logError(e);
             }
-            return { status: 500, body: { error: { code: 'internal', message: 'Internal error.' } } };
+            return { status: 500, body: { error: { code: 'internal', message: 'Internal error.' } }, headers: headers };
         }
     };
 }
