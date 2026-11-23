@@ -245,9 +245,6 @@
 
         $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
 
-        $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
-        $('#footer-semester').removeClass('d-none');
-
         $('#right-content-bar').removeClass('invisible');
 
         if (viewingSharedSchedule) {
@@ -664,6 +661,7 @@
 
     function navbarInit() {
         $('#top-navbar-print-section-title').text(semesterFriendlyName(currentSemester));
+        $('#top-navbar-dropdown-semester-name').text(semesterFriendlyName(currentSemester));
 
         if (!viewingSharedSchedule) {
             var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');
@@ -2818,9 +2816,6 @@
         $('#course-select').hide();
 
         $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
-
-        $('#footer-semester-name').text(semesterFriendlyName(currentSemester));
-        $('#footer-semester').removeClass('d-none');
 
         // The filter form is indexed by Google even though it's hidden, so remove it.
         $('#filter-form').remove();
