@@ -1,6 +1,6 @@
 # CheeseFork² Privacy Policy
 
-Last updated: 2026-09-22
+Last updated: 2026-11-23
 
 CheeseFork² is a free, open source schedule builder for Technion students, based on CheeseFork by Michael Maltsev. This policy describes what data the site handles, where it goes, and how you can control it. The full source code is available at https://github.com/talisraeli/cheese-fork under the GNU General Public License v3.0, so everything described here can be verified.
 
@@ -9,9 +9,10 @@ CheeseFork² is a static website. There is no CheeseFork²-operated server that 
 ## Summary
 
 - You can use CheeseFork² without an account. Your schedule is then stored only in your browser.
-- Signing in is optional. It enables syncing your schedule across devices, sharing it with a link, a hosted iCalendar link, and posting course feedback.
+- Signing in is optional. It enables syncing your schedule across devices, sharing it with a link, and a hosted iCalendar link.
 - The site uses Google Analytics.
-- Course feedback you post is public. Schedules and iCalendar files you share are visible to anyone who has the link.
+- CheeseFork² does not collect course feedback. The "הצג חוות דעת בחלון חדש" button opens the course's feedback on the original CheeseFork.
+- Schedules and iCalendar files you share are visible to anyone who has the link.
 - Histogram sharing uploads only aggregate course statistics to a public GitHub repository, never your own grades or identity.
 
 ## 1. Using CheeseFork² without an account
@@ -21,8 +22,7 @@ When you are not signed in, the schedule you build (selected courses, chosen les
 The site also stores small preference values in local storage, such as:
 
 - the last semester you viewed;
-- whether you dismissed the intro tour, tips, and reminder popups (course feedback, weekly graph, histogram sharing, Technion scans);
-- the display name you last used when posting course feedback;
+- whether you dismissed the intro tour, tips, and reminder popups (weekly graph, histogram sharing, Technion scans);
 - your light/dark mode choice.
 
 This data stays on your device until you clear the site's data in your browser.
@@ -61,11 +61,7 @@ If you are signed in, the file is uploaded to Firebase Cloud Storage and made av
 
 ## 6. Course feedback
 
-You can read course feedback (reviews) without signing in. Posting feedback requires signing in.
-
-When you post feedback, the following is stored in Cloud Firestore and shown publicly to all CheeseFork² users, including through the embeddable feedback widget: the author name you type in the form (which may be anything you choose, and is not your account name), the semester, the review text, the workload and overall ratings, and the time of posting. As stated in the posting form, feedback is displayed anonymously, but your account identity is retained for moderation purposes. Feedback that violates the posting guidelines may be removed.
-
-When you report a post as inappropriate, the email address and reason you enter, together with the reported post's text, author name, and timestamp, are stored in Cloud Firestore. Reports are visible only to the CheeseFork² maintainers and are used to review the reported content and, if needed, to follow up with you.
+CheeseFork² does not collect or show course feedback (reviews). In a course's details, the "הצג חוות דעת בחלון חדש" button opens that course's feedback on the original CheeseFork at https://cheesefork.cf/, a separate site run by Michael Maltsev under its own privacy policy. The old embeddable feedback widget address redirects there too.
 
 ## 7. Sharing histograms
 
@@ -77,7 +73,7 @@ The extracted data is sent from your browser directly to the GitHub API and comm
 
 ## 8. Analytics
 
-CheeseFork² uses Google Analytics on the main site and on the embeddable feedback and histogram widgets. Google Analytics collects information such as the pages you visit, your browser and device type, approximate location derived from your IP address, and interaction events (for example, which navigation buttons or popup options were clicked). Google Analytics sets cookies in your browser for this purpose.
+CheeseFork² uses Google Analytics on the main site and on the embeddable histogram widget. Google Analytics collects information such as the pages you visit, your browser and device type, approximate location derived from your IP address, and interaction events (for example, which navigation buttons or popup options were clicked). Google Analytics sets cookies in your browser for this purpose.
 
 CheeseFork² does not send your name, email, user ID, or schedule contents to Google Analytics. You can block Google Analytics with a content blocker or with Google's opt-out browser add-on. Google's own privacy policy is available at https://policies.google.com/privacy.
 
@@ -89,6 +85,7 @@ Using CheeseFork² causes your browser to contact the following services. Each o
 - **Google Analytics**, loaded from www.googletagmanager.com. See section 8.
 - **Course catalog and data files** loaded from ug.cheesefork.cf, sap.cheesefork.cf, and michael-maltsev.github.io (hosted on GitHub Pages). These contain only public course information, histograms, and calendar data; no user data is sent to them beyond the request itself.
 - **Facebook Page plugin**. The "weekly graph" popup embeds the CheeseFork Facebook page in an iframe served by Facebook. Facebook may set cookies and collect data when that popup is displayed, according to Facebook's privacy policy. The plugin is only loaded when the popup is shown, and you can disable the popup from within it.
+- **Original CheeseFork** (cheesefork.cf). The "הצג חוות דעת בחלון חדש" button and the old feedback widget address open course feedback there. Nothing is sent to it beyond the request itself.
 - **Hosting**. The site itself is served by GitHub Pages, which may keep standard server access logs.
 
 The site also contains links to external sites and communities (Technion websites, Technion scans, WhatsApp, Telegram, Discord, Facebook groups, the Chrome Web Store). Following a link takes you to a site with its own policy, and CheeseFork² does not share your data with them.
@@ -101,14 +98,13 @@ CheeseFork² itself does not set cookies. It uses local storage for the data des
 
 - Data in your browser is kept until you clear the site's data in your browser settings.
 - Cloud schedule data is kept for as long as your account exists. You can remove individual courses and custom events from within the app.
-- Public course feedback is kept indefinitely unless removed by moderation or at your request.
 - Contributed histograms are part of a public repository and are kept indefinitely; they contain no personal data.
 
-To request deletion of your account, your cloud schedule data, feedback you posted, or a hosted iCalendar file, contact the maintainer as described in section 14. Please include the email address or display name of the account so the data can be located.
+To request deletion of your account, your cloud schedule data, or a hosted iCalendar file, contact the maintainer as described in section 14. Please include the email address or display name of the account so the data can be located.
 
 ## 12. Security
 
-All communication with the services above is over HTTPS. Your cloud schedule data can only be modified from your browser while you are signed in to your account. Data that you choose to make available through a link (a shared schedule or a hosted iCalendar file) is readable by anyone who has that link, and course feedback is public by design.
+All communication with the services above is over HTTPS. Your cloud schedule data can only be modified from your browser while you are signed in to your account. Data that you choose to make available through a link (a shared schedule or a hosted iCalendar file) is readable by anyone who has that link.
 
 ## 13. Changes to this policy
 

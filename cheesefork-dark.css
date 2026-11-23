@@ -142,32 +142,6 @@ body {
     border-color: #444 !important;
 }
 
-#course-feedback-summary .course-rank {
-    border-color: #495057;
-}
-
-#course-feedback-carousel .timeline-box {
-    border-color: #495057;
-}
-
-#course-feedback-carousel .timeline-box,
-#course-feedback-carousel .box-footer {
-    background-color: #333;
-}
-
-#course-feedback-carousel .box-content {
-    background-color: #1b1f22;
-}
-
-#course-feedback-carousel .carousel-indicators li {
-    filter: none;
-}
-
-#course-feedback-carousel .carousel-control-prev-icon,
-#course-feedback-carousel .carousel-control-next-icon {
-    filter: invert(1);
-}
-
 .course-metadata-diff-old {
     background-color: rgba(229,83,75,0.3);
 }

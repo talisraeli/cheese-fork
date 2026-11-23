@@ -12,10 +12,9 @@ service cloud.firestore {
       }
     }
 
-    // Course reviews.
+    // Course reviews. No longer used: the site links to the original CheeseFork's reviews instead.
     match /courseFeedback/{course} {
-      allow read: if true;
-      allow write: if request.auth != null;
+      allow read, write: if false;
     }
 
     // Course group links (WhatsApp, Telegram, Discord).
@@ -23,10 +22,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // Reports on reviews. Write-only from the client; read them in the console.
+    // Reports on reviews. No longer used; existing reports can still be read in the console.
     match /courseFeedbackReports/{course} {
-      allow read: if false;
-      allow create, update: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
