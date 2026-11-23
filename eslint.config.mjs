@@ -6,6 +6,8 @@ export default [
         ignores: [
             "modules/",
             "node_modules/",
+            "functions/node_modules/",
+            "functions/shared/",
             "dark-mode-toggle-stylesheets-loader.min.js",
             "eslint.config.mjs",
             "share-histograms.js",
@@ -33,7 +35,7 @@ export default [
         }
     },
     {
-        files: ["tests/**/*.cjs"],
+        files: ["tests/**/*.cjs", "functions/**/*.js"],
         languageOptions: {
             ecmaVersion: "latest",
             sourceType: "commonjs",

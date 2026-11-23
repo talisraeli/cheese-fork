@@ -47,6 +47,27 @@ translation catalog is isolated inside `share-histograms.js`. It reads `lang`
 from its own script URL and changes only its overlay, preserving the host page's
 language and direction. Old sharing links continue to default to Hebrew.
 
+## API
+
+Signed-in users can create a personal API key and use it to view and change their
+schedule from scripts and other apps. See [API.md](API.md) for the endpoints.
+
+The API runs as Firebase Cloud Functions in `functions/`, which require the Firebase
+project to be on the Blaze plan. Its logic in `functions/lib/` has no Firebase
+dependencies and is covered by `tests/api.test.cjs`. Deploy it with:
+
+```sh
+(cd functions && npm ci)
+firebase deploy --only functions,hosting,firestore:rules
+```
+
+The API is served at `https://api.cf.talisrae.li` through Firebase Hosting, which rewrites
+every path to the `api` function (`functions/hosting-public` is intentionally empty).
+
+The deploy copies `course-manager.js` into the functions, so that the course data they
+save matches what the site saves. Keep the schedule layout in
+`functions/lib/schedule.js` in sync with `cheesefork.js`.
+
 ## Credits
 
 - Originally created by [Michael Maltsev](https://github.com/michael-maltsev) as [CheeseFork](https://github.com/michael-maltsev/cheese-fork).
