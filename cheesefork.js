@@ -148,7 +148,15 @@
             onLayerCreate: layerCreate,
             onLayerRename: layerRename,
             onLayerDelete: layerDelete,
-            onLayerVisibilityChange: layerVisibilityChange
+            onLayerVisibilityChange: layerVisibilityChange,
+            onCustomEventHoverIn: function (eventId) {
+                courseCalendar.setCustomEventHighlighted(eventId, true);
+            },
+            onCustomEventHoverOut: function (eventId) {
+                courseCalendar.setCustomEventHighlighted(eventId, false);
+            },
+            onCustomEventMove: layerCustomEventMove,
+            onCustomEventRemove: layerCustomEventRemove
         });
 
         courseExamInfo = new CourseExamInfo($('#course-exam-info'), {
@@ -213,12 +221,17 @@
                 selectedLessonUnsave(course, lessonNumber, lessonType, layerId);
             },
             onCustomEventAdded: function (eventId, eventData, layerId) {
+                if (currentLayers.length > 0) {
+                    courseButtonList.addCustomEvent(eventId, eventData.title, layerId);
+                }
                 customEventSave(eventId, eventData, layerId);
             },
             onCustomEventUpdated: function (eventId, eventData, layerId) {
+                courseButtonList.updateCustomEvent(eventId, eventData.title);
                 customEventSave(eventId, eventData, layerId);
             },
             onCustomEventRemoved: function (eventId, layerId) {
+                courseButtonList.removeCustomEvent(eventId);
                 customEventUnsave(eventId, layerId);
             },
             onColorPickerClick: showColorPicker
@@ -1422,8 +1435,38 @@
         });
     }
 
-    // Creates a new layer. If course isn't null, the course is moved to the new layer.
-    function layerCreate(course, fromLayerId) {
+    function sessionLayerCustomEvents(session, layerId) {
+        if (!layerId) {
+            return session[currentSemester + '_custom_events'];
+        }
+
+        return session[currentSemester + '_layers'][layerId].customEvents;
+    }
+
+    function sessionLayerCustomEventMove(session, eventId, fromLayerId, toLayerId) {
+        var fromCustomEvents = sessionLayerCustomEvents(session, fromLayerId);
+        if (fromCustomEvents[eventId]) {
+            sessionLayerCustomEvents(session, toLayerId)[eventId] = fromCustomEvents[eventId];
+            delete fromCustomEvents[eventId];
+        }
+    }
+
+    function layerCustomEventMove(eventId, fromLayerId, toLayerId) {
+        savedSessionUpdateAndReload(function (session) {
+            sessionLayerCustomEventMove(session, eventId, fromLayerId, toLayerId);
+        });
+    }
+
+    function layerCustomEventRemove(eventId, layerId) {
+        savedSessionUpdateAndReload(function (session) {
+            delete sessionLayerCustomEvents(session, layerId)[eventId];
+            // Same as in customEventUnsave, the color of a removed event is no longer needed.
+            delete session[currentSemester + '_colors']['custom_event_' + eventId];
+        });
+    }
+
+    // Creates a new layer. If course or customEventId are given, the item is moved to the new layer.
+    function layerCreate(course, fromLayerId, customEventId) {
         var semesterLayersKey = currentSemester + '_layers';
         var newLayerId;
 
@@ -1445,10 +1488,12 @@
 
             if (course !== null) {
                 sessionLayerCourseMove(session, course, fromLayerId, newLayerId);
+            } else if (customEventId !== undefined) {
+                sessionLayerCustomEventMove(session, customEventId, fromLayerId, newLayerId);
             }
         });
 
-        if (course === null) {
+        if (course === null && customEventId === undefined) {
             // An empty layer was requested, probably for adding courses to it.
             courseButtonList.setActiveLayer(newLayerId);
         }
@@ -2272,6 +2317,12 @@
         var extraLayers = [];
 
         currentLayers.forEach(function (layer) {
+            // With layers, custom events are in the list too, for moving them between layers.
+            var layerCustomEvents = sessionLayerCustomEvents(session, layer.id) || {};
+            Object.keys(layerCustomEvents).sort().forEach(function (eventId) {
+                courseButtonList.addCustomEvent(eventId, layerCustomEvents[eventId].title, layer.id);
+            });
+
             if (!layer.id) {
                 if (layer.hidden) {
                     schedule = {};
