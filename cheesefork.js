@@ -15,6 +15,7 @@
     var stopScheduleWatching = null;
     var currentSavedSession = null, savedSessionForUndo = null, savedSessionForRedo = null;
     var metadataDiff = {};
+    var customColors = {};
     // The layers of the shown schedule, { id, name, hidden } each. Empty if layers aren't used.
     var currentLayers = [];
 
@@ -219,7 +220,8 @@
             },
             onCustomEventRemoved: function (eventId, layerId) {
                 customEventUnsave(eventId, layerId);
-            }
+            },
+            onColorPickerClick: showColorPicker
         });
 
         $('#top-navbar-supported-content').removeClass('top-navbar-content-uninitialized');
@@ -262,7 +264,13 @@
         }
     }
 
-    function courseColorGenerator(course) {
+    // For custom events, course is the event title and customEventId is the event id.
+    function courseColorGenerator(course, customEventId) {
+        var customColor = customColors[customEventId || course];
+        if (customColor) {
+            return customColor;
+        }
+
         var str = courseManager.toOldCourseNumber(course);
         // Fixup: both 114036 and 114246 get a green color, and both are taken at the same semester.
         // So here we cause the color of 114246 to be different.
@@ -280,6 +288,82 @@
             str = coursePrefixForHashCalc[str] + str;
         }
         return colorHash.hex(str);
+    }
+
+    function customColorsFromSavedSession(session) {
+        var colors = {};
+
+        var savedColors = session[currentSemester + '_colors'] || {};
+        Object.keys(savedColors).forEach(function (colorKey) {
+            // Can come from a shared schedule of another user, so accept only plain hex colors.
+            if (/^#[0-9a-f]{6}$/i.test(savedColors[colorKey])) {
+                colors[colorKey] = savedColors[colorKey];
+            }
+        });
+
+        return colors;
+    }
+
+    function updateColors() {
+        courseButtonList.updateColors();
+        courseCalendar.updateColors();
+        courseExamInfo.renderCourses(getVisibleCourseNumbers());
+    }
+
+    // colorKey is a course number or a custom event id.
+    function showColorPicker(colorKey) {
+        // Same saturation as the middle value of the automatic colors, with white text in mind.
+        var palette = [];
+        [0.5, 0.35].forEach(function (lightness) {
+            for (var hue = 0; hue < 360; hue += 30) {
+                palette.push(hslToHex(hue, 0.5, lightness));
+            }
+        });
+
+        var content = $('<div class="color-picker"></div>');
+
+        palette.forEach(function (color) {
+            var colorButton = $('<button type="button" class="color-picker-item"></button>')
+                .attr('aria-label', color)
+                .css('background-color', color)
+                .toggleClass('color-picker-item-selected', customColors[colorKey] === color)
+                .click(function () {
+                    dialog.close();
+                    customColorSave(colorKey, color);
+                    updateColors();
+                });
+            content.append(colorButton);
+        });
+
+        var dialog = BootstrapDialog.show({
+            title: 'בחירת צבע',
+            message: content,
+            buttons: [{
+                label: 'צבע ברירת מחדל',
+                action: function (dialog) {
+                    dialog.close();
+                    if (customColors[colorKey]) {
+                        customColorSave(colorKey, null);
+                        updateColors();
+                    }
+                }
+            }, {
+                label: 'סגור',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
+
+        function hslToHex(hue, saturation, lightness) {
+            // https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB_alternative
+            var a = saturation * Math.min(lightness, 1 - lightness);
+            return '#' + [0, 8, 4].map(function (n) {
+                var k = (n + hue / 30) % 12;
+                var value = lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+                return ('0' + Math.round(value * 255).toString(16)).slice(-2);
+            }).join('');
+        }
     }
 
     function showExtraContentOnLoad() {
@@ -1413,6 +1497,13 @@
                 delete session[layerLessonsKey(course, layerId)];
             });
 
+            // Course colors are kept, same as when unselecting a course, but the colors of
+            // the removed custom events are no longer needed.
+            var layerCustomEvents = layerId ? layers[layerId].customEvents : session[semesterCustomEventsKey];
+            Object.keys(layerCustomEvents || {}).forEach(function (eventId) {
+                delete session[currentSemester + '_colors']['custom_event_' + eventId];
+            });
+
             if (layerId) {
                 delete layers[layerId];
             } else {
@@ -1670,9 +1761,15 @@
     }
 
     function customEventUnsave(eventId, layerId) {
+        // The event id isn't reused, so its custom color (if any) is no longer needed.
+        var semesterColorsKey = currentSemester + '_colors';
+        var colorKey = 'custom_event_' + eventId;
+
         if (layerId) {
+            delete customColors[colorKey];
             savedSessionUpdate(function (session) {
                 delete session[currentSemester + '_layers'][layerId].customEvents[eventId];
+                delete session[semesterColorsKey][colorKey];
             });
             return;
         }
@@ -1681,20 +1778,82 @@
 
         delete currentSavedSession[semesterCustomEventsKey][eventId];
 
+        var hadCustomColor = !!currentSavedSession[semesterColorsKey][colorKey];
+        delete currentSavedSession[semesterColorsKey][colorKey];
+        delete customColors[colorKey];
+
         var doc = firestoreAuthenticatedUserDoc();
         if (doc) {
             var input = {};
             input[semesterCustomEventsKey + '.' + eventId] = firebase.firestore.FieldValue.delete();
+            if (hadCustomColor) {
+                customColorFirestoreInput(input, colorKey);
+            }
             doc.update(input);
         } else {
             try {
                 localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
+                if (hadCustomColor) {
+                    customColorsLocalStorageSave();
+                }
             } catch (e) {
                 // localStorage is not available in IE/Edge when running from a local file.
             }
         }
 
         onSavedSessionChange();
+    }
+
+    // colorKey is a course number or a custom event id. Pass null as color to remove the custom color.
+    function customColorSave(colorKey, color) {
+        var semesterColorsKey = currentSemester + '_colors';
+
+        if (color) {
+            currentSavedSession[semesterColorsKey][colorKey] = color;
+            customColors[colorKey] = color;
+        } else {
+            delete currentSavedSession[semesterColorsKey][colorKey];
+            delete customColors[colorKey];
+        }
+
+        var doc = firestoreAuthenticatedUserDoc();
+        if (doc) {
+            var input = {};
+            customColorFirestoreInput(input, colorKey);
+            doc.update(input);
+        } else {
+            try {
+                customColorsLocalStorageSave();
+            } catch (e) {
+                // localStorage is not available in IE/Edge when running from a local file.
+            }
+        }
+
+        onSavedSessionChange();
+    }
+
+    // Sets the Firestore update for colorKey according to currentSavedSession.
+    // The colors are stored only if there are any, most users don't have custom colors.
+    function customColorFirestoreInput(input, colorKey) {
+        var semesterColorsKey = currentSemester + '_colors';
+        var colors = currentSavedSession[semesterColorsKey];
+
+        if (Object.keys(colors).length === 0) {
+            input[semesterColorsKey] = firebase.firestore.FieldValue.delete();
+        } else {
+            input[semesterColorsKey + '.' + colorKey] = colors[colorKey] || firebase.firestore.FieldValue.delete();
+        }
+    }
+
+    function customColorsLocalStorageSave() {
+        var semesterColorsKey = currentSemester + '_colors';
+        var colors = currentSavedSession[semesterColorsKey];
+
+        if (Object.keys(colors).length === 0) {
+            localStorage.removeItem(semesterColorsKey);
+        } else {
+            localStorage.setItem(semesterColorsKey, JSON.stringify(colors));
+        }
     }
 
     function watchSharedSchedule(onLoadedFunc) {
@@ -1837,6 +1996,14 @@
             session[semesterCustomEventsKey] = {};
         }
 
+        var semesterColorsKey = currentSemester + '_colors';
+        try {
+            session[semesterColorsKey] = JSON.parse(localStorage.getItem(semesterColorsKey) || '{}');
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+            session[semesterColorsKey] = {};
+        }
+
         var semesterLayersKey = currentSemester + '_layers';
         try {
             session[semesterLayersKey] = savedLayersSanitize(JSON.parse(localStorage.getItem(semesterLayersKey) || '{}'));
@@ -1891,6 +2058,9 @@
 
         var semesterCustomEventsKey = currentSemester + '_custom_events';
         session[semesterCustomEventsKey] = data[semesterCustomEventsKey] || {};
+
+        var semesterColorsKey = currentSemester + '_colors';
+        session[semesterColorsKey] = data[semesterColorsKey] || {};
 
         var semesterLayersKey = currentSemester + '_layers';
         session[semesterLayersKey] = savedLayersSanitize(data[semesterLayersKey]);
@@ -1971,6 +2141,15 @@
         // but that's OK, we'll just override the same data.
         if (JSON.stringify(currentCustomEvents) !== JSON.stringify(newCustomEvents)) {
             newKeys.push(semesterCustomEventsKey);
+        }
+
+        var semesterColorsKey = currentSemester + '_colors';
+        if (JSON.stringify(currentSession[semesterColorsKey]) !== JSON.stringify(sessionToRestore[semesterColorsKey])) {
+            if (Object.keys(sessionToRestore[semesterColorsKey]).length === 0) {
+                removeKeys.push(semesterColorsKey);
+            } else {
+                newKeys.push(semesterColorsKey);
+            }
         }
 
         var semesterLayersKey = currentSemester + '_layers';
@@ -2065,6 +2244,8 @@
             scrollTop = $(window).scrollTop(); // save scroll position
         }
 
+        customColors = customColorsFromSavedSession(session);
+
         var semesterCoursesKey = currentSemester + '_courses';
         courseButtonList.clear();
 
@@ -2127,6 +2308,7 @@
     }
 
     function resetSchedule() {
+        customColors = {};
         currentLayers = [];
         courseButtonList.clear();
         courseCalendar.removeAll();
