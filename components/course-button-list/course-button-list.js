@@ -707,6 +707,10 @@ var CourseButtonList = (function () {
             opacity: 0.8,
             delay: 100, // Helps distinguish between click and drag
             distance: 5, // Minimum distance to start drag
+            // Keep the dragged item inside the page, otherwise dragging it past the edge
+            // enlarges the page and makes it scroll (mostly noticeable on touch screens).
+            // Not 'document' or 'window', which don't account for the item size or scrolling.
+            containment: 'body',
             connectWith: '.course-button-list-badge-container, .course-button-list-delete-area',
 
             // Helper event - fires before start, get height while item is still visible

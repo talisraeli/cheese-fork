@@ -45,6 +45,7 @@ var CourseCalendar = (function () {
             selectHelper: true,
             selectOverlap: true,
             select: onSelect.bind(that),
+            dayClick: onDayClick.bind(that),
             eventDrop: onCustomEventMoveResize.bind(that),
             eventResize: onCustomEventMoveResize.bind(that),
             eventClick: onEventClick.bind(that),
@@ -674,6 +675,31 @@ var CourseCalendar = (function () {
                 }
             }]
         });
+    }
+
+    // With a mouse, a click on an empty slot already selects it. With touch, selecting
+    // requires a long press which is hard to discover, so a tap selects the slot too.
+    function onDayClick(date, jsEvent) {
+        if (this.readonly || !jsEvent || !/^touch/.test(jsEvent.type)) {
+            return;
+        }
+
+        // Prevent the click that follows the tap, which would land on the dialog
+        // that's about to be shown and close it.
+        jsEvent.preventDefault();
+
+        var calendar = this.element;
+
+        // Wait for a long press selection which ends with the same touch, if any.
+        setTimeout(function () {
+            if (calendar.fullCalendar('getView').isSelected) {
+                return;
+            }
+
+            // The option is undefined unless set, use FullCalendar's default in this case.
+            var slotDuration = moment.duration(calendar.fullCalendar('option', 'slotDuration') || '00:30:00');
+            calendar.fullCalendar('select', date, date.clone().add(slotDuration));
+        }, 0);
     }
 
     function onCustomEventMoveResize(event) {
