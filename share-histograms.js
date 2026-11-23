@@ -40,7 +40,7 @@ let cheeseforkShareHistograms = function () {
             "sharing.overlay.resource.coursePage": "עמוד הקורס",
             "sharing.overlay.resource.histogramPage": "עמוד ההיסטוגרמה",
             "sharing.overlay.resource.histogramImage": "תמונת ההיסטוגרמה",
-            "sharing.overlay.semester.winter": "חורף {year}-{nextYear}",
+            "sharing.overlay.semester.winter": "חורף {year}–{nextYear}",
             "sharing.overlay.semester.spring": "אביב {year}",
             "sharing.overlay.semester.summer": "קיץ {year}"
         },
@@ -79,7 +79,7 @@ let cheeseforkShareHistograms = function () {
             "sharing.overlay.resource.coursePage": "the course page",
             "sharing.overlay.resource.histogramPage": "the histogram page",
             "sharing.overlay.resource.histogramImage": "the histogram image",
-            "sharing.overlay.semester.winter": "Winter {year}-{nextYear}",
+            "sharing.overlay.semester.winter": "Winter {year}–{nextYear}",
             "sharing.overlay.semester.spring": "Spring {year}",
             "sharing.overlay.semester.summer": "Summer {year}"
         }

@@ -46,7 +46,7 @@ var CourseSelect = (function () {
                         });
 
                     return $('<div>').addClass('option source-content').attr({lang: /[א-ת]/.test(general['שם מקצוע']) ? 'he' : 'en', dir: 'auto'}).append(courseNumber)
-                        .append(document.createTextNode(' - ' + general['שם מקצוע'])).get(0);
+                        .append(document.createTextNode(' – ' + general['שם מקצוע'])).get(0);
                 }
             },
             onInitialize: function () {
@@ -134,7 +134,7 @@ var CourseSelect = (function () {
             var general = courseManager.getGeneralInfo(course);
             return {
                 value: course,
-                text: course + ' - ' + general['שם מקצוע'],
+                text: course + ' – ' + general['שם מקצוע'],
                 oldCourseNumber: courseManager.toOldCourseNumber(course)
             };
         });
