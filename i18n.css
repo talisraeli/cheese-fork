@@ -413,3 +413,16 @@ html[dir="ltr"] .course-button-list-layer-active {
 html[dir="ltr"] .course-button-list-layer-menu .dropdown-menu {
     text-align: left !important;
 }
+
+/* An empty dir="auto" field is laid out left to right, so align its placeholder and caret with the interface instead. */
+html[dir="rtl"] input[dir="auto"]:placeholder-shown,
+html[dir="rtl"] textarea[dir="auto"]:placeholder-shown {
+    direction: rtl;
+    text-align: right;
+}
+
+html[dir="ltr"] input[dir="auto"]:placeholder-shown,
+html[dir="ltr"] textarea[dir="auto"]:placeholder-shown {
+    direction: ltr;
+    text-align: left;
+}
