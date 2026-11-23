@@ -13,7 +13,8 @@
     margin-right: 1rem;
 }
 
-#top-navbar .navbar-nav .nav-link {
+#top-navbar .navbar-nav .nav-link,
+#top-navbar .language-selector {
     color: rgba(0,0,0,.9);
 }
 
@@ -182,6 +183,10 @@ footer dark-mode-toggle {
 }
 footer dark-mode-toggle::part(fieldset) {
     padding: 0;
+}
+/* The "remember" row is empty but still takes up height, which lifts the toggle above the text line. */
+footer dark-mode-toggle::part(aside) {
+    display: none;
 }
 
 /* Items of the "what's new" popup: the icon sits at the right edge, the title and text beside it. */

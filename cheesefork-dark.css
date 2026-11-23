@@ -87,7 +87,8 @@ body {
     filter: invert(1);
 }
 
-#top-navbar .navbar-nav .nav-link {
+#top-navbar .navbar-nav .nav-link,
+#top-navbar .language-selector {
     color: rgba(255,255,255,.9);
 }
 
