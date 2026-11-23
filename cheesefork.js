@@ -2754,11 +2754,34 @@
     }
 
     // https://stackoverflow.com/a/30810322
+    // The prompt is in English for any assistant to follow, whatever language the user writes in.
+    // It leaves the key out, so that pasting it doesn't share the key with the assistant's service.
+    function apiAssistantPrompt(apiBaseUrl, docsRawUrl, semester) {
+        return [
+            'Help me manage my CheeseFork² course schedule (Technion) through its HTTP API.',
+            '',
+            'Base URL: ' + apiBaseUrl,
+            'Authentication: send the header "Authorization: Bearer YOUR_API_KEY" with every request.',
+            'Full documentation: ' + docsRawUrl,
+            '',
+            'Key facts:',
+            '- Semesters are YYYYSS: YYYY01 is winter YYYY-YYYY+1, YYYY02 spring, YYYY03 summer. My current semester is ' + semester + '.',
+            '- GET /semesters/{semester}/schedule returns my whole schedule, GET /semesters/{semester}/courses my courses.',
+            '- POST /semesters/{semester}/courses with {"course": "02340114"} adds a course; DELETE /semesters/{semester}/courses/{course} removes it.',
+            '- GET /semesters/{semester}/catalog/{course} lists the lessons of a course. Choose one with PUT /semesters/{semester}/courses/{course}/lessons/{type} and {"number": 11}, where type is lecture, tutorial, lab, seminar, project or workshop.',
+            '- Custom weekly events: POST /semesters/{semester}/custom-events with {"title": "Gym", "day": "monday", "startTime": "08:30", "endTime": "10:00"}.',
+            '- Errors return {"error": {"code", "message"}}. The limit is 60 requests per minute; on 429, wait for the Retry-After seconds.',
+            '',
+            'Read the documentation before making changes. If you can make HTTP requests, call the API yourself; otherwise give me curl commands to run. If I have not given you my API key yet, ask me for it. Before removing courses or events, or replacing chosen lessons, tell me what will change and wait for my confirmation.'
+        ].join('\n');
+    }
+
     // Lets the signed-in user create, replace or revoke their personal API key (see API.md).
     // The key itself is shown only right after it's created, only its hash is stored.
     function showApiKeyDialog() {
         var apiBaseUrl = 'https://api.cf.talisrae.li/v1';
         var docsUrl = 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/API.md';
+        var docsRawUrl = 'https://raw.githubusercontent.com/talisraeli/cheese-fork/gh-pages/API.md';
         var functions = firebase.functions();
 
         var content = $('<div class="api-key-dialog">');
@@ -2768,6 +2791,27 @@
             .append($('<code dir="ltr">').text(apiBaseUrl)).appendTo(content);
         var status = $('<p class="api-key-status">').text(CheeseI18n.t('shell.api.loading')).appendTo(content);
         var newKey = $('<div class="api-key-new d-none">').appendTo(content);
+
+        // A prompt to paste into an AI assistant, so that it can manage the schedule with the API.
+        var prompt = apiAssistantPrompt(apiBaseUrl, docsRawUrl, currentSemester);
+        var promptSection = $('<div class="api-key-prompt">').appendTo(content);
+        $('<p class="mb-1">').text(CheeseI18n.t('shell.api.promptIntro')).appendTo(promptSection);
+        $('<textarea class="form-control text-monospace small" rows="6" readonly dir="ltr">')
+            .val(prompt)
+            .on('focus click', function () {
+                this.select();
+            })
+            .appendTo(promptSection);
+        var promptCopyButton = $('<button type="button" class="btn btn-outline-secondary btn-sm mt-1">')
+            .text(CheeseI18n.t('shell.api.promptCopy'))
+            .click(function () {
+                copyToClipboard(prompt, function () {
+                    promptCopyButton.text(CheeseI18n.t('shell.api.copied'));
+                }, function () {
+                    alert(CheeseI18n.t('shell.error.copy'));
+                });
+            })
+            .appendTo(promptSection);
 
         var hasKey = false;
         var busy = true;

@@ -244,6 +244,8 @@ CheeseI18n.addMessages('he', {
     "shell.api.loading": "טוען…",
     "shell.api.never": "אף פעם",
     "shell.api.none": "עדיין אין לכם מפתח API.",
+    "shell.api.promptCopy": "העתק פרומפט",
+    "shell.api.promptIntro": "רוצים שעוזר AI ינהל עבורכם את המערכת? העתיקו אליו את הפרומפט הזה, ותנו לו את מפתח ה-API כשהוא יבקש:",
     "shell.api.replace": "החלפת מפתח",
     "shell.api.replaceConfirm": "החלפת המפתח תפסיק מיד את פעולת המפתח הנוכחי. להמשיך?",
     "shell.api.revoke": "ביטול מפתח",
