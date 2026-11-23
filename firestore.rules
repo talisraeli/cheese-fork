@@ -22,6 +22,14 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // API keys (by hash) and each user's current key. Only the Cloud Functions access them.
+    match /apiKeys/{hash} {
+      allow read, write: if false;
+    }
+    match /apiKeyOwners/{uid} {
+      allow read, write: if false;
+    }
+
     // Reports on reviews. No longer used; existing reports can still be read in the console.
     match /courseFeedbackReports/{course} {
       allow read, write: if false;

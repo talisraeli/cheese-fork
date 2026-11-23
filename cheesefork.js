@@ -795,6 +795,16 @@
                 });
             });
 
+            $('#top-navbar-api').click(function (event) {
+                event.preventDefault();
+
+                gtag('event', 'navbar-api');
+
+                $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
+                showApiKeyDialog();
+            });
+
             $('#top-navbar-undo').click(function (event) {
                 event.preventDefault();
 
@@ -1063,10 +1073,12 @@
             $('#top-navbar-logout').removeClass('d-none')
                 .find('a').attr('data-original-title', CheeseI18n.t('shell.login.signedInAs', {name: firestoreDisplayNameDecode(user.displayName || user.email || CheeseI18n.t('shell.login.unknown'))}));
             $('#top-navbar-share').find('a').removeClass('disabled').tooltip('disable');
+            $('#top-navbar-api').removeClass('d-none');
         }
 
         function handleSignedOutUser() {
             $('#top-navbar-logout').addClass('d-none');
+            $('#top-navbar-api').addClass('d-none');
             $('#top-navbar-login').removeClass('d-none');
             $('#top-navbar-share').find('a').addClass('disabled').tooltip('enable');
             firebaseUI.start('#firebaseui-auth-container', uiConfig);
@@ -2742,6 +2754,145 @@
     }
 
     // https://stackoverflow.com/a/30810322
+    // Lets the signed-in user create, replace or revoke their personal API key (see API.md).
+    // The key itself is shown only right after it's created, only its hash is stored.
+    function showApiKeyDialog() {
+        var apiBaseUrl = 'https://api.cf.talisrae.li/v1';
+        var docsUrl = 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/API.md';
+        var functions = firebase.functions();
+
+        var content = $('<div class="api-key-dialog">');
+        var docsLink = $('<a target="_blank" rel="noopener">').attr('href', docsUrl).text(CheeseI18n.t('shell.api.docs'));
+        $('<p>').text(CheeseI18n.t('shell.api.intro') + ' ').append(docsLink).appendTo(content);
+        $('<p>').text(CheeseI18n.t('shell.api.baseUrl') + ' ')
+            .append($('<code dir="ltr">').text(apiBaseUrl)).appendTo(content);
+        var status = $('<p class="api-key-status">').text(CheeseI18n.t('shell.api.loading')).appendTo(content);
+        var newKey = $('<div class="api-key-new d-none">').appendTo(content);
+
+        var hasKey = false;
+        var busy = true;
+
+        function formatTime(millis) {
+            return millis ? new Date(millis).toLocaleString(CheeseI18n.getLocale()) : CheeseI18n.t('shell.api.never');
+        }
+
+        function showStatus(result) {
+            hasKey = !!result.exists;
+            if (hasKey) {
+                status.text(CheeseI18n.t('shell.api.status', {
+                    hint: result.hint + '…',
+                    created: formatTime(result.createdAt),
+                    used: formatTime(result.lastUsedAt)
+                }));
+            } else {
+                status.text(CheeseI18n.t('shell.api.none'));
+            }
+        }
+
+        function showNewKey(key) {
+            var input = $('<input type="text" class="form-control" readonly dir="ltr">').val(key);
+            input.on('focus click', function () {
+                this.select();
+            });
+            var copyButton = $('<button type="button" class="btn btn-outline-secondary">')
+                .text(CheeseI18n.t('shell.api.copy'))
+                .click(function () {
+                    copyToClipboard(key, function () {
+                        copyButton.text(CheeseI18n.t('shell.api.copied'));
+                    }, function () {
+                        alert(CheeseI18n.t('shell.error.copy'));
+                    });
+                });
+            newKey.empty()
+                .append($('<p class="text-warning">').text(CheeseI18n.t('shell.api.copyNow')))
+                .append($('<div class="input-group">').append(input)
+                    .append($('<div class="input-group-append">').append(copyButton)))
+                .removeClass('d-none');
+        }
+
+        function hideNewKey() {
+            newKey.addClass('d-none').empty();
+        }
+
+        function updateButtons(dialog) {
+            var createButton = dialog.getButton('api-key-create');
+            createButton.text(CheeseI18n.t(hasKey ? 'shell.api.replace' : 'shell.api.create'));
+            createButton.prop('disabled', busy);
+            dialog.getButton('api-key-revoke').toggleClass('d-none', !hasKey).prop('disabled', busy);
+        }
+
+        function call(dialog, name, onResult) {
+            busy = true;
+            updateButtons(dialog);
+            functions.httpsCallable(name)().then(function (response) {
+                busy = false;
+                onResult(response.data);
+                updateButtons(dialog);
+            }, function (error) {
+                busy = false;
+                updateButtons(dialog);
+                status.text(CheeseI18n.t('shell.api.error', {error: error.message}));
+            });
+        }
+
+        function confirmIf(condition, message, okLabel, onConfirmed) {
+            if (!condition) {
+                onConfirmed();
+                return;
+            }
+            BootstrapDialog.confirm({
+                title: CheeseI18n.t('shell.api.title'),
+                message: message,
+                type: BootstrapDialog.TYPE_WARNING,
+                btnOKLabel: okLabel,
+                btnCancelLabel: CheeseI18n.t('shell.dialog.cancel'),
+                callback: function (confirmed) {
+                    if (confirmed) {
+                        onConfirmed();
+                    }
+                }
+            });
+        }
+
+        var dialog = BootstrapDialog.show({
+            title: CheeseI18n.t('shell.api.title'),
+            message: content,
+            buttons: [{
+                id: 'api-key-create',
+                label: CheeseI18n.t('shell.api.create'),
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    confirmIf(hasKey, CheeseI18n.t('shell.api.replaceConfirm'), CheeseI18n.t('shell.api.replace'), function () {
+                        gtag('event', 'api-key-create');
+                        call(dialog, 'apiKeyCreate', function (result) {
+                            showStatus({exists: true, hint: result.hint, createdAt: result.createdAt, lastUsedAt: null});
+                            showNewKey(result.key);
+                        });
+                    });
+                }
+            }, {
+                id: 'api-key-revoke',
+                label: CheeseI18n.t('shell.api.revoke'),
+                cssClass: 'btn-outline-danger d-none',
+                action: function (dialog) {
+                    confirmIf(true, CheeseI18n.t('shell.api.revokeConfirm'), CheeseI18n.t('shell.api.revoke'), function () {
+                        gtag('event', 'api-key-revoke');
+                        call(dialog, 'apiKeyRevoke', function (result) {
+                            hideNewKey();
+                            showStatus(result);
+                        });
+                    });
+                }
+            }, {
+                label: CheeseI18n.t('shell.dialog.close'),
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }]
+        });
+        call(dialog, 'apiKeyStatus', showStatus);
+    }
+
     function copyToClipboard(text, onSuccess, onFailure) {
         if (!navigator.clipboard) {
             fallbackCopyTextToClipboard(text);

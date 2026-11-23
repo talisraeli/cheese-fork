@@ -124,3 +124,64 @@ test('English weekday headings adapt to narrow calendars without changing select
         dom.window.close();
     }
 });
+
+test('the API dialog creates a key, shows it once and revokes it', async () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+
+        const calls = [];
+        const results = {
+            apiKeyStatus: { exists: false },
+            apiKeyCreate: { key: 'cf2_' + 'a'.repeat(43), hint: 'cf2_aaaaaa', createdAt: Date.UTC(2026, 10, 23) },
+            apiKeyRevoke: { exists: false }
+        };
+        window.firebase = {
+            functions: () => ({
+                httpsCallable: name => () => {
+                    calls.push(name);
+                    return window.Promise.resolve({ data: results[name] });
+                }
+            })
+        };
+        // jsdom doesn't attach the modal to the document, so use the dialog object.
+        let dialog = null;
+        const show = window.BootstrapDialog.show;
+        window.BootstrapDialog.show = options => (dialog = show(options));
+        const confirmations = [];
+        window.BootstrapDialog.confirm = options => {
+            confirmations.push(options.btnOKLabel);
+            options.callback(true);
+        };
+        const settle = () => new Promise(resolve => setTimeout(resolve, 0));
+        const status = () => dialog.getModalBody().find('.api-key-status').text();
+
+        window.$('#top-navbar-api a').trigger('click');
+        await settle();
+        assert.deepEqual(calls, ['apiKeyStatus']);
+        assert.equal(status(), "You don't have an API key yet.");
+        assert.equal(dialog.getButton('api-key-create').text(), 'Create API key');
+        assert.ok(dialog.getButton('api-key-revoke').hasClass('d-none'));
+
+        dialog.getButton('api-key-create').trigger('click');
+        await settle();
+        assert.deepEqual(calls, ['apiKeyStatus', 'apiKeyCreate']);
+        assert.deepEqual(confirmations, []);
+        assert.equal(dialog.getModalBody().find('.api-key-new input').val(), results.apiKeyCreate.key);
+        assert.match(status(), /^Your key starts with cf2_aaaaaa…\. Created: .+\. Last used: never\.$/);
+        assert.equal(dialog.getButton('api-key-create').text(), 'Replace key');
+        assert.ok(!dialog.getButton('api-key-revoke').hasClass('d-none'));
+
+        dialog.getButton('api-key-revoke').trigger('click');
+        await settle();
+        assert.deepEqual(confirmations, ['Revoke key']);
+        assert.deepEqual(calls, ['apiKeyStatus', 'apiKeyCreate', 'apiKeyRevoke']);
+        assert.equal(dialog.getModalBody().find('.api-key-new input').length, 0);
+        assert.equal(status(), "You don't have an API key yet.");
+        dialog.close();
+    } finally {
+        dom.window.close();
+    }
+});
