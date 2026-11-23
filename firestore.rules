@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Saved schedules. Readable by anyone so that shared schedule links (?uid=) work.
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+
+      match /semesters/{semester} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Course reviews.
+    match /courseFeedback/{course} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Course group links (WhatsApp, Telegram, Discord).
+    match /courseExtraDetails/{course} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Reports on reviews. Write-only from the client; read them in the console.
+    match /courseFeedbackReports/{course} {
+      allow read: if false;
+      allow create, update: if request.auth != null;
+    }
+  }
+}
