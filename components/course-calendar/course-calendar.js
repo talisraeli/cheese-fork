@@ -502,7 +502,7 @@ var CourseCalendar = (function () {
             title: title,
             start: eventStartEnd.start,
             end: eventStartEnd.end,
-            backgroundColor: courseCalendar.colorGenerator(course),
+            backgroundColor: courseCalendar.colorGenerator(course, null, layerId),
             textColor: 'white',
             borderColor: 'white',
             className: courseClassName +
@@ -753,8 +753,13 @@ var CourseCalendar = (function () {
         if (colorButton.length > 0 && colorButton.is(':hover')) {
             gtag('event', 'calendar-color-click');
 
-            // Courses are identified by the course number, custom events by the event id.
-            that.onColorPickerClick(event.courseNumber !== null ? event.courseNumber : event.id);
+            // Courses are identified by the course number and the layer, since the same course
+            // can be in several layers, each with its own color. Custom events by the event id.
+            if (event.courseNumber !== null) {
+                that.onColorPickerClick(event.courseNumber, null, event.layerId);
+            } else {
+                that.onColorPickerClick(null, event.id);
+            }
             return;
         }
 
@@ -1195,7 +1200,7 @@ var CourseCalendar = (function () {
 
         calendar.fullCalendar('clientEvents', function (event) {
             var color = event.courseNumber !== null ?
-                that.colorGenerator(event.courseNumber) :
+                that.colorGenerator(event.courseNumber, null, event.layerId) :
                 that.colorGenerator(event.title, event.id);
             if (event.backgroundColor !== color) {
                 event.backgroundColor = color;
