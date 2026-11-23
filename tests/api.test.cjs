@@ -7,6 +7,7 @@ const { createApi } = require('../functions/lib/api');
 const { Catalog, catalogUrl, parseCatalog, createCatalogLoader } = require('../functions/lib/catalog');
 const { generateApiKey, hashApiKey, apiKeyHint, apiKeyFromHeaders } = require('../functions/lib/keys');
 const { DELETE, documentPath } = require('../functions/lib/schedule');
+const { createRateLimiter, rateLimitHeaders } = require('../functions/lib/rate-limit');
 
 const SEMESTER = '202601';
 const COURSE = '01040001';
@@ -78,12 +79,14 @@ function createMemoryStore() {
     };
 }
 
-function setup() {
+function setup(options) {
     const store = createMemoryStore();
     const key = generateApiKey();
     store.keys[hashApiKey(key)] = 'user1';
     let now = 1700000000;
     const api = createApi({
+        userLimit: options && options.userLimit,
+        now: options && options.now,
         store: store,
         loadCatalog: async semester => {
             if (semester !== SEMESTER) {
@@ -301,4 +304,55 @@ test('catalog files are located and parsed like in index.html', async () => {
 test('early semesters are saved in the user document', () => {
     assert.equal(documentPath('u', '201701'), 'users/u');
     assert.equal(documentPath('u', '202601'), 'users/u/semesters/202601');
+});
+
+test('the rate limiter counts requests per id in fixed windows', () => {
+    let time = 0;
+    const limiter = createRateLimiter({ limit: 2, windowMs: 60000, now: () => time });
+
+    assert.deepEqual(limiter.take('a'), { allowed: true, limit: 2, remaining: 1, resetSeconds: 60 });
+    assert.equal(limiter.take('a').remaining, 0);
+    time = 15000;
+    const denied = limiter.take('a');
+    assert.deepEqual(denied, { allowed: false, limit: 2, remaining: 0, resetSeconds: 45 });
+    assert.deepEqual(rateLimitHeaders(denied), {
+        'RateLimit-Limit': '2', 'RateLimit-Remaining': '0', 'RateLimit-Reset': '45', 'Retry-After': '45'
+    });
+    assert.equal(limiter.take('b').allowed, true);
+
+    time = 60000;
+    assert.equal(limiter.take('a').allowed, true);
+});
+
+test('each user is limited to a number of requests per minute', async () => {
+    let time = 0;
+    const { store, api, call } = setup({ userLimit: { limit: 3 }, now: () => time });
+
+    const responses = [];
+    responses.push(await call('GET', base + '/courses'));
+    responses.push(await call('POST', base + '/courses', { course: COURSE }));
+    responses.push(await call('GET', base + '/courses/' + COURSE));
+    assert.deepEqual(responses.map(response => [response.status, response.headers['RateLimit-Remaining']]),
+        [[200, '2'], [201, '1'], [200, '0']]);
+    assert.equal(responses[0].headers['RateLimit-Limit'], '3');
+    assert.equal(responses[0].headers['Retry-After'], undefined);
+
+    time = 20000;
+    let response = await call('DELETE', base + '/courses/' + COURSE);
+    assert.equal(response.status, 429);
+    assert.equal(response.body.error.code, 'rate_limited');
+    assert.equal(response.headers['Retry-After'], '40');
+    // The rejected request didn't change the schedule.
+    assert.deepEqual(store.docs[documentPath('user1', SEMESTER)][SEMESTER + '_courses'], [COURSE]);
+
+    // Other users and requests without a valid key aren't affected.
+    const otherKey = generateApiKey();
+    store.keys[hashApiKey(otherKey)] = 'user2';
+    response = await api({ method: 'GET', path: base + '/courses', query: {}, headers: { authorization: 'Bearer ' + otherKey } });
+    assert.equal(response.status, 200);
+    response = await api({ method: 'GET', path: base + '/courses', query: {}, headers: {} });
+    assert.equal(response.status, 401);
+
+    time = 60000;
+    assert.equal((await call('DELETE', base + '/courses/' + COURSE)).status, 204);
 });

@@ -11,6 +11,7 @@ const { createApi } = require('./lib/api');
 const { createCatalogLoader } = require('./lib/catalog');
 const { createFirestoreStore } = require('./lib/firestore-store');
 const { generateApiKey, hashApiKey, apiKeyHint } = require('./lib/keys');
+const { createRateLimiter } = require('./lib/rate-limit');
 
 initializeApp();
 setGlobalOptions({ maxInstances: 10 });
@@ -30,6 +31,7 @@ exports.api = onRequest({ cors: false }, async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Headers', 'Authorization, X-API-Key, Content-Type');
     res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.set('Access-Control-Expose-Headers', 'RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, Retry-After');
     res.set('Cache-Control', 'no-store');
     if (req.method === 'OPTIONS') {
         res.status(204).end();
@@ -44,6 +46,7 @@ exports.api = onRequest({ cors: false }, async (req, res) => {
         body: req.body
     });
 
+    res.set(response.headers || {});
     if (response.body === undefined) {
         res.status(response.status).end();
     } else {
@@ -53,11 +56,21 @@ exports.api = onRequest({ cors: false }, async (req, res) => {
 
 // API key management for the signed-in user, called from the site. Each user has at most one key.
 
+// Creating and revoking keys is rare, so a few attempts a minute are plenty.
+const keyChangeLimiter = createRateLimiter({ limit: 5, windowMs: 60 * 1000 });
+
 function requireUid(request) {
     if (!request.auth) {
         throw new HttpsError('unauthenticated', 'Sign in to manage your API key.');
     }
     return request.auth.uid;
+}
+
+function limitKeyChanges(uid) {
+    const usage = keyChangeLimiter.take(uid);
+    if (!usage.allowed) {
+        throw new HttpsError('resource-exhausted', 'Too many API key changes, try again in ' + usage.resetSeconds + ' seconds.');
+    }
 }
 
 function ownerRef(uid) {
@@ -86,6 +99,7 @@ exports.apiKeyStatus = onCall(async request => {
 // Creates the user's key, replacing (and revoking) the previous one. The key is returned only here.
 exports.apiKeyCreate = onCall(async request => {
     const uid = requireUid(request);
+    limitKeyChanges(uid);
     const key = generateApiKey();
     const hash = hashApiKey(key);
     const createdAt = Timestamp.now();
@@ -104,6 +118,7 @@ exports.apiKeyCreate = onCall(async request => {
 
 exports.apiKeyRevoke = onCall(async request => {
     const uid = requireUid(request);
+    limitKeyChanges(uid);
     await db.runTransaction(async transaction => {
         const owner = await transaction.get(ownerRef(uid));
         if (owner.exists) {
