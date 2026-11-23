@@ -52,6 +52,16 @@ language and direction. Old sharing links continue to default to Hebrew.
 Signed-in users can create a personal API key and use it to view and change their
 schedule from scripts and other apps. See [API.md](API.md) for the endpoints.
 
+The **API** dialog in the navigation bar creates, replaces and revokes the key, and
+offers a ready-made prompt to paste into an AI assistant, such as Claude or ChatGPT, so
+that it can manage the schedule through the API. The prompt, built by
+`apiAssistantPrompt` in `cheesefork.js`, gives the base URL, authentication, the main
+endpoints, the rate limit, the current semester and a link to the raw `API.md`, and asks
+the assistant to confirm before removing or replacing anything. It's in English so any
+assistant can follow it. It uses a `YOUR_API_KEY` placeholder rather than the key, so
+pasting it doesn't share the key with the assistant's service. Keep it in sync with
+`API.md` when the API changes.
+
 The API runs as Firebase Cloud Functions in `functions/`, which require the Firebase
 project to be on the Blaze plan. Its logic in `functions/lib/` has no Firebase
 dependencies and is covered by `tests/api.test.cjs`. Deploy it with:

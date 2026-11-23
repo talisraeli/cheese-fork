@@ -197,3 +197,35 @@ test('the API dialog creates a key, shows it once and revokes it', async () => {
         dom.window.close();
     }
 });
+
+test('the welcome popup lists the new features again for visitors who saw an older version', () => {
+    for (const [seenVersion, shown] of [[null, true], ['1', true], ['2', false]]) {
+        const dom = createPage();
+        try {
+            const window = loadUI(dom.window);
+            window.localStorage.setItem('dontShowIntro', String(Date.now()));
+            if (seenVersion) {
+                window.localStorage.setItem('whatsNewSeenVersion', seenVersion);
+            }
+            const dialogs = [];
+            const show = window.BootstrapDialog.show;
+            window.BootstrapDialog.show = options => {
+                const dialog = show(options);
+                dialogs.push(dialog);
+                return dialog;
+            };
+            load(window, 'cheesefork.js');
+
+            const welcome = dialogs.find(dialog => dialog.getTitle() === 'Welcome to CheeseFork²');
+            assert.equal(!!welcome, shown, 'seen version ' + seenVersion);
+            if (welcome) {
+                const titles = Array.from(welcome.getModalBody().find('.whats-new-item h6'), element => element.textContent);
+                assert.deepEqual(titles, ['Layers', 'Your choice of colors', 'Dragging on touch screens', 'English interface', 'API access']);
+                assert.ok(welcome.getModalBody().find('.fa-key').length === 1);
+                welcome.close();
+            }
+        } finally {
+            dom.window.close();
+        }
+    }
+});

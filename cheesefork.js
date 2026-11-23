@@ -32,6 +32,11 @@
     // The layers of the shown schedule, { id, name, hidden } each. Empty if layers aren't used.
     var currentLayers = [];
 
+    // The version of the popup that introduces the features CheeseFork² adds over the original
+    // CheeseFork. Bump it when new features are added to the popup, to show it again. Declared
+    // here because cheeseforkInit() below can show the popup before the rest of the script runs.
+    var whatsNewVersion = 2;
+
     // UI components.
     var loginDialog = null;
     var courseSelect = null;
@@ -410,10 +415,6 @@
         });
     }
 
-    // Introduces the features that CheeseFork² adds over the original CheeseFork.
-    // Bump this version when new features are added to the popup, to show it again.
-    var whatsNewVersion = 1;
-
     // Calls onDone right away if the popup isn't shown, otherwise after it's closed.
     function showWhatsNewPopup(onDone) {
         try {
@@ -438,6 +439,14 @@
             icon: 'fas fa-hand-pointer',
             title: CheeseI18n.t('shell.whatsNew.touchDrag.title'),
             text: CheeseI18n.t('shell.whatsNew.touchDrag.text')
+        }, {
+            icon: 'fas fa-globe',
+            title: CheeseI18n.t('shell.whatsNew.language.title'),
+            text: CheeseI18n.t('shell.whatsNew.language.text')
+        }, {
+            icon: 'fas fa-key',
+            title: CheeseI18n.t('shell.whatsNew.api.title'),
+            text: CheeseI18n.t('shell.whatsNew.api.text')
         }];
 
         var message = $('<div class="whats-new"></div>');
