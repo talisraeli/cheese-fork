@@ -394,7 +394,82 @@
     }
 
     function showExtraContentOnLoad() {
-        return showIntro() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
+        // The other popups wait until the "what's new" popup is closed, so they don't show on top of it.
+        showWhatsNewPopup(function () {
+            return showIntro() || showCourseFeedbackPopup() || showThursdayGraphPopup() || showTechnionScansPopup();
+        });
+    }
+
+    // Introduces the features that CheeseFork² adds over the original CheeseFork.
+    // Bump this version when new features are added to the popup, to show it again.
+    var whatsNewVersion = 1;
+
+    // Calls onDone right away if the popup isn't shown, otherwise after it's closed.
+    function showWhatsNewPopup(onDone) {
+        try {
+            var seenVersion = parseInt(localStorage.getItem('whatsNewSeenVersion'), 10);
+            if (seenVersion >= whatsNewVersion) {
+                onDone();
+                return;
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+
+        var features = [{
+            icon: 'fas fa-layer-group',
+            title: 'שכבות',
+            text: 'ארגנו את הקורסים והאירועים בשכבות נפרדות, למשל כדי להשוות בין כמה אפשרויות למערכת. ' +
+                'כדי ליצור שכבה, גררו קורס מהרשימה אל סמל השכבות שמופיע בזמן הגרירה. ' +
+                'אפשר להסתיר ולהציג כל שכבה, לשנות את שמה או למחוק אותה.'
+        }, {
+            icon: 'fas fa-palette',
+            title: 'צבעים לבחירתכם',
+            text: 'העבירו את העכבר מעל קורס או אירוע במערכת ולחצו על סמל הפלטה כדי לבחור לו צבע. ' +
+                'לכל קורס יכול להיות צבע אחר בכל שכבה.'
+        }, {
+            icon: 'fas fa-hand-pointer',
+            title: 'גרירה במסכי מגע',
+            text: 'אפשר לסדר מחדש את רשימת הקורסים בגרירה גם בטלפון ובטאבלט.'
+        }];
+
+        var message = $('<div class="whats-new"></div>');
+        message.append($('<p></p>').text('CheeseFork² מבוסס על CheeseFork המקורי של מיכאל מלצב, ומוסיף לו כמה דברים חדשים:'));
+
+        var list = $('<ul class="list-unstyled mb-0"></ul>');
+        features.forEach(function (feature) {
+            var item = $('<li class="whats-new-item mb-3"></li>');
+            item.append($('<div class="whats-new-icon text-warning"></div>')
+                .append($('<i></i>').addClass(feature.icon)));
+            item.append($('<h6 class="mb-1 font-weight-bold"></h6>').text(feature.title));
+            item.append($('<div></div>').text(feature.text));
+            list.append(item);
+        });
+        message.append(list);
+
+        gtag('event', 'whats-new-show');
+
+        BootstrapDialog.show({
+            title: 'ברוכים הבאים ל-CheeseFork²',
+            message: message,
+            buttons: [{
+                label: 'בואו נתחיל',
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    dialog.close();
+                }
+            }],
+            onhide: function () {
+                try {
+                    localStorage.setItem('whatsNewSeenVersion', whatsNewVersion.toString());
+                } catch (e) {
+                    // localStorage is not available in IE/Edge when running from a local file.
+                }
+            },
+            onhidden: function () {
+                onDone();
+            }
+        });
     }
 
     function showIntro() {

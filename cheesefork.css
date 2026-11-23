@@ -183,3 +183,19 @@ footer dark-mode-toggle {
 footer dark-mode-toggle::part(fieldset) {
     padding: 0;
 }
+
+/* Items of the "what's new" popup: the icon sits at the right edge, the title and text beside it. */
+.whats-new-item {
+    position: relative;
+    padding-right: 3.25rem;
+    min-height: 2.5rem;
+}
+.whats-new-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2.5rem;
+    text-align: center;
+    font-size: 1.75rem;
+    line-height: 1;
+}
