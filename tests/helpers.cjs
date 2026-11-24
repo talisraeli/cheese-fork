@@ -49,6 +49,8 @@ function loadUI(window) {
         'modules/fullcalendar/locale/he.js',
         'modules/selectize/js/standalone/selectize.min.js',
         'modules/color-hash/color-hash.js',
+        'modules/ics.js/ics.deps.min.js',
+        'ics-text.js',
         'modules/jsdiff/diff.min.js',
         'modules/intro.js/intro.min.js',
         'modules/reparse.js',
@@ -101,4 +103,112 @@ function englishContent(element) {
     return copy.textContent;
 }
 
-module.exports = { root, read, load, createPage, loadUI, englishContent };
+// A signed-in user with the Firebase APIs that cheesefork.js uses. Load it before cheesefork.js.
+// data is the user's semester document. Storage holds the paths in options.files, and the
+// returned object records the uploads and metadata checks.
+function installFakeFirebase(window, options = {}) {
+    const user = { uid: options.uid || 'user1', displayName: 'Test User', email: null };
+    const files = new Set(options.files || []);
+    const data = JSON.parse(JSON.stringify(options.data || {}));
+    const uploads = [];
+    const metadataChecks = [];
+    const DELETE = { fieldValue: 'delete' };
+    const resolved = value => window.Promise.resolve(value);
+
+    // Applies an update map like Firestore: dotted paths, and DELETE removing fields.
+    function update(input) {
+        Object.keys(input).forEach(key => {
+            const path = key.split('.');
+            let target = data;
+            path.slice(0, -1).forEach(segment => {
+                target[segment] = target[segment] || {};
+                target = target[segment];
+            });
+            const last = path[path.length - 1];
+            const value = input[key];
+            if (value === DELETE) {
+                delete target[last];
+            } else if (value && value.arrayRemove) {
+                target[last] = (target[last] || []).filter(item => !value.arrayRemove.includes(item));
+            } else {
+                target[last] = JSON.parse(JSON.stringify(value));
+            }
+        });
+    }
+
+    const doc = {
+        collection: () => ({ doc: () => doc }),
+        onSnapshot(callback) {
+            setTimeout(() => callback({
+                metadata: { hasPendingWrites: false },
+                exists: true,
+                data: () => JSON.parse(JSON.stringify(data))
+            }), 0);
+            return () => {};
+        },
+        set(value) {
+            update(value);
+            return resolved();
+        },
+        update(input) {
+            update(input);
+            return resolved();
+        }
+    };
+
+    const auth = {
+        languageCode: null,
+        currentUser: null,
+        onAuthStateChanged(callback) {
+            setTimeout(() => {
+                auth.currentUser = user;
+                callback(user);
+            }, 0);
+        },
+        signOut() {}
+    };
+    const authFunction = () => auth;
+    authFunction.GoogleAuthProvider = { PROVIDER_ID: 'google.com' };
+    authFunction.EmailAuthProvider = { PROVIDER_ID: 'password' };
+    authFunction.FacebookAuthProvider = { PROVIDER_ID: 'facebook.com' };
+
+    const firestore = () => ({ collection: () => ({ doc: () => doc }) });
+    firestore.FieldValue = {
+        delete: () => DELETE,
+        arrayRemove: (...items) => ({ arrayRemove: items })
+    };
+
+    const fileRef = path => ({
+        fullPath: path,
+        putString(text, format, metadata) {
+            uploads.push({ path, text, metadata });
+            files.add(path);
+            return resolved();
+        },
+        getMetadata() {
+            metadataChecks.push(path);
+            return files.has(path) ? resolved({ fullPath: path }) :
+                window.Promise.reject({ code: 'storage/object-not-found' });
+        }
+    });
+
+    window.firebase = {
+        initializeApp() {},
+        app: () => ({ options: { storageBucket: 'test-bucket' } }),
+        auth: authFunction,
+        firestore: firestore,
+        storage: () => ({ ref: () => ({ child: fileRef }) })
+    };
+    window.firebaseui = {
+        auth: {
+            AuthUI: function () {
+                this.start = () => {};
+            },
+            CredentialHelper: { NONE: 'none' }
+        }
+    };
+
+    return { user, data, uploads, metadataChecks };
+}
+
+module.exports = { root, read, load, createPage, loadUI, englishContent, installFakeFirebase };

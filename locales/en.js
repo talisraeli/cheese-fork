@@ -291,7 +291,7 @@ CheeseI18n.addMessages('en', {
     "shell.export.download": "Click here to download",
     "shell.export.empty": "Your schedule is empty",
     "shell.export.emptyTitle": "Oops",
-    "shell.export.explanation": "Your iCalendar file is stored on the CheeseFork² server and updated to match your schedule whenever you open this dialog. The link stays the same for your account and semester, so you can subscribe to it in a calendar app that supports calendar URLs. To publish later changes, open this dialog again. Most calendar services refresh subscriptions only every few hours.",
+    "shell.export.explanation": "Your iCalendar file is stored on the CheeseFork² server. The link stays the same for your account and semester, so you can subscribe to it in a calendar app that supports calendar URLs. After this first export, the file is updated automatically a few seconds after you change your schedule while signed in, including the next time you open the site after changes made with the API. Only the visible layers are included. Most calendar services refresh subscriptions only every few hours.",
     "shell.export.holidaysError": "Could not load holidays for the current semester.",
     "shell.export.link": "iCalendar file link: ",
     "shell.export.title": "Export to iCalendar",
