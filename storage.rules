@@ -1,12 +1,15 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Exported iCalendar files: {uid}/{semester}.ics
-    // Public read so calendar apps can subscribe to the link.
+    // Exported iCalendar files: {uid}/{semester}.ics, such as {uid}/winter-2026-2027.ics.
+    // Public read so calendar apps can subscribe to the link. Only calendars can be written,
+    // so that the public bucket can't be used to host other files, such as web pages.
     match /{uid}/{file} {
       allow read: if true;
       allow write: if request.auth != null
         && request.auth.uid == uid
+        && file.matches('[a-z0-9-]+[.]ics')
+        && request.resource.contentType.matches('text/calendar(;.*)?')
         && request.resource.size < 1 * 1024 * 1024;
     }
   }
