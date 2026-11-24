@@ -961,7 +961,9 @@
                     // Ask browsers not to cache the request.
                     // https://stackoverflow.com/q/42788488
                     // https://stackoverflow.com/q/41938969
-                    cacheControl: 'public, max-age=0'
+                    cacheControl: 'public, max-age=0',
+                    // Required by the Storage rules, and served to calendar apps.
+                    contentType: 'text/calendar; charset=utf-8'
                 }).then(function (snapshot) {
                     var urlElement = $('<a target="_blank" rel="noopener">').text(CheeseI18n.t('shell.export.download')).prop('href', calendarUrl);
                     exportCalendarDialog.getModalBody().find('.calendar-link-placeholder').html(urlElement);
