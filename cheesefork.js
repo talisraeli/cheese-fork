@@ -139,6 +139,7 @@
         courseButtonList = new CourseButtonList($('#course-button-list'), {
             courseManager: courseManager,
             colorGenerator: courseColorGenerator,
+            textColorGenerator: courseTextColorGenerator,
             readonly: viewingSharedSchedule,
             onHoverIn: function (course, layerId) {
                 courseExamInfo.setHovered(course);
@@ -194,6 +195,10 @@
                 var layerIds = getLayerIdsOfCourse(course).filter(isLayerVisible);
                 return courseColorGenerator(course, null, layerIds[0] || '');
             },
+            textColorGenerator: function (course) {
+                var layerIds = getLayerIdsOfCourse(course).filter(isLayerVisible);
+                return courseTextColorGenerator(course, null, layerIds[0] || '');
+            },
             onHoverIn: function (course) {
                 // The exam info is pinned to the bottom of the sidebar, which stretches with the
                 // calendar. Keep it in place so that a preview doesn't move it from under the pointer.
@@ -224,6 +229,7 @@
         courseCalendar = new CourseCalendar($('#course-calendar'), {
             courseManager: courseManager,
             colorGenerator: courseColorGenerator,
+            textColorGenerator: courseTextColorGenerator,
             readonly: viewingSharedSchedule,
             getActiveLayerId: function () {
                 return courseButtonList.getActiveLayerId();
@@ -265,7 +271,7 @@
                 customEventUnsave(eventId, layerId);
             },
             onColorPickerClick: function (course, customEventId, layerId) {
-                showColorPicker(customEventId || courseColorKey(course, layerId));
+                showColorPicker(customEventId || courseColorKey(course, layerId), courseColorGenerator(course, customEventId, layerId));
             }
         });
 
@@ -340,6 +346,35 @@
         return colorHash.hex(str);
     }
 
+    // The text color for the background color of courseColorGenerator. The automatic colors and
+    // the palette are meant for white text, but a custom color can be too light for it, so dark
+    // text is used when white text isn't readable on it (contrast below 3:1) and dark text is.
+    function courseTextColorGenerator(course, customEventId, layerId) {
+        var customColor = customColors[customEventId || courseColorKey(course, layerId)];
+        return customColor ? readableTextColor(customColor) : 'white';
+    }
+
+    var DARK_TEXT_COLOR = '#212529';
+
+    function readableTextColor(backgroundColor) {
+        // https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+        var luminance = function (hex) {
+            var channels = [1, 3, 5].map(function (i) {
+                var value = parseInt(hex.substr(i, 2), 16) / 255;
+                return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+        };
+        var contrast = function (a, b) {
+            return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        };
+
+        var background = luminance(backgroundColor);
+        var whiteContrast = contrast(background, 1);
+        var darkContrast = contrast(background, luminance(DARK_TEXT_COLOR));
+        return whiteContrast < 3 && darkContrast > whiteContrast ? DARK_TEXT_COLOR : 'white';
+    }
+
     function customColorsFromSavedSession(session) {
         var colors = {};
 
@@ -360,8 +395,9 @@
         courseExamInfo.renderCourses(getVisibleCourseNumbers());
     }
 
-    // colorKey is a course color key (see courseColorKey) or a custom event id.
-    function showColorPicker(colorKey) {
+    // colorKey is a course color key (see courseColorKey) or a custom event id, and currentColor
+    // is the color it has now.
+    function showColorPicker(colorKey, currentColor) {
         // Same saturation as the middle value of the automatic colors, with white text in mind.
         var palette = [];
         [0.5, 0.35].forEach(function (lightness) {
@@ -385,9 +421,25 @@
             content.append(colorButton);
         });
 
+        // Any color. Browsers without a color input show a text field, so the value is checked.
+        var customInput = $('<input type="color" class="color-picker-custom-input" id="color-picker-custom-input">')
+            .val(currentColor || '#000000')
+            .on('change', function () {
+                var color = String($(this).val()).trim().toLowerCase();
+                if (!/^#[0-9a-f]{6}$/.test(color)) {
+                    return;
+                }
+                dialog.close();
+                customColorSave(colorKey, color);
+                updateColors();
+            });
+        var customRow = $('<div class="color-picker-custom"></div>')
+            .append($('<label for="color-picker-custom-input"></label>').text(CheeseI18n.t('shell.color.custom')))
+            .append(customInput);
+
         var dialog = BootstrapDialog.show({
             title: CheeseI18n.t('shell.color.title'),
-            message: content,
+            message: $('<div></div>').append(content, customRow),
             buttons: [{
                 label: CheeseI18n.t('shell.color.default'),
                 action: function (dialog) {

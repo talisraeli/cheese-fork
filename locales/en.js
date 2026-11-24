@@ -257,6 +257,7 @@ CheeseI18n.addMessages('en', {
     "shell.changes.general": "General information",
     "shell.changes.removed": "This course is no longer available",
     "shell.changes.title": "Schedule changes",
+    "shell.color.custom": "Custom color:",
     "shell.color.default": "Default color",
     "shell.color.title": "Choose a color",
     "shell.courses.placeholder": "Click to choose a course…",
