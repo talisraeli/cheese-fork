@@ -2334,18 +2334,20 @@
         BootstrapDialog.show({
             title: CheeseI18n.t('shell.importLocal.title'),
             message: message,
+            // The labels are long, so the buttons are stacked, see cheesefork.css.
+            cssClass: 'import-local-dialog',
             buttons: [{
-                id: 'import-local-use',
-                label: CheeseI18n.t('shell.importLocal.useLocal'),
-                action: function (dialog) {
-                    choose(dialog, 'use');
-                }
-            }, {
                 id: 'import-local-merge',
                 label: CheeseI18n.t('shell.importLocal.merge'),
                 cssClass: 'btn-primary',
                 action: function (dialog) {
                     choose(dialog, 'merge');
+                }
+            }, {
+                id: 'import-local-use',
+                label: CheeseI18n.t('shell.importLocal.useLocal'),
+                action: function (dialog) {
+                    choose(dialog, 'use');
                 }
             }, {
                 id: 'import-local-keep',
