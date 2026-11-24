@@ -20,6 +20,7 @@
     <script src="i18n.js"></script>
     <script src="locales/he.js"></script>
     <script src="locales/en.js"></script>
+    <script src="locales/ar.js"></script>
     <meta name="description" data-i18n-content="shell.meta.description" content="כלי בניית מערכת שעות עבור סטודנטים בטכניון | A class schedule maker for students at the Technion">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title data-i18n="shell.meta.title">CheeseFork² – Your Cheesy Scheduler</title>
@@ -160,6 +161,7 @@
                 <select id="site-language" class="language-switch" data-language-switch data-i18n-aria-label="shell.language" aria-label="שפה">
                     <option value="en" lang="en" dir="ltr">English</option>
                     <option value="he" lang="he" dir="rtl">עברית</option>
+                    <option value="ar" lang="ar" dir="rtl">العربية</option>
                 </select>
             </div>
         </div>
@@ -369,6 +371,8 @@
 <script src="modules/fullcalendar/lib/moment.min.js"></script>
 <script src="modules/fullcalendar/fullcalendar.min.js"></script>
 <script src='modules/fullcalendar/locale/he.js'></script>
+<script src='modules/fullcalendar/locale/ar.js'></script>
+<script src="moment-locale.js"></script>
 <script src="modules/selectize/js/standalone/selectize.min.js"></script>
 <script src="modules/color-hash/color-hash.js"></script>
 <script src="modules/ics.js/ics.deps.min.js"></script>
@@ -384,7 +388,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-functions-compat.js"></script>
 <script>
-    document.write('<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth' + (CheeseI18n.isRTL() ? '__iw' : '') + '.js"><\/script>');
+    document.write('<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth' + ({he: '__iw', ar: '__ar'}[CheeseI18n.getLocale()] || '') + '.js"><\/script>');
 </script>
 <script>
     var availableSemesters = {

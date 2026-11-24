@@ -248,6 +248,14 @@ var CourseCalendar = (function () {
         }
     }
 
+    // The week of a date in the calendar: 1 for the displayed week, 2017-01-01 to 2017-01-07, and
+    // more for the lessons kept in later weeks while they aren't shown. Unlike moment's week(), it
+    // doesn't depend on the locale, whose weeks can start on another day, such as Saturday in Arabic.
+    function calendarWeek(date) {
+        var days = (Date.UTC(date.year(), date.month(), date.date()) - Date.UTC(2017, 0, 1)) / 86400000;
+        return Math.floor(days / 7) + 1;
+    }
+
     function stringHexEncode(str) {
         var result = '';
         for (var i = 0; i < str.length; i++) {
@@ -309,7 +317,7 @@ var CourseCalendar = (function () {
 
             var type = getLessonType(course, event.lessonData);
             lessonTypesAvailable[type] = true;
-            if (event.start.week() === 1) {
+            if (calendarWeek(event.start) === 1) {
                 lessonTypesVisible[type] = true;
             }
 
@@ -346,7 +354,7 @@ var CourseCalendar = (function () {
 
         calendar.fullCalendar('clientEvents', function (event) {
             // Only displayed events determine the visible range.
-            if (event.start.week() !== 1) {
+            if (calendarWeek(event.start) !== 1) {
                 return false;
             }
 
@@ -552,7 +560,7 @@ var CourseCalendar = (function () {
 
         if (lessonNumber !== '-') {
             events.forEach(function (cbEvent) {
-                if (cbEvent.start.week() === 1 &&
+                if (calendarWeek(cbEvent.start) === 1 &&
                     !cbEvent.selected &&
                     isSameCourse(cbEvent, courseNumber, layerId) &&
                     getEventLessonType(cbEvent) === lessonType &&
@@ -1113,18 +1121,20 @@ var CourseCalendar = (function () {
         layerId = layerId || '';
 
         var conflictedEvents = calendar.fullCalendar('clientEvents', function (event) {
-            return isSameCourse(event, course, layerId) && event.start.week() > 1;
+            return isSameCourse(event, course, layerId) && calendarWeek(event.start) > 1;
         });
 
         var temporaryEvents = [];
 
         for (var i = 0; i < conflictedEvents.length; i++) {
             var conf = conflictedEvents[i];
+            // Back to the same day and time of the displayed week.
+            var daysToFirstWeek = 7 * (calendarWeek(conf.start) - 1);
             var temp = {
                 id: 'temp_' + conf.id,
                 title: conf.title,
-                start: conf.start.clone().week(1),
-                end: conf.end.clone().week(1),
+                start: conf.start.clone().subtract(daysToFirstWeek, 'days'),
+                end: conf.end.clone().subtract(daysToFirstWeek, 'days'),
                 backgroundColor: conf.backgroundColor,
                 textColor: conf.textColor,
                 borderColor: conf.borderColor,
@@ -1292,7 +1302,7 @@ var CourseCalendar = (function () {
         var count = 0;
 
         calendar.fullCalendar('clientEvents', function (event) {
-            if (event.start.week() === 1 && event.selected) {
+            if (calendarWeek(event.start) === 1 && event.selected) {
                 var subject = '';
                 var description = '';
                 var location = '';

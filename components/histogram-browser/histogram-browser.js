@@ -193,7 +193,7 @@ var HistogramBrowser = (function () {
                 '<i class="fas fa-globe" aria-hidden="true"></i>' +
                 '<label for="histogram-guide-language" class="sr-only">' + h('sharing.language') + '</label>' +
                 '<select id="histogram-guide-language" class="language-switch" data-language-switch aria-label="' + h('sharing.language') + '">' +
-                    '<option value="en" lang="en">English</option><option value="he" lang="he">עברית</option>' +
+                    '<option value="en" lang="en">English</option><option value="he" lang="he">עברית</option><option value="ar" lang="ar">العربية</option>' +
                 '</select>' +
             '</div>' +
             '<p>' + h('sharing.guide.intro') + '</p>' +

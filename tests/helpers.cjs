@@ -28,6 +28,7 @@ function createPage(file = 'index.html', language = 'en', query = '') {
     load(dom.window, 'i18n.js');
     load(dom.window, 'locales/he.js');
     load(dom.window, 'locales/en.js');
+    load(dom.window, 'locales/ar.js');
     dom.window.CheeseI18n.apply(dom.window.document);
     return dom;
 }
@@ -47,6 +48,8 @@ function loadUI(window) {
         'modules/fullcalendar/lib/moment.min.js',
         'modules/fullcalendar/fullcalendar.min.js',
         'modules/fullcalendar/locale/he.js',
+        'modules/fullcalendar/locale/ar.js',
+        'moment-locale.js',
         'modules/selectize/js/standalone/selectize.min.js',
         'modules/color-hash/color-hash.js',
         'modules/ics.js/ics.deps.min.js',

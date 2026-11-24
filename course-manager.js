@@ -259,8 +259,13 @@ CourseManager.prototype.getFieldLabel = function (key) {
     return Object.prototype.hasOwnProperty.call(keys, key) ? CheeseI18n.t(keys[key]) : key;
 };
 
+// The catalog is in Hebrew, so its values are translated for the other languages.
+function isCatalogLanguage() {
+    return CheeseI18n.getLocale() === 'he';
+}
+
 CourseManager.prototype.getLessonTypeLabel = function (value) {
-    if (CheeseI18n.getLocale() !== 'en' && value !== 'sadna') {
+    if (isCatalogLanguage() && value !== 'sadna') {
         return value;
     }
     var keys = {
@@ -278,7 +283,7 @@ CourseManager.prototype.getLessonTypeLabel = function (value) {
 };
 
 CourseManager.prototype.getDayLabel = function (value) {
-    if (CheeseI18n.getLocale() !== 'en') {
+    if (isCatalogLanguage()) {
         return value;
     }
     var keys = {
@@ -301,7 +306,7 @@ CourseManager.prototype.getDayLabel = function (value) {
 };
 
 CourseManager.prototype.getFacultyLabel = function (value) {
-    if (CheeseI18n.getLocale() !== 'en') {
+    if (isCatalogLanguage()) {
         return value;
     }
     var keys = {
@@ -338,7 +343,7 @@ CourseManager.prototype.getFacultyLabel = function (value) {
 };
 
 CourseManager.prototype.getFrameworkLabel = function (value) {
-    if (CheeseI18n.getLocale() !== 'en') {
+    if (isCatalogLanguage()) {
         return value;
     }
     var keys = {
@@ -420,10 +425,10 @@ CourseManager.prototype.getDescription = function (course, options) {
                     .replace(/\s+(\))/g, '$1')
                     .replace(/\s+/g, ' ')
                     .trim();
-                if (CheeseI18n.getLocale() === 'en') {
+                if (!isCatalogLanguage()) {
                     value = value
-                        .replace(/(^|[\s(])או(?=$|[\s()])/g, '$1or')
-                        .replace(/(^|[\s(])ו-\s*(?=\d|\()/g, '$1and ');
+                        .replace(/(^|[\s(])או(?=$|[\s()])/g, '$1' + CheeseI18n.t('courses.expression.or'))
+                        .replace(/(^|[\s(])ו-\s*(?=\d|\()/g, '$1' + CheeseI18n.t('courses.expression.and') + ' ');
                 }
                 addContent(key, value, '\n\n');
             }
@@ -442,7 +447,7 @@ CourseManager.prototype.getDescription = function (course, options) {
         keys.forEach(function (key) {
             if (general[key]) {
                 var value = general[key].replace(/\n\n/g, '\n========\n');
-                if (CheeseI18n.getLocale() === 'en') {
+                if (!isCatalogLanguage()) {
                     value = value.split('\n').map(function (line) {
                         return line.replace(/^בתאריך (\d+)\.(\d+)\.(\d+)(?: יום ([א-ו]) משעה (\d+(?::\d+)?) עד השעה (\d+(?::\d+)?))?/, function (match, day, month, year, weekday, start, end) {
                             var label = day + '/' + month + '/' + year;

@@ -313,7 +313,8 @@ for (const [scriptLanguage, pageLanguage, expectedLanguage] of [
     ['en', 'he', 'en'],
     ['he', 'en', 'he'],
     [null, 'en', 'he'],
-    ['fr', 'en', 'he']
+    ['fr', 'en', 'he'],
+    ['ar', 'en', 'ar']
 ]) {
     test('the injected sharing UI uses script lang=' + scriptLanguage + ' while preserving the host page', async () => {
         const { dom, window, fetches, alerts, pageDirection } = createGradesPage(scriptLanguage, pageLanguage);
@@ -323,7 +324,7 @@ for (const [scriptLanguage, pageLanguage, expectedLanguage] of [
             const region = window.document.querySelector('#cheesefork-histogram-sharing');
             assert.ok(region);
             assert.equal(region.lang, expectedLanguage);
-            assert.equal(region.dir, expectedLanguage === 'he' ? 'rtl' : 'ltr');
+            assert.equal(region.dir, expectedLanguage === 'en' ? 'ltr' : 'rtl');
             assert.equal(window.document.documentElement.lang, pageLanguage);
             assert.equal(window.document.documentElement.dir, pageDirection);
             assert.equal(window.document.querySelector('#source-content').textContent, 'Original grade information');
@@ -335,6 +336,9 @@ for (const [scriptLanguage, pageLanguage, expectedLanguage] of [
                 assert.doesNotMatch(region.textContent, /[\u0590-\u05ff]/);
                 assert.match(region.querySelector('#grabber_title').textContent, /ready/i);
                 assert.match(submit.textContent, /share/i);
+            } else if (expectedLanguage === 'ar') {
+                assert.doesNotMatch(region.textContent, /[\u0590-\u05ff]/);
+                assert.match(region.textContent, /مشاركة مخططات العلامات/);
             } else {
                 assert.match(region.textContent, /[\u0590-\u05ff]/);
             }
