@@ -98,6 +98,42 @@ test('any custom color can be chosen, with dark text when white text is unreadab
     }
 });
 
+test('a schedule saved with a light custom color loads signed out with dark text', () => {
+    // The signed-out schedule is shown while the script is still starting, see DARK_TEXT_COLOR.
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        const errors = [];
+        window.addEventListener('error', event => errors.push(event.error || event.message));
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', '{"05d405e805e605d005d4":10}');
+        window.localStorage.setItem('202601_colors', '{"01040001":"#f0e68c"}');
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+        assert.deepEqual(errors, []);
+        assert.deepEqual(colors(window), {
+            calendar: ['#f0e68c', DARK],
+            button: [rgb('#f0e68c'), rgb(DARK)],
+            exam: [rgb('#f0e68c'), rgb(DARK)]
+        });
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('cheesefork.js declares its variables before starting the page', () => {
+    // cheeseforkInit() runs near the top of the script, so a variable declared below it is still
+    // undefined while the page starts, even if its declaration assigns a value.
+    const lines = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'cheesefork.js'), 'utf8').split(/\r?\n/);
+    const start = lines.findIndex(line => line === '        cheeseforkInit();');
+    const end = lines.indexOf('})();');
+    assert.ok(start > 0 && end > start);
+    const late = lines.slice(start, end)
+        .map((line, i) => ({ line: start + i + 1, text: line }))
+        .filter(item => /^    var /.test(item.text));
+    assert.deepEqual(late, []);
+});
+
 test('automatic colors keep white text', () => {
     const { dom, window } = loadSchedule();
     try {

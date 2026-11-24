@@ -47,6 +47,14 @@
     // Several changes in a row, such as choosing lessons, cause a single upload.
     var CALENDAR_AUTO_UPLOAD_DELAY_MS = 5000;
 
+    // The text color for custom colors that are too light for white text, see readableTextColor.
+    // Declared here since the schedule, and its colors, can be shown before the rest of the
+    // script runs. Every value used while cheeseforkInit() runs must be declared above it.
+    var DARK_TEXT_COLOR = '#212529';
+
+    // The number of changes that can be undone, see onSavedSessionChange.
+    var SAVED_SESSION_UNDO_LIMIT = 50;
+
     // UI components.
     var loginDialog = null;
     var courseSelect = null;
@@ -353,8 +361,6 @@
         var customColor = customColors[customEventId || courseColorKey(course, layerId)];
         return customColor ? readableTextColor(customColor) : 'white';
     }
-
-    var DARK_TEXT_COLOR = '#212529';
 
     function readableTextColor(backgroundColor) {
         // https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
@@ -2773,8 +2779,6 @@
     // onSavedSessionChange, so savedSessionLastState keeps a copy of the session after the last
     // change, which is the session from before the next one. Undoing and redoing write the
     // difference between the sessions, like any other change.
-
-    var SAVED_SESSION_UNDO_LIMIT = 50;
 
     function sessionCopy(session) {
         return $.extend(true, {}, session); // make a deep copy
