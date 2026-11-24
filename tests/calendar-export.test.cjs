@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createPage, loadUI } = require('./helpers.cjs');
+const { createPage, loadUI, load } = require('./helpers.cjs');
 
 function createCalendar(language) {
     const dom = createPage('index.html', language);
@@ -87,3 +87,84 @@ for (const language of ['en', 'he']) {
         }
     });
 }
+
+function octets(line) {
+    return Buffer.byteLength(line, 'utf8');
+}
+
+// RFC 5545 3.1: unfolding removes each line break followed by a space.
+function unfold(calendar) {
+    return calendar.replace(/\r\n /g, '');
+}
+
+test('exported calendars escape text, fold long lines and keep Hebrew characters whole', () => {
+    const dom = createPage();
+    try {
+        const window = dom.window;
+        load(window, 'modules/ics.js/ics.deps.min.js');
+        load(window, 'ics-text.js');
+        let saved = null;
+        window.saveAs = (blob, filename) => {
+            saved = { blob, filename };
+        };
+
+        const calendar = window.IcsText.wrap(window.ics('test', 'CheeseFork²', ['NAME:' + window.IcsText.escapeText('Winter, 2026')], 'Asia/Jerusalem'));
+        const longTitle = 'הרצאה 10 – ' + 'מבוא למדעי המחשב '.repeat(6).trim();
+        calendar.addEvent('Gym; swim, run \\ rest', 'Staff A\nStaff B', 'Building 1, room 2', '2026-10-25T10:30:00', '2026-10-25T12:30:00');
+        calendar.addEvent(longTitle, '', '', '2026-10-26T10:30:00', '2026-10-26T12:30:00');
+
+        const text = calendar.build();
+        const lines = text.split('\r\n');
+        assert.ok(lines.every(line => octets(line) <= 75), 'every line is at most 75 octets');
+        assert.ok(lines.some(line => line.startsWith(' ')), 'the long title is folded');
+        assert.ok(!text.includes('�'));
+
+        const unfolded = unfold(text).split('\r\n');
+        assert.ok(unfolded.includes('NAME:Winter\\, 2026'));
+        assert.ok(unfolded.includes('SUMMARY:Gym\\; swim\\, run \\\\ rest'));
+        assert.ok(unfolded.includes('DESCRIPTION:Staff A\\nStaff B'));
+        assert.ok(unfolded.includes('LOCATION:Building 1\\, room 2'));
+        assert.ok(unfolded.includes('SUMMARY:' + longTitle));
+        assert.ok(!text.includes('LANGUAGE=en-us'));
+
+        assert.equal(calendar.download('winter-2026-2027'), text);
+        assert.equal(saved.filename, 'winter-2026-2027.ics');
+        assert.equal(saved.blob.type, 'text/calendar;charset=utf-8');
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('folding counts octets and never splits a character', () => {
+    const dom = createPage();
+    try {
+        const window = dom.window;
+        load(window, 'ics-text.js');
+        for (const line of ['A'.repeat(200), 'SUMMARY:' + 'א'.repeat(100), 'SUMMARY:' + '😀'.repeat(40), 'SHORT:ok']) {
+            const folded = window.IcsText.foldLine(line);
+            const parts = folded.split('\r\n');
+            assert.ok(parts.every(part => octets(part) <= 75), line);
+            assert.ok(parts.slice(1).every(part => part.startsWith(' ')));
+            assert.equal(unfold(folded), line);
+            assert.ok(!parts.some(part => /[\uD800-\uDBFF]$/.test(part)), 'no surrogate pair is split');
+        }
+        assert.equal(window.IcsText.foldLine('SHORT:ok'), 'SHORT:ok');
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('lessons are exported with plain text, escaped by the wrapped calendar', () => {
+    const { dom, window, calendar } = createCalendar('en');
+    try {
+        window.courses_from_rishum[0].schedule[0]['מרצה/מתרגל'] = 'Professor Example\nSecond, Lecturer';
+        calendar.loadSavedSchedule({ '01040001': { '05d405e805e605d005d4': 10 } }, {});
+        const calls = [];
+        calendar.saveAsIcs({
+            addEvent(...args) { calls.push(args); }
+        }, '2026-10-25', '2027-02-01', []);
+        assert.equal(calls[0][1], 'Professor Example\nSecond, Lecturer');
+    } finally {
+        dom.window.close();
+    }
+});

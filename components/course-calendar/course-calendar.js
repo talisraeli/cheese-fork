@@ -1250,6 +1250,8 @@ var CourseCalendar = (function () {
         calendar.fullCalendar('updateEvents', customEvents);
     };
 
+    // Adds the selected lessons and custom events to icsCal, an ics.js calendar wrapped with
+    // IcsText.wrap, which escapes the plain text passed to addEvent.
     CourseCalendar.prototype.saveAsIcs = function (icsCal, dateFrom, dateTo, daysOff) {
         var that = this;
         var calendar = that.element;
@@ -1319,9 +1321,6 @@ var CourseCalendar = (function () {
 
                 begin.day(eventDay);
                 var end = event.end.clone().add(begin.diff(event.start), 'milliseconds');
-
-                // https://stackoverflow.com/a/667274
-                description = description.replace(/\n/g, '\\n');
 
                 // Causes timezone to be added to the formatted string,
                 // fixes a time shift issue in Safari.

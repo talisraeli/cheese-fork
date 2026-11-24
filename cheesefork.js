@@ -1,6 +1,6 @@
 'use strict';
 
-/* global introJs, ColorHash, BootstrapDialog, ics, JsDiff, firebase, firebaseui, gtag, CheeseI18n, moment */
+/* global introJs, ColorHash, BootstrapDialog, ics, IcsText, JsDiff, firebase, firebaseui, gtag, CheeseI18n, moment */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
 /* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
 
@@ -837,7 +837,7 @@
             $(this).find('[data-toggle="tooltip"]').tooltip('hide');
 
             var extraCalendarHeaders = [
-                'NAME:' + semesterFriendlyName(currentSemester),
+                'NAME:' + IcsText.escapeText(semesterFriendlyName(currentSemester)),
 
                 // Suggested minimum interval for polling for changes.
                 'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
@@ -866,7 +866,7 @@
 
             // Generate a unique UID every time to avoid overriding old events.
             // https://github.com/michael-maltsev/cheese-fork/issues/19
-            var icsCal = ics('cheesefork.cf-' + Date.now(), 'CheeseFork²', extraCalendarHeaders, 'Asia/Jerusalem');
+            var icsCal = IcsText.wrap(ics('cheesefork.cf-' + Date.now(), 'CheeseFork²', extraCalendarHeaders, 'Asia/Jerusalem'));
 
             // Schedule.
             var dateFrom = availableSemesters[currentSemester].start;
