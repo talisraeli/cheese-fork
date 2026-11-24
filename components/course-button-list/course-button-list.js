@@ -365,7 +365,8 @@ var CourseButtonList = (function () {
                     placeholder: 'https://chat.whatsapp.com/...',
                     'aria-label': CheeseI18n.t('courses.whatsappGroup'),
                     style: 'direction: ltr;',
-                    pattern: 'https://chat\\.whatsapp\\.com/.+'
+                    pattern: 'https://chat\\.whatsapp\\.com/.+',
+                    maxlength: 300
                 }),
                 $('<input>', {
                     type: 'text',
@@ -374,7 +375,8 @@ var CourseButtonList = (function () {
                     placeholder: 'https://chat.whatsapp.com/...',
                     'aria-label': CheeseI18n.t('courses.whatsappGroup'),
                     style: 'direction: ltr;',
-                    pattern: 'https://chat\\.whatsapp\\.com/.+'
+                    pattern: 'https://chat\\.whatsapp\\.com/.+',
+                    maxlength: 300
                 }),
                 $('<input>', {
                     type: 'text',
@@ -383,7 +385,8 @@ var CourseButtonList = (function () {
                     placeholder: 'https://chat.whatsapp.com/...',
                     'aria-label': CheeseI18n.t('courses.whatsappGroup'),
                     style: 'direction: ltr;',
-                    pattern: 'https://chat\\.whatsapp\\.com/.+'
+                    pattern: 'https://chat\\.whatsapp\\.com/.+',
+                    maxlength: 300
                 }),
                 $('<input>', {
                     type: 'text',
@@ -392,7 +395,8 @@ var CourseButtonList = (function () {
                     placeholder: 'https://t.me/...',
                     'aria-label': CheeseI18n.t('courses.telegramGroup'),
                     style: 'direction: ltr;',
-                    pattern: 'https://t\\.me/.+'
+                    pattern: 'https://t\\.me/.+',
+                    maxlength: 300
                 }),
                 $('<input>', {
                     type: 'text',
@@ -401,7 +405,8 @@ var CourseButtonList = (function () {
                     placeholder: 'https://discord.gg/...',
                     'aria-label': CheeseI18n.t('courses.discordServer'),
                     style: 'direction: ltr;',
-                    pattern: 'https://(discord\\.gg|discord\\.com/invite)/.+'
+                    pattern: 'https://(discord\\.gg|discord\\.com/invite)/.+',
+                    maxlength: 300
                 }),
                 $('<div>', {
                     class: 'invalid-feedback',
@@ -472,6 +477,10 @@ var CourseButtonList = (function () {
                             newGroupLinksDataWithDelete[key] = firebase.firestore.FieldValue.delete();
                         }
                     });
+
+                    // Required by the Firestore rules, to know who changed the links.
+                    newGroupLinksDataWithDelete.updatedBy = firebase.auth().currentUser.uid;
+                    newGroupLinksDataWithDelete.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
 
                     firebase.firestore().collection('courseExtraDetails').doc(course)
                         .set(newGroupLinksDataWithDelete, { merge: true })

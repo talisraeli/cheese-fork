@@ -17,9 +17,36 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Course group links (WhatsApp, Telegram, Discord).
+    // Course group links (WhatsApp, Telegram, Discord). Any signed-in user can edit them, but
+    // only with links of the expected services, as checked by the form in course-button-list.js,
+    // and each change records who made it and when. Removing all links leaves the document.
     match /courseExtraDetails/{course} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && course.matches('[0-9]{6,8}')
+        && groupLinksChangeValid(request.resource.data.keys());
+      allow update: if request.auth != null
+        && groupLinksChangeValid(request.resource.data.diff(resource.data).affectedKeys());
+
+      function groupLinksChangeValid(changedKeys) {
+        let data = request.resource.data;
+        return changedKeys.hasOnly([
+            'whatsappGroupLink', 'whatsappGroupLink2', 'whatsappGroupLink3',
+            'telegramGroupLink', 'discordServerLink', 'updatedBy', 'updatedAt'
+          ])
+          && data.updatedBy == request.auth.uid
+          && data.updatedAt == request.time
+          && groupLinkValid(data, 'whatsappGroupLink', 'https://chat[.]whatsapp[.]com/.+')
+          && groupLinkValid(data, 'whatsappGroupLink2', 'https://chat[.]whatsapp[.]com/.+')
+          && groupLinkValid(data, 'whatsappGroupLink3', 'https://chat[.]whatsapp[.]com/.+')
+          && groupLinkValid(data, 'telegramGroupLink', 'https://t[.]me/.+')
+          && groupLinkValid(data, 'discordServerLink', 'https://(discord[.]gg|discord[.]com/invite)/.+');
+      }
+
+      function groupLinkValid(data, key, pattern) {
+        return !(key in data)
+          || (data[key] is string && data[key].size() <= 300 && data[key].matches(pattern));
+      }
     }
 
     // API keys (by hash) and each user's current key. Only the Cloud Functions access them.
