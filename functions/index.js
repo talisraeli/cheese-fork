@@ -9,6 +9,7 @@ const logger = require('firebase-functions/logger');
 
 const { createApi } = require('./lib/api');
 const { createCatalogLoader } = require('./lib/catalog');
+const { createSemestersLoader } = require('./lib/semesters');
 const { createFirestoreStore } = require('./lib/firestore-store');
 const { generateApiKey, hashApiKey, apiKeyHint } = require('./lib/keys');
 const { createRateLimiter } = require('./lib/rate-limit');
@@ -21,6 +22,7 @@ const db = getFirestore();
 const handleApiRequest = createApi({
     store: createFirestoreStore(db, getAuth()),
     loadCatalog: createCatalogLoader(fetch, Date.now),
+    loadSemesters: createSemestersLoader(fetch, Date.now),
     nowSeconds: () => Math.round(Date.now() / 1000),
     logError: error => logger.error(error)
 });

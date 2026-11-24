@@ -41,6 +41,18 @@ function requireBody(body) {
     return body;
 }
 
+// A whole number from a query string, between min and max, or the default if it's missing.
+function queryInteger(query, name, defaultValue, min, max) {
+    const value = query && query[name];
+    if (value === undefined || value === '') {
+        return defaultValue;
+    }
+    if (typeof value !== 'string' || !/^\d+$/.test(value) || parseInt(value, 10) < min || parseInt(value, 10) > max) {
+        throw new ApiError(400, 'invalid_' + name, name + ' must be a whole number from ' + min + ' to ' + max + '.');
+    }
+    return parseInt(value, 10);
+}
+
 function requireLessonNumber(value) {
     if (typeof value === 'string' && /^\d+$/.test(value)) {
         value = parseInt(value, 10);
@@ -53,7 +65,7 @@ function requireLessonNumber(value) {
 
 // Each route is [method, pattern, handler]; pattern segments starting with ":" are parameters.
 function createRoutes(deps) {
-    const { store, loadCatalog, nowSeconds } = deps;
+    const { store, loadCatalog, loadSemesters, nowSeconds } = deps;
 
     async function catalogCourse(semester, course) {
         const catalog = await loadCatalog(semester);
@@ -84,9 +96,33 @@ function createRoutes(deps) {
         return store.transact(ctx.uid, ctx.semester, change);
     }
 
+    // The layer as GET /courses and GET /custom-events describe it, with its name and courses.
+    async function layerBody(ctx, layerId) {
+        const data = await store.read(ctx.uid, ctx.semester);
+        const layer = schedule.readLayer(data, ctx.semester, layerId);
+        layer.courses = await withCourseNames(ctx.semester, layer.courses);
+        return Object.assign({ semester: ctx.semester }, layer);
+    }
+
     return [
         ['GET', '/v1/me', async ctx => {
             return { body: await store.userInfo(ctx.uid) };
+        }],
+
+        ['GET', '/v1/semesters', async ctx => {
+            const [semesters, saved] = await Promise.all([loadSemesters(), store.readAll(ctx.uid)]);
+            const ids = Object.keys(semesters).sort().reverse();
+            return {
+                body: {
+                    latest: ids[0] || null,
+                    semesters: ids.map(semester => ({
+                        semester: semester,
+                        start: semesters[semester].start,
+                        end: semesters[semester].end,
+                        hasSchedule: !!saved[semester] && schedule.hasSchedule(saved[semester], semester)
+                    }))
+                }
+            };
         }],
 
         ['GET', '/v1/semesters/:semester/schedule', async ctx => {
@@ -214,6 +250,84 @@ function createRoutes(deps) {
             return { status: 204 };
         }],
 
+        ['GET', '/v1/semesters/:semester/catalog', async ctx => {
+            const q = ctx.query && typeof ctx.query.q === 'string' ? ctx.query.q.trim() : '';
+            if (q.length < 2) {
+                throw new ApiError(400, 'invalid_query', 'q must have at least 2 characters: part of a course number or name.');
+            }
+            const limit = queryInteger(ctx.query, 'limit', 20, 1, 100);
+            const offset = queryInteger(ctx.query, 'offset', 0, 0, 100000);
+            const catalog = await loadCatalog(ctx.semester);
+            const courses = catalog.search(q);
+            return {
+                body: {
+                    semester: ctx.semester,
+                    query: q,
+                    total: courses.length,
+                    offset: offset,
+                    limit: limit,
+                    courses: courses.slice(offset, offset + limit)
+                }
+            };
+        }],
+
+        ['GET', '/v1/semesters/:semester/layers', async ctx => {
+            const data = await store.read(ctx.uid, ctx.semester);
+            const layers = schedule.readSchedule(data, ctx.semester).layers;
+            const list = layers.length > 0 ? layers : [schedule.readLayer(data, ctx.semester)];
+            return {
+                body: {
+                    semester: ctx.semester,
+                    layers: list.map(layer => ({
+                        id: layer.id,
+                        name: layer.name,
+                        hidden: layer.hidden,
+                        courseCount: layer.courses.length,
+                        customEventCount: layer.customEvents.length
+                    }))
+                }
+            };
+        }],
+
+        ['POST', '/v1/semesters/:semester/layers', async ctx => {
+            const input = ctx.body === undefined || ctx.body === null || ctx.body === '' ? {} : requireBody(ctx.body);
+            const layerId = await transact(ctx, data => schedule.createLayer(data, ctx.semester, input, nowSeconds()));
+            return { status: 201, body: await layerBody(ctx, layerId) };
+        }],
+
+        ['PATCH', '/v1/semesters/:semester/layers/:layer', async ctx => {
+            const input = requireBody(ctx.body);
+            const layerId = await transact(ctx, data => schedule.updateLayer(data, ctx.semester, ctx.params.layer, input));
+            return { body: await layerBody(ctx, layerId) };
+        }],
+
+        ['DELETE', '/v1/semesters/:semester/layers/:layer', async ctx => {
+            await transact(ctx, data => schedule.deleteLayer(data, ctx.semester, ctx.params.layer));
+            return { status: 204 };
+        }],
+
+        ['POST', '/v1/semesters/:semester/layers/:layer/duplicate', async ctx => {
+            const layerId = await transact(ctx, data => schedule.duplicateLayer(data, ctx.semester, ctx.params.layer, nowSeconds()));
+            return { status: 201, body: await layerBody(ctx, layerId) };
+        }],
+
+        ['POST', '/v1/semesters/:semester/courses/:course/move', async ctx => {
+            const course = requireCourseNumber(ctx.params.course);
+            const to = requireBody(ctx.body).to;
+            const layerId = await transact(ctx, data => schedule.moveCourse(data, ctx.semester, course, ctx.layer, to));
+            return { body: { course: course, layer: layerId } };
+        }],
+
+        ['GET', '/v1/semesters/:semester/conflicts', async ctx => {
+            const data = await store.read(ctx.uid, ctx.semester);
+            const catalog = await loadCatalog(ctx.semester);
+            return {
+                body: Object.assign({ semester: ctx.semester }, schedule.findConflicts(data, ctx.semester, ctx.layer,
+                    course => catalog.has(course) ? catalog.lessons(course) : [],
+                    course => catalog.name(course)))
+            };
+        }],
+
         ['GET', '/v1/semesters/:semester/catalog/:course', async ctx => {
             const course = requireCourseNumber(ctx.params.course);
             const catalog = await catalogCourse(ctx.semester, course);
@@ -307,6 +421,7 @@ function createApi(deps) {
             const ctx = {
                 uid: uid,
                 params: route.params,
+                query: request.query || {},
                 body: request.body,
                 layer: request.query && typeof request.query.layer === 'string' ? request.query.layer : undefined
             };
