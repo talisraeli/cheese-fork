@@ -218,4 +218,21 @@ function installFakeFirebase(window, options = {}) {
     return { user, data, uploads, metadataChecks, signIn };
 }
 
-module.exports = { root, read, load, createPage, loadUI, englishContent, installFakeFirebase };
+// Waits until condition() is true, failing after timeoutMs. For page work whose duration varies,
+// such as loading the schedule, which takes much longer on a busy machine than on an idle one.
+async function waitUntil(condition, description, timeoutMs = 10000) {
+    const start = Date.now();
+    while (!condition()) {
+        if (Date.now() - start > timeoutMs) {
+            throw new Error('Timed out waiting until ' + description);
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+}
+
+// Whether the page finished loading the schedule, which hides the page loader.
+function pageLoaded(window) {
+    return window.document.getElementById('page-loader').style.display === 'none';
+}
+
+module.exports = { root, read, load, createPage, loadUI, englishContent, installFakeFirebase, waitUntil, pageLoaded };

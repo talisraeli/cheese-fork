@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createPage, loadUI, load, installFakeFirebase } = require('./helpers.cjs');
+const { createPage, loadUI, load, installFakeFirebase, waitUntil, pageLoaded } = require('./helpers.cjs');
 
 const CALENDAR_PATH = 'user1/winter-2026-2027.ics';
 const LECTURE = '{"05d405e805e605d005d4":10}';
@@ -31,7 +31,8 @@ async function loadSignedIn(files) {
         data: { '202601_courses': ['01040001'], '202601_01040001': JSON.parse(LECTURE) }
     });
     load(window, 'cheesefork.js');
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await waitUntil(() => pageLoaded(window) && window.$('#course-calendar').fullCalendar('clientEvents').length > 0,
+        'the schedule is loaded');
     return { dom, window, firebase, daysOffRequests };
 }
 
