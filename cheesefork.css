@@ -208,19 +208,97 @@ footer dark-mode-toggle::part(aside) {
 }
 
 /* Items of the "what's new" popup: the icon sits at the right edge, the title and text beside it. */
-.whats-new-item {
-    position: relative;
-    padding-right: 3.25rem;
-    min-height: 2.5rem;
+/* The pages of the "what's new" dialog. A page scrolls, so that the dialog fits the window
+   with its title, page dots and buttons. Flex layout follows the text direction. */
+.whats-new-pages {
+    max-height: calc(100vh - 16rem);
+    overflow-y: auto;
 }
+
+.whats-new-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.25rem;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: none;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.whats-new-item:hover,
+.whats-new-item:focus {
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+.whats-new-item-text {
+    flex: 1;
+}
+
 .whats-new-icon {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 2.5rem;
+    flex: 0 0 2.5rem;
+    margin: 0 0.75rem;
     text-align: center;
     font-size: 1.75rem;
     line-height: 1;
+}
+
+.whats-new-page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.whats-new-page-header .whats-new-icon {
+    margin: 0 0 0 0.75rem;
+}
+
+html[dir="ltr"] .whats-new-page-header .whats-new-icon {
+    margin: 0 0.75rem 0 0;
+}
+
+.whats-new-steps li {
+    margin-bottom: 0.4rem;
+}
+
+.whats-new-note {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+.whats-new-dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.whats-new-dot {
+    width: 0.65rem;
+    height: 0.65rem;
+    margin: 0 0.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(128, 128, 128, 0.45);
+    cursor: pointer;
+}
+
+.whats-new-dot.active {
+    background-color: #ffc107;
+}
+
+/* Skip is on the far side of the footer, apart from Previous and Next. */
+.whats-new-dialog .modal-footer .whats-new-skip {
+    margin-left: auto;
+}
+
+html[dir="ltr"] .whats-new-dialog .modal-footer .whats-new-skip {
+    margin-left: 0;
+    margin-right: auto;
 }
 
 /* The notice of a failed schedule save, above the page and its dialogs. */
