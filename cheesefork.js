@@ -243,9 +243,7 @@
                 selectedLessonUnsave(course, lessonNumber, lessonType, layerId);
             },
             onCustomEventAdded: function (eventId, eventData, layerId) {
-                if (currentLayers.length > 0) {
-                    courseButtonList.addCustomEvent(eventId, eventData.title, layerId);
-                }
+                courseButtonList.addCustomEvent(eventId, eventData.title, layerId);
                 customEventSave(eventId, eventData, layerId);
             },
             onCustomEventUpdated: function (eventId, eventData, layerId) {
@@ -2304,8 +2302,14 @@
         // The courses of all layers are in the list, but only visible layers are in the calendar.
         var extraLayers = [];
 
+        if (currentLayers.length === 0) {
+            Object.keys(customEvents).sort().forEach(function (eventId) {
+                courseButtonList.addCustomEvent(eventId, customEvents[eventId].title, '');
+            });
+        }
+
         currentLayers.forEach(function (layer) {
-            // With layers, custom events are in the list too, for moving them between layers.
+            // Custom events are in the list too, for moving them between layers or removing them.
             var layerCustomEvents = sessionLayerCustomEvents(session, layer.id) || {};
             Object.keys(layerCustomEvents).sort().forEach(function (eventId) {
                 courseButtonList.addCustomEvent(eventId, layerCustomEvents[eventId].title, layer.id);
