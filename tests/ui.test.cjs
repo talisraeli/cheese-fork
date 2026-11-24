@@ -151,6 +151,49 @@ test('undo keeps changes made in another tab', () => {
     }
 });
 
+test('a schedule change that fails to save is reported once', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        let gtagEvents = 0;
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', '{"05d405e805e605d005d4":10}');
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+        window.gtag = (type, name) => {
+            if (name === 'save-error') {
+                gtagEvents++;
+            }
+        };
+
+        // Unavailable storage, as in IE/Edge running from a local file, is expected and not reported.
+        const setItem = window.Storage.prototype.setItem;
+        window.Storage.prototype.setItem = () => {
+            throw new window.DOMException('Access denied', 'SecurityError');
+        };
+        window.$('#course-calendar .fc-event').trigger('click');
+        assert.equal(window.$('#save-error-alert').length, 0);
+
+        // A full storage loses the change, so it's reported, once until the notice is closed.
+        window.Storage.prototype.setItem = () => {
+            throw new window.DOMException('The quota has been exceeded.', 'QuotaExceededError');
+        };
+        window.$('#course-calendar .fc-event').trigger('click');
+        window.$('#course-calendar .fc-event').trigger('click');
+        const notice = window.$('#save-error-alert');
+        assert.equal(notice.length, 1);
+        assert.equal(notice.attr('role'), 'alert');
+        assert.match(notice.text(), /storage is full/);
+        assert.equal(gtagEvents, 2);
+
+        notice.find('button.close').trigger('click');
+        assert.equal(window.$('#save-error-alert').length, 0);
+        window.Storage.prototype.setItem = setItem;
+    } finally {
+        dom.window.close();
+    }
+});
+
 test('English weekday headings adapt to narrow calendars without changing selected lessons', () => {
     const dom = createPage();
     try {

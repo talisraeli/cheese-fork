@@ -1604,7 +1604,7 @@
             if (metadataUpdate) {
                 input[metadataCourseKey] = courseData;
             }
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
@@ -1613,7 +1613,7 @@
                     localStorage.setItem(metadataCourseKey, JSON.stringify(courseData));
                 }
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1640,12 +1640,12 @@
         if (doc) {
             var input = {};
             input[semesterCoursesKey] = currentSavedSession[semesterCoursesKey];
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1685,7 +1685,7 @@
             if (removeMetadata) {
                 input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             }
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(semesterCoursesKey, JSON.stringify(currentSavedSession[semesterCoursesKey]));
@@ -1694,7 +1694,7 @@
                     localStorage.removeItem(metadataCourseKey);
                 }
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1722,12 +1722,12 @@
         if (doc) {
             var input = {};
             input[courseKey + '.' + lessonType] = lessonNumber;
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1750,12 +1750,12 @@
         if (doc) {
             var input = {};
             input[courseKey + '.' + lessonType] = firebase.firestore.FieldValue.delete();
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(courseKey, JSON.stringify(currentSavedSession[courseKey]));
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1778,12 +1778,12 @@
         if (doc) {
             var input = {};
             input[semesterCustomEventsKey + '.' + eventId] = eventData;
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1819,7 +1819,7 @@
             if (hadCustomColor) {
                 customColorFirestoreInput(input, colorKey);
             }
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 localStorage.setItem(semesterCustomEventsKey, JSON.stringify(currentSavedSession[semesterCustomEventsKey]));
@@ -1827,7 +1827,7 @@
                     customColorsLocalStorageSave();
                 }
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -1851,12 +1851,12 @@
         if (doc) {
             var input = {};
             customColorFirestoreInput(input, colorKey);
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 customColorsLocalStorageSave();
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 
@@ -2251,7 +2251,7 @@
                 input[metadataCourseKey] = courseManager.getCourseData(course);
             });
 
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 removeKeys.forEach(function (key) {
@@ -2267,7 +2267,7 @@
                     localStorage.setItem(metadataCourseKey, JSON.stringify(courseManager.getCourseData(course)));
                 });
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
     }
@@ -2407,6 +2407,50 @@
             return doc;
         }
         return null;
+    }
+
+    // Saves a change of the signed-in user's schedule. The change is already shown, so a failed
+    // write would otherwise go unnoticed until it disappears on the next reload. While offline,
+    // the promise stays pending until the write reaches the server, so this isn't reported.
+    function firestoreSave(doc, input) {
+        doc.update(input).catch(function (error) {
+            showSaveError(CheeseI18n.t('shell.error.saveSchedule', {error: error.message || error}));
+        });
+    }
+
+    // Called with the error of a failed localStorage save of the schedule.
+    function localStorageSaveFailed(error) {
+        // localStorage is not available in IE/Edge when running from a local file, which is
+        // expected. A full storage is not, and the change is lost.
+        var quotaExceeded = error && (error.name === 'QuotaExceededError' ||
+            error.name === 'NS_ERROR_DOM_QUOTA_REACHED' || error.code === 22 || error.code === 1014);
+        if (quotaExceeded) {
+            showSaveError(CheeseI18n.t('shell.error.saveScheduleLocal'));
+        }
+    }
+
+    // Shows a notice that doesn't block the page, once until it's closed.
+    function showSaveError(message) {
+        gtag('event', 'save-error');
+
+        if ($('#save-error-alert').length > 0) {
+            return;
+        }
+
+        var notice = $('<div id="save-error-alert" class="alert alert-danger save-error-alert" role="alert"></div>');
+        notice.append($('<span></span>').text(message));
+        notice.append($('<button type="button" class="btn btn-sm btn-danger save-error-reload"></button>')
+            .text(CheeseI18n.t('shell.error.reload'))
+            .click(function () {
+                window.location.reload();
+            }));
+        notice.append($('<button type="button" class="close"></button>')
+            .attr('aria-label', CheeseI18n.t('shell.dialog.close'))
+            .append('<span aria-hidden="true">&times;</span>')
+            .click(function () {
+                notice.remove();
+            }));
+        $('body').append(notice);
     }
 
     function firestoreUserDoc(userId) {
@@ -2714,7 +2758,7 @@
                 input[metadataCourseKey] = firebase.firestore.FieldValue.delete();
             });
 
-            doc.update(input);
+            firestoreSave(doc, input);
         } else {
             try {
                 courseNumbers.forEach(function (course) {
@@ -2735,7 +2779,7 @@
                     localStorage.removeItem(metadataCourseKey);
                 });
             } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
+                localStorageSaveFailed(e);
             }
         }
 

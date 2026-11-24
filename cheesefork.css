@@ -204,3 +204,23 @@ footer dark-mode-toggle::part(aside) {
     font-size: 1.75rem;
     line-height: 1;
 }
+
+/* The notice of a failed schedule save, above the page and its dialogs. */
+.save-error-alert {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1060;
+    width: max-content;
+    max-width: calc(100% - 2rem);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.save-error-alert .save-error-reload {
+    margin: 0 0.75rem;
+    flex-shrink: 0;
+}
