@@ -43,7 +43,7 @@
     // loaded. And the automatic upload of an exported calendar (see calendarAutoUploadSchedule):
     // exported is null if unknown, or true or false once checked.
     var calendarDaysOff = null;
-    var calendarAutoUpload = { uid: null, exported: null, timer: null, uploading: false, pending: false };
+    var calendarAutoUpload = { uid: null, exported: null, uploadedFingerprint: null, timer: null, uploading: false, pending: false };
     // Several changes in a row, such as choosing lessons, cause a single upload.
     var CALENDAR_AUTO_UPLOAD_DELAY_MS = 5000;
 
@@ -1093,14 +1093,47 @@
             encodeURIComponent(calendarFileRef(uid).fullPath) + '?alt=media';
     }
 
+    // Identifies the events of a calendar, to skip uploading the same calendar again. Each build
+    // has new UID and DTSTAMP values (see buildScheduleCalendar), so they're left out.
+    function calendarFingerprint(calendar) {
+        var text = calendar.split('\r\n').filter(function (line) {
+            return !/^(UID|DTSTAMP):/.test(line);
+        }).join('\r\n');
+
+        // cyrb53, a fast 53-bit string hash: https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js
+        // Math.imul, which IE 11 lacks.
+        var imul = function (a, b) {
+            var ah = (a >>> 16) & 0xffff, al = a & 0xffff, bh = (b >>> 16) & 0xffff, bl = b & 0xffff;
+            return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0)) | 0;
+        };
+        var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (var i = 0; i < text.length; i++) {
+            var ch = text.charCodeAt(i);
+            h1 = imul(h1 ^ ch, 2654435761);
+            h2 = imul(h2 ^ ch, 1597334677);
+        }
+        h1 = imul(h1 ^ (h1 >>> 16), 2246822507) ^ imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = imul(h2 ^ (h2 >>> 16), 2246822507) ^ imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+    }
+
+    // The fingerprint is saved with the file, so that other visits and devices can skip
+    // uploading the same calendar, see whenCalendarExported.
     function uploadCalendarFile(uid, calendar) {
+        var fingerprint = calendarFingerprint(calendar);
         return calendarFileRef(uid).putString(calendar, 'raw', {
             // Ask browsers not to cache the request.
             // https://stackoverflow.com/q/42788488
             // https://stackoverflow.com/q/41938969
             cacheControl: 'public, max-age=0',
             // Required by the Storage rules, and served to calendar apps.
-            contentType: 'text/calendar; charset=utf-8'
+            contentType: 'text/calendar; charset=utf-8',
+            customMetadata: { fingerprint: fingerprint }
+        }).then(function (snapshot) {
+            if (calendarAutoUpload.uid === uid) {
+                calendarAutoUpload.uploadedFingerprint = fingerprint;
+            }
+            return snapshot;
         });
     }
 
@@ -1133,6 +1166,7 @@
         if (calendarAutoUpload.uid !== user.uid) {
             calendarAutoUpload.uid = user.uid;
             calendarAutoUpload.exported = null;
+            calendarAutoUpload.uploadedFingerprint = null;
         }
 
         whenCalendarExported(user.uid, function () {
@@ -1144,6 +1178,11 @@
                 // Unlike an export, an empty schedule is uploaded too, to remove the
                 // events of the courses that were removed from the subscribed calendar.
                 var calendar = buildScheduleCalendar(daysOff).build(true);
+
+                // Most visits and many changes, such as colors, leave the calendar the same.
+                if (calendarFingerprint(calendar) === calendarAutoUpload.uploadedFingerprint) {
+                    return;
+                }
 
                 calendarAutoUpload.uploading = true;
                 uploadCalendarFile(user.uid, calendar).then(function () {
@@ -1175,9 +1214,12 @@
             return;
         }
 
-        calendarFileRef(uid).getMetadata().then(function () {
+        calendarFileRef(uid).getMetadata().then(function (metadata) {
             if (calendarAutoUpload.uid === uid) {
                 calendarAutoUpload.exported = true;
+                // Files uploaded before fingerprints were saved have none, and are uploaded again once.
+                calendarAutoUpload.uploadedFingerprint =
+                    (metadata && metadata.customMetadata && metadata.customMetadata.fingerprint) || null;
                 onExported();
             }
         }, function (error) {

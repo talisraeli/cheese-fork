@@ -104,11 +104,13 @@ function englishContent(element) {
 }
 
 // A signed-in user with the Firebase APIs that cheesefork.js uses. Load it before cheesefork.js.
-// data is the user's semester document. Storage holds the paths in options.files, and the
-// returned object records the uploads and metadata checks.
+// data is the user's semester document. Storage holds the files in options.files, either paths
+// or { path, customMetadata }, and the returned object records the uploads and metadata checks.
 function installFakeFirebase(window, options = {}) {
     const user = { uid: options.uid || 'user1', displayName: 'Test User', email: null };
-    const files = new Set(options.files || []);
+    // Path to custom metadata.
+    const files = new Map((options.files || []).map(file =>
+        typeof file === 'string' ? [file, {}] : [file.path, file.customMetadata || {}]));
     const data = JSON.parse(JSON.stringify(options.data || {}));
     const uploads = [];
     const metadataChecks = [];
@@ -194,12 +196,12 @@ function installFakeFirebase(window, options = {}) {
         fullPath: path,
         putString(text, format, metadata) {
             uploads.push({ path, text, metadata });
-            files.add(path);
-            return resolved();
+            files.set(path, (metadata && metadata.customMetadata) || {});
+            return resolved({ metadata: { fullPath: path } });
         },
         getMetadata() {
             metadataChecks.push(path);
-            return files.has(path) ? resolved({ fullPath: path }) :
+            return files.has(path) ? resolved({ fullPath: path, customMetadata: files.get(path) }) :
                 window.Promise.reject({ code: 'storage/object-not-found' });
         }
     });
