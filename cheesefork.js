@@ -1949,12 +1949,13 @@
 
                 currentSavedSession = session;
 
+                // Local changes are skipped above, so this is a change from another tab, device
+                // or the API. Undo restores the session saved for it, so start undo from here,
+                // otherwise it would revert the change made elsewhere.
+                onSavedSessionReset();
                 if (!firstDataLoaded) {
-                    onSavedSessionReset();
                     firstDataLoaded = true;
                     onLoadedFunc();
-                } else {
-                    onSavedSessionChange();
                 }
             }, function (error) {
                 alert(CheeseI18n.t('shell.error.loadData', {error: error}));
@@ -1978,7 +1979,8 @@
                     }
 
                     currentSavedSession = session;
-                    onSavedSessionChange();
+                    // A change from another tab. Start undo from here, as for Firestore above.
+                    onSavedSessionReset();
                 }
             };
 
