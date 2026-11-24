@@ -6,6 +6,10 @@ function CourseExamInfo(element, options) {
     this.element = element;
     this.courseManager = options.courseManager;
     this.colorGenerator = options.colorGenerator;
+    // The text color for a background color of colorGenerator, same arguments. White by default.
+    this.textColorGenerator = options.textColorGenerator || function () {
+        return 'white';
+    };
     this.onHoverIn = options.onHoverIn;
     this.onHoverOut = options.onHoverOut;
 }
@@ -84,7 +88,7 @@ CourseExamInfo.prototype.renderCourses = function (courses) {
 
             var daysText = $('<span class="exam-info-item exam-info-item-course-' + course + '"></span>');
             var color = that.colorGenerator(course);
-            daysText.css('background-color', color);
+            daysText.css({'background-color': color, color: that.textColorGenerator(course)});
             daysText.hover(
                 function () {
                     $(this).addClass('exam-info-item-hovered');

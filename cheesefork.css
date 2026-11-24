@@ -175,6 +175,24 @@ html.os-html>.os-host>.os-scrollbar {
     box-shadow: 0 0 0 2px #fff inset;
 }
 
+.color-picker-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.color-picker-custom label {
+    margin: 0;
+}
+
+.color-picker-custom-input {
+    width: 64px;
+    height: 32px;
+    padding: 0 2px;
+    cursor: pointer;
+}
+
 /* dark-mode-toggle customizations */
 footer dark-mode-toggle {
     display: inline-block;

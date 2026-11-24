@@ -8,6 +8,10 @@ var CourseCalendar = (function () {
         this.element = element;
         this.courseManager = options.courseManager;
         this.colorGenerator = options.colorGenerator;
+        // The text color for a background color of colorGenerator, same arguments. White by default.
+        this.textColorGenerator = options.textColorGenerator || function () {
+            return 'white';
+        };
         this.readonly = options.readonly;
         this.onCourseHoverIn = options.onCourseHoverIn;
         this.onCourseHoverOut = options.onCourseHoverOut;
@@ -507,7 +511,7 @@ var CourseCalendar = (function () {
             start: eventStartEnd.start,
             end: eventStartEnd.end,
             backgroundColor: courseCalendar.colorGenerator(course, null, layerId),
-            textColor: 'white',
+            textColor: courseCalendar.textColorGenerator(course, null, layerId),
             borderColor: 'white',
             className: courseClassName +
                 ' ' + courseClassName + '-type-' + lessonType +
@@ -616,7 +620,7 @@ var CourseCalendar = (function () {
             start: start,
             end: end,
             backgroundColor: courseCalendar.colorGenerator(eventTitle, eventId),
-            textColor: 'white',
+            textColor: courseCalendar.textColorGenerator(eventTitle, eventId),
             borderColor: 'white',
             editable: !courseCalendar.readonly,
             constraint: {
@@ -811,6 +815,7 @@ var CourseCalendar = (function () {
 
                         event.title = eventTitle;
                         event.backgroundColor = that.colorGenerator(eventTitle, event.id);
+                        event.textColor = that.textColorGenerator(eventTitle, event.id);
                         calendar.fullCalendar('updateEvent', event);
 
                         that.onCustomEventUpdated(event.id.replace(/^custom_event_/, ''), {
@@ -1239,8 +1244,12 @@ var CourseCalendar = (function () {
             var color = event.courseNumber !== null ?
                 that.colorGenerator(event.courseNumber, null, event.layerId) :
                 that.colorGenerator(event.title, event.id);
-            if (event.backgroundColor !== color) {
+            var textColor = event.courseNumber !== null ?
+                that.textColorGenerator(event.courseNumber, null, event.layerId) :
+                that.textColorGenerator(event.title, event.id);
+            if (event.backgroundColor !== color || event.textColor !== textColor) {
                 event.backgroundColor = color;
+                event.textColor = textColor;
                 (event.courseNumber !== null ? lessonEvents : customEvents).push(event);
             }
             return false;

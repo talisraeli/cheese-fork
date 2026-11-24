@@ -257,6 +257,7 @@ CheeseI18n.addMessages('he', {
     "shell.changes.general": "מידע כללי",
     "shell.changes.removed": "הקורס לא קיים יותר",
     "shell.changes.title": "שינויים במערכת השעות",
+    "shell.color.custom": "צבע מותאם אישית:",
     "shell.color.default": "צבע ברירת מחדל",
     "shell.color.title": "בחירת צבע",
     "shell.courses.placeholder": "לחצו לבחירת מקצוע...",

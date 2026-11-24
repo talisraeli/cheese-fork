@@ -8,6 +8,10 @@ var CourseButtonList = (function () {
         this.element = element;
         this.courseManager = options.courseManager;
         this.colorGenerator = options.colorGenerator;
+        // The text color for a background color of colorGenerator, same arguments. White by default.
+        this.textColorGenerator = options.textColorGenerator || function () {
+            return 'white';
+        };
         this.readonly = options.readonly;
         this.onHoverIn = options.onHoverIn;
         this.onHoverOut = options.onHoverOut;
@@ -87,9 +91,20 @@ var CourseButtonList = (function () {
         });
     }
 
-    // Same as the color of the event in the calendar, which is identified by the full event id.
-    function customEventColor(that, eventId, title) {
-        return that.colorGenerator(title, 'custom_event_' + eventId);
+    // The CSS colors of a selected course, same as its events in the calendar.
+    function courseColors(that, course, layerId) {
+        return {
+            'background-color': that.colorGenerator(course, null, layerId),
+            color: that.textColorGenerator(course, null, layerId)
+        };
+    }
+
+    // Same as the colors of the event in the calendar, which is identified by the full event id.
+    function customEventColors(that, eventId, title) {
+        return {
+            'background-color': that.colorGenerator(title, 'custom_event_' + eventId),
+            color: that.textColorGenerator(title, 'custom_event_' + eventId)
+        };
     }
 
     // Custom events are listed after the courses of the layer.
@@ -552,8 +567,7 @@ var CourseButtonList = (function () {
         var badge = $('<span class="badge badge-secondary float-right">' +
             '<span class="course-button-list-badge-text">i</span>' +
             '</span>');
-        var color = that.colorGenerator(course, null, layerId);
-        button.css('background-color', color)
+        button.css(courseColors(that, course, layerId))
             .click(function () {
                 if (!that.readonly) {
                     onCourseButtonClick($(this), course);
@@ -674,12 +688,11 @@ var CourseButtonList = (function () {
                 button.removeClass('active').removeClass('course-button-list-item-conflicted');
                 button.find('.content-absolute').removeClass('course-button-list-content-has-hidden')
                     .tooltip('dispose');
-                button.css('background-color', '');
+                button.css({'background-color': '', color: ''});
                 that.onDisableCourse(course, getListLayerId(button.parent()));
             } else {
                 button.addClass('active');
-                var color = that.colorGenerator(course, null, getListLayerId(button.parent()));
-                button.css('background-color', color);
+                button.css(courseColors(that, course, getListLayerId(button.parent())));
                 that.onEnableCourse(course, getListLayerId(button.parent()));
             }
         }
@@ -1038,7 +1051,7 @@ var CourseButtonList = (function () {
 
         var item = $('<li class="list-group-item active course-button-list-item course-button-list-custom-event"></li>')
             .attr('data-custom-event-id', eventId)
-            .css('background-color', customEventColor(that, eventId, title))
+            .css(customEventColors(that, eventId, title))
             .hover(function () {
                 $(this).addClass('course-button-list-item-hovered');
                 that.onCustomEventHoverIn($(this).attr('data-custom-event-id'));
@@ -1057,7 +1070,7 @@ var CourseButtonList = (function () {
     CourseButtonList.prototype.updateCustomEvent = function (eventId, title) {
         var item = findCustomEventItem(this, eventId);
         item.find('.content-absolute, .content-bold-hidden').text(title);
-        item.css('background-color', customEventColor(this, eventId, title));
+        item.css(customEventColors(this, eventId, title));
     };
 
     CourseButtonList.prototype.removeCustomEvent = function (eventId) {
@@ -1114,10 +1127,9 @@ var CourseButtonList = (function () {
         getAllLists(that).find('li.list-group-item.active').each(function () {
             var item = $(this);
             var customEventId = item.attr('data-custom-event-id');
-            var color = customEventId !== undefined ?
-                customEventColor(that, customEventId, item.find('.content-bold-hidden').text()) :
-                that.colorGenerator(item.attr('data-course-number'), null, getListLayerId(item.parent()));
-            item.css('background-color', color);
+            item.css(customEventId !== undefined ?
+                customEventColors(that, customEventId, item.find('.content-bold-hidden').text()) :
+                courseColors(that, item.attr('data-course-number'), getListLayerId(item.parent())));
         });
     };
 
