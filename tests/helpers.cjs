@@ -156,16 +156,23 @@ function installFakeFirebase(window, options = {}) {
         }
     };
 
+    // Signed in from the start, unless options.signedOut, then signIn() signs in.
+    let authCallback = null;
     const auth = {
         languageCode: null,
         currentUser: null,
         onAuthStateChanged(callback) {
+            authCallback = callback;
             setTimeout(() => {
-                auth.currentUser = user;
-                callback(user);
+                auth.currentUser = options.signedOut ? null : user;
+                callback(auth.currentUser);
             }, 0);
         },
         signOut() {}
+    };
+    const signIn = () => {
+        auth.currentUser = user;
+        authCallback(user);
     };
     const authFunction = () => auth;
     authFunction.GoogleAuthProvider = { PROVIDER_ID: 'google.com' };
@@ -208,7 +215,7 @@ function installFakeFirebase(window, options = {}) {
         }
     };
 
-    return { user, data, uploads, metadataChecks };
+    return { user, data, uploads, metadataChecks, signIn };
 }
 
 module.exports = { root, read, load, createPage, loadUI, englishContent, installFakeFirebase };

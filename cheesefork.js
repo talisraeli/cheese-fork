@@ -1205,6 +1205,8 @@
                 resetSchedule();
                 watchSavedSchedule(function () {
                     $('#page-loader').hide();
+                    // Just signed in, offer the schedule built while signed out.
+                    offerLocalScheduleImport();
                 });
             } else {
                 // Fast reload.
@@ -2145,6 +2147,214 @@
 
             onLoadedFunc();
         }
+    }
+
+    // Importing the schedule built while signed out
+    //
+    // While signed out, the schedule is saved in localStorage, and signing in shows the account's
+    // schedule instead. Right after signing in, if the schedule of the current semester in this
+    // browser has courses or custom events and differs from the account's, offer to use it, to
+    // merge it into the account's, or to keep the account's. Using or merging it is a change like
+    // any other, so it can be undone.
+
+    function sessionCustomEventCount(session) {
+        var count = Object.keys(session[currentSemester + '_custom_events'] || {}).length;
+        sessionExtraLayerIds(session).forEach(function (layerId) {
+            count += Object.keys(session[currentSemester + '_layers'][layerId].customEvents).length;
+        });
+        return count;
+    }
+
+    // JSON with sorted object keys, for comparing sessions regardless of the key order.
+    function canonicalJson(value) {
+        if (Array.isArray(value)) {
+            return '[' + value.map(canonicalJson).join(',') + ']';
+        }
+        if (value && typeof value === 'object') {
+            return '{' + Object.keys(value).sort().map(function (key) {
+                return JSON.stringify(key) + ':' + canonicalJson(value[key]);
+            }).join(',') + '}';
+        }
+        return JSON.stringify(value);
+    }
+
+    // Returns a copy of accountSession with what localSession has and it doesn't: the courses of
+    // its first layer with their selected lessons, its custom events, and its other layers as
+    // new layers. The custom colors of what's added are copied unless already set.
+    function sessionsMerge(accountSession, localSession) {
+        var session = sessionCopy(accountSession);
+        var semesterCoursesKey = currentSemester + '_courses';
+        var semesterCustomEventsKey = currentSemester + '_custom_events';
+        var semesterColorsKey = currentSemester + '_colors';
+        var semesterLayersKey = currentSemester + '_layers';
+
+        session[semesterCoursesKey] = session[semesterCoursesKey] || [];
+        session[semesterCustomEventsKey] = session[semesterCustomEventsKey] || {};
+        session[semesterColorsKey] = session[semesterColorsKey] || {};
+        session[semesterLayersKey] = session[semesterLayersKey] || {};
+
+        var colors = session[semesterColorsKey];
+        var localColors = localSession[semesterColorsKey] || {};
+        var copyColor = function (fromKey, toKey) {
+            if (localColors[fromKey] && !colors[toKey]) {
+                colors[toKey] = localColors[fromKey];
+            }
+        };
+
+        var usedEventIds = {};
+        Object.keys(session[semesterCustomEventsKey]).forEach(function (eventId) {
+            usedEventIds[eventId] = true;
+        });
+        sessionExtraLayerIds(session).forEach(function (layerId) {
+            Object.keys(session[semesterLayersKey][layerId].customEvents).forEach(function (eventId) {
+                usedEventIds[eventId] = true;
+            });
+        });
+
+        // Custom event ids are numbers, see onCustomEventAdded.
+        var addCustomEvents = function (localEvents, targetEvents) {
+            Object.keys(localEvents || {}).forEach(function (eventId) {
+                var newEventId = eventId;
+                while (usedEventIds[newEventId]) {
+                    newEventId = String(parseInt(newEventId, 10) + 1);
+                }
+                usedEventIds[newEventId] = true;
+                targetEvents[newEventId] = $.extend(true, {}, localEvents[eventId]);
+                copyColor('custom_event_' + eventId, 'custom_event_' + newEventId);
+            });
+        };
+
+        // The first layer.
+        sessionLayerCourses(localSession, '').forEach(function (course) {
+            if (courseManager.doesExist(course) && session[semesterCoursesKey].indexOf(course) === -1) {
+                session[semesterCoursesKey].push(course);
+                session[layerLessonsKey(course, '')] = $.extend(true, {}, localSession[layerLessonsKey(course, '')]);
+                copyColor(course, course);
+            }
+        });
+        addCustomEvents(localSession[semesterCustomEventsKey], session[semesterCustomEventsKey]);
+
+        // The other layers, as new layers.
+        var layers = session[semesterLayersKey];
+        sessionExtraLayerIds(localSession).forEach(function (layerId) {
+            var localLayer = localSession[semesterLayersKey][layerId];
+
+            var newLayerId = layerId;
+            while (layers[newLayerId]) {
+                newLayerId = 'layer' + (parseInt(newLayerId.slice('layer'.length), 10) + 1);
+            }
+
+            var layer = { name: localLayer.name, courses: [], customEvents: {} };
+            if (localLayer.hidden) {
+                layer.hidden = true;
+            }
+            layers[newLayerId] = layer;
+
+            localLayer.courses.forEach(function (course) {
+                if (courseManager.doesExist(course) && layer.courses.indexOf(course) === -1) {
+                    layer.courses.push(course);
+                    session[layerLessonsKey(course, newLayerId)] =
+                        $.extend(true, {}, localSession[layerLessonsKey(course, layerId)]);
+                    copyColor(courseColorKey(course, layerId), courseColorKey(course, newLayerId));
+                }
+            });
+            addCustomEvents(localLayer.customEvents, layer.customEvents);
+        });
+
+        return session;
+    }
+
+    // Removes the schedule of the current semester from localStorage.
+    function localStorageScheduleClear() {
+        try {
+            var prefix = currentSemester + '_';
+            var keys = [];
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (key.lastIndexOf(prefix, 0) === 0) {
+                    keys.push(key);
+                }
+            }
+            keys.forEach(function (key) {
+                localStorage.removeItem(key);
+            });
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+    }
+
+    function offerLocalScheduleImport() {
+        var localSession = savedSessionFromLocalStorage();
+        var localCourses = sessionAllCourses(localSession).filter(function (course) {
+            return courseManager.doesExist(course);
+        });
+        var localEventCount = sessionCustomEventCount(localSession);
+        if ((localCourses.length === 0 && localEventCount === 0) ||
+            canonicalJson(localSession) === canonicalJson(currentSavedSession)) {
+            return;
+        }
+
+        var summary = function (courses, events) {
+            return CheeseI18n.t('shell.importLocal.summary', {courses: courses, events: events});
+        };
+
+        var message = $('<div></div>');
+        message.append($('<p></p>').text(CheeseI18n.t('shell.importLocal.message', {
+            local: summary(localCourses.length, localEventCount),
+            account: summary(sessionAllCourses(currentSavedSession).length, sessionCustomEventCount(currentSavedSession))
+        })));
+        var clearCheckbox = $('<input type="checkbox" class="form-check-input" id="import-local-clear" checked>');
+        message.append($('<div class="form-check"></div>')
+            .append(clearCheckbox)
+            .append($('<label class="form-check-label" for="import-local-clear"></label>')
+                .text(CheeseI18n.t('shell.importLocal.clearLocal'))));
+
+        var choose = function (dialog, choice) {
+            gtag('event', 'import-local-' + choice);
+            dialog.close();
+
+            var newSession = null;
+            if (choice === 'use') {
+                newSession = localSession;
+            } else if (choice === 'merge') {
+                newSession = sessionsMerge(currentSavedSession, localSession);
+            }
+
+            if (newSession) {
+                restoreSavedSession(currentSavedSession, newSession);
+                currentSavedSession = sessionCopy(newSession);
+                onSavedSessionChange();
+            }
+
+            if (clearCheckbox.prop('checked')) {
+                localStorageScheduleClear();
+            }
+        };
+
+        BootstrapDialog.show({
+            title: CheeseI18n.t('shell.importLocal.title'),
+            message: message,
+            buttons: [{
+                id: 'import-local-use',
+                label: CheeseI18n.t('shell.importLocal.useLocal'),
+                action: function (dialog) {
+                    choose(dialog, 'use');
+                }
+            }, {
+                id: 'import-local-merge',
+                label: CheeseI18n.t('shell.importLocal.merge'),
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    choose(dialog, 'merge');
+                }
+            }, {
+                id: 'import-local-keep',
+                label: CheeseI18n.t('shell.importLocal.keepAccount'),
+                action: function (dialog) {
+                    choose(dialog, 'keep');
+                }
+            }]
+        });
     }
 
     function savedSessionFromLocalStorage() {
