@@ -183,6 +183,7 @@
             onReorder: coursesOrderSave,
             onCourseMove: layerCourseMove,
             onLayerCreate: layerCreate,
+            onLayerDuplicate: layerDuplicate,
             onLayerRename: layerRename,
             onLayerDelete: layerDelete,
             onLayerVisibilityChange: layerVisibilityChange,
@@ -1647,6 +1648,15 @@
     }
 
     // Creates a new layer. If course or customEventId are given, the item is moved to the new layer.
+    // Layer ids are the creation time in seconds, made unique.
+    function newLayerIdFor(layers) {
+        var layerIdCounter = Math.round(Date.now() / 1000);
+        while (layers['layer' + layerIdCounter]) {
+            layerIdCounter++;
+        }
+        return 'layer' + layerIdCounter;
+    }
+
     function layerCreate(course, fromLayerId, customEventId) {
         var semesterLayersKey = currentSemester + '_layers';
         var newLayerId;
@@ -1654,12 +1664,7 @@
         savedSessionUpdateAndReload(function (session) {
             var layers = session[semesterLayersKey];
 
-            var layerIdCounter = Math.round(Date.now() / 1000);
-            newLayerId = 'layer' + layerIdCounter;
-            while (layers[newLayerId]) {
-                layerIdCounter++;
-                newLayerId = 'layer' + layerIdCounter;
-            }
+            newLayerId = newLayerIdFor(layers);
 
             layers[newLayerId] = {
                 name: CheeseI18n.t('shell.layers.defaultName', {number: sessionExtraLayerIds(session).length + 2}),
@@ -1678,6 +1683,67 @@
             // An empty layer was requested, probably for adding courses to it.
             courseButtonList.setActiveLayer(newLayerId);
         }
+    }
+
+    // Adds a copy of the layer, with its courses and their selected lessons, its custom events
+    // and their custom colors, and selects it for adding courses, to try a variation of a plan.
+    // The copy is visible even if the layer is hidden.
+    function layerDuplicate(layerId) {
+        var semesterLayersKey = currentSemester + '_layers';
+        var semesterColorsKey = currentSemester + '_colors';
+        var newLayerId;
+
+        var layerName = currentLayers.filter(function (layer) {
+            return layer.id === layerId;
+        })[0].name;
+
+        savedSessionUpdateAndReload(function (session) {
+            var layers = session[semesterLayersKey];
+            var colors = session[semesterColorsKey];
+
+            newLayerId = newLayerIdFor(layers);
+
+            var courses = sessionLayerCourses(session, layerId).slice();
+            var layer = {
+                name: CheeseI18n.t('courses.layers.copyName', {name: layerName}),
+                courses: courses,
+                customEvents: {}
+            };
+            layers[newLayerId] = layer;
+
+            courses.forEach(function (course) {
+                session[layerLessonsKey(course, newLayerId)] =
+                    $.extend(true, {}, session[layerLessonsKey(course, layerId)] || {});
+                if (colors[courseColorKey(course, layerId)]) {
+                    colors[courseColorKey(course, newLayerId)] = colors[courseColorKey(course, layerId)];
+                }
+            });
+
+            // Custom event ids are unique across the layers, see onCustomEventAdded.
+            var usedEventIds = {};
+            [''].concat(sessionExtraLayerIds(session)).forEach(function (otherLayerId) {
+                Object.keys(sessionLayerCustomEvents(session, otherLayerId) || {}).forEach(function (eventId) {
+                    usedEventIds[eventId] = true;
+                });
+            });
+            var eventIdCounter = Math.round(Date.now() / 1000);
+
+            var customEvents = sessionLayerCustomEvents(session, layerId) || {};
+            Object.keys(customEvents).sort().forEach(function (eventId) {
+                while (usedEventIds[eventIdCounter]) {
+                    eventIdCounter++;
+                }
+                var newEventId = String(eventIdCounter);
+                usedEventIds[newEventId] = true;
+
+                layer.customEvents[newEventId] = $.extend(true, {}, customEvents[eventId]);
+                if (colors['custom_event_' + eventId]) {
+                    colors['custom_event_' + newEventId] = colors['custom_event_' + eventId];
+                }
+            });
+        });
+
+        courseButtonList.setActiveLayer(newLayerId);
     }
 
     function layerRename(layerId, name) {
