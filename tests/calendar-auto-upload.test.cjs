@@ -63,6 +63,7 @@ test('an exported calendar is uploaded again after schedule changes, once for se
         let upload = firebase.uploads[0];
         assert.equal(upload.path, CALENDAR_PATH);
         assert.equal(upload.metadata.contentType, 'text/calendar; charset=utf-8');
+        assert.match(upload.metadata.customMetadata.fingerprint, /^[0-9a-f]+$/);
         assert.ok(upload.text.includes('SUMMARY:Lecture 10 – Course Alpha'));
         assert.ok(upload.text.includes('EXDATE;TZID=Asia/Jerusalem:20261101T103000'), 'the days off are excluded');
 
@@ -85,6 +86,52 @@ test('an exported calendar is uploaded again after schedule changes, once for se
         // The file and the days off are checked once.
         assert.deepEqual(firebase.metadataChecks, [CALENDAR_PATH]);
         assert.equal(daysOffRequests.length, 1);
+    } finally {
+        dom.window.close();
+    }
+});
+
+// Loads the site once, as above, and returns the fingerprint its upload saved with the file.
+async function uploadedFingerprint() {
+    const { dom, firebase } = await loadSignedIn([CALENDAR_PATH]);
+    try {
+        await uploadsCount(firebase, 1);
+        return firebase.uploads[0].metadata.customMetadata.fingerprint;
+    } finally {
+        dom.window.close();
+    }
+}
+
+test('a calendar that is the same as the uploaded one is not uploaded again', async () => {
+    const fingerprint = await uploadedFingerprint();
+
+    // Another visit, building the calendar at another time, finds the same events.
+    const { dom, window, firebase } = await loadSignedIn([{ path: CALENDAR_PATH, customMetadata: { fingerprint } }]);
+    try {
+        await settle();
+        assert.equal(firebase.uploads.length, 0);
+        assert.deepEqual(firebase.metadataChecks, [CALENDAR_PATH], 'the fingerprint comes with the existence check');
+
+        // Changes that are undone before the upload leave the calendar the same.
+        window.$('#course-calendar .fc-event').trigger('click');
+        window.$('#course-calendar .fc-event').trigger('click');
+        await settle();
+        assert.equal(firebase.uploads.length, 0);
+
+        // A real change is uploaded, with its own fingerprint.
+        window.$('#course-calendar .fc-event').trigger('click');
+        await uploadsCount(firebase, 1);
+        assert.notEqual(firebase.uploads[0].metadata.customMetadata.fingerprint, fingerprint);
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('a calendar that changed elsewhere, such as with the API, is uploaded on the next visit', async () => {
+    const { dom, firebase } = await loadSignedIn([{ path: CALENDAR_PATH, customMetadata: { fingerprint: 'stale' } }]);
+    try {
+        await uploadsCount(firebase, 1);
+        assert.ok(firebase.uploads[0].text.includes('SUMMARY:Lecture 10 – Course Alpha'));
     } finally {
         dom.window.close();
     }
