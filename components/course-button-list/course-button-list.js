@@ -20,6 +20,7 @@ var CourseButtonList = (function () {
         this.onReorder = options.onReorder;
         this.onCourseMove = options.onCourseMove;
         this.onLayerCreate = options.onLayerCreate;
+        this.onLayerDuplicate = options.onLayerDuplicate;
         this.onLayerRename = options.onLayerRename;
         this.onLayerDelete = options.onLayerDelete;
         this.onLayerVisibilityChange = options.onLayerVisibilityChange;
@@ -132,10 +133,12 @@ var CourseButtonList = (function () {
             '<div class="dropdown-menu dropdown-menu-right text-right">' +
             '<a class="dropdown-item course-button-list-layer-rename" href="#"></a>' +
             '<a class="dropdown-item course-button-list-layer-add" href="#"></a>' +
+            '<a class="dropdown-item course-button-list-layer-duplicate" href="#"></a>' +
             '<a class="dropdown-item course-button-list-layer-delete" href="#"></a>' +
             '</div></span>');
         menu.find('.course-button-list-layer-rename').text(CheeseI18n.t('courses.layers.rename'));
         menu.find('.course-button-list-layer-add').text(CheeseI18n.t('courses.layers.add'));
+        menu.find('.course-button-list-layer-duplicate').text(CheeseI18n.t('courses.layers.duplicate'));
         menu.find('.course-button-list-layer-delete').text(CheeseI18n.t('courses.layers.delete'));
 
         header.append(menu);
@@ -160,6 +163,11 @@ var CourseButtonList = (function () {
         menu.find('.course-button-list-layer-add').click(function (e) {
             e.preventDefault();
             that.onLayerCreate(null, null);
+        });
+
+        menu.find('.course-button-list-layer-duplicate').click(function (e) {
+            e.preventDefault();
+            that.onLayerDuplicate(layer.id);
         });
 
         menu.find('.course-button-list-layer-delete').click(function (e) {
