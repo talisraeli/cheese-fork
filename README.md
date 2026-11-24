@@ -76,7 +76,12 @@ every path to the `api` function (`functions/hosting-public` is intentionally em
 
 The deploy copies `course-manager.js` into the functions, so that the course data they
 save matches what the site saves. Keep the schedule layout in
-`functions/lib/schedule.js` in sync with `cheesefork.js`.
+`functions/lib/schedule.js` in sync with `cheesefork.js`, including its layer functions
+(`layerCreate`, `layerDelete`, `layerDuplicate` and the others), which the API mirrors.
+
+`GET /semesters` reads the list of semesters from `availableSemesters` in the live site's
+`index.html` (see `functions/lib/semesters.js`), so semesters added by CI show up in the
+API without deploying the functions.
 
 ## Credits
 

@@ -461,6 +461,422 @@ function setCustomEventColor(data, semester, eventId, color, layer) {
     return update;
 }
 
+// Layer changes rewrite several fields at once, like the client does. They're made on a copy of
+// the semester's fields (see semesterChange), mirroring the layer functions of cheesefork.js:
+// layerCreate, layerRename, layerVisibilityChange, layerDelete, layerDuplicate and
+// sessionLayerCourseMove.
+
+const LAYER_NAME_MAX_LENGTH = 20;
+
+// Returns the update that turns the semester's fields in data into those of the copy that
+// change(copy) modifies, with whole fields set or removed, as the client saves them.
+function semesterChange(data, semester, change) {
+    const prefix = semester + '_';
+    const before = {};
+    Object.keys(data).forEach(key => {
+        if (key.startsWith(prefix)) {
+            before[key] = data[key];
+        }
+    });
+    const after = JSON.parse(JSON.stringify(before));
+    const result = change(after);
+
+    // Empty layers and colors aren't saved, see savedSessionChangesSave.
+    const k = keys(semester);
+    after[k.layers] = sanitizeLayers(after[k.layers]);
+    ['layers', 'colors'].forEach(name => {
+        if (!isPlainObject(after[k[name]]) || Object.keys(after[k[name]]).length === 0) {
+            delete after[k[name]];
+        }
+    });
+
+    // The metadata is kept only for courses that are in a layer, see removeCourse.
+    const coursesAfter = allCourses(after, semester);
+    allCourses(before, semester).forEach(course => {
+        if (!coursesAfter.includes(course)) {
+            delete after[k.metadata(course)];
+        }
+    });
+
+    const update = {};
+    new Set(Object.keys(before).concat(Object.keys(after))).forEach(key => {
+        if (!(key in after)) {
+            update[key] = DELETE;
+        } else if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) {
+            update[key] = after[key];
+        }
+    });
+    return { update: update, result: result };
+}
+
+// The layers of a semester copy, with the courses and custom events of each, see sanitizeLayers.
+function copyLayers(session, semester) {
+    const k = keys(semester);
+    session[k.layers] = sanitizeLayers(session[k.layers]);
+    return session[k.layers];
+}
+
+function sessionLayerCourses(session, semester, layerId) {
+    const k = keys(semester);
+    if (!layerId) {
+        session[k.courses] = Array.isArray(session[k.courses]) ? session[k.courses] : [];
+        return session[k.courses];
+    }
+    return session[k.layers][layerId].courses;
+}
+
+function setSessionLayerCourses(session, semester, layerId, courses) {
+    if (layerId) {
+        session[keys(semester).layers][layerId].courses = courses;
+    } else {
+        session[keys(semester).courses] = courses;
+    }
+}
+
+function sessionLayerCustomEvents(session, semester, layerId) {
+    const k = keys(semester);
+    if (!layerId) {
+        session[k.customEvents] = isPlainObject(session[k.customEvents]) ? session[k.customEvents] : {};
+        return session[k.customEvents];
+    }
+    return session[k.layers][layerId].customEvents;
+}
+
+function sessionColors(session, semester) {
+    const k = keys(semester);
+    session[k.colors] = isPlainObject(session[k.colors]) ? session[k.colors] : {};
+    return session[k.colors];
+}
+
+function layerName(name) {
+    if (typeof name !== 'string' || name.trim() === '' || name.trim().length > LAYER_NAME_MAX_LENGTH) {
+        throw new ApiError(400, 'invalid_name', 'name must be a non-empty string of up to ' + LAYER_NAME_MAX_LENGTH + ' characters.');
+    }
+    return name.trim();
+}
+
+function layerHidden(hidden) {
+    if (typeof hidden !== 'boolean') {
+        throw new ApiError(400, 'invalid_hidden', 'hidden must be true or false.');
+    }
+    return hidden;
+}
+
+// Layer ids are the creation time in seconds, made unique, see newLayerIdFor in cheesefork.js.
+function newLayerId(layers, nowSeconds) {
+    let counter = nowSeconds;
+    while (layers['layer' + counter]) {
+        counter++;
+    }
+    return 'layer' + counter;
+}
+
+// The name the site shows for a layer, see layersFromSavedSession.
+function layerDisplayName(layers, layerId) {
+    const layer = layers[layerId || 'default'];
+    if (layer && typeof layer.name === 'string' && layer.name !== '') {
+        return layer.name;
+    }
+    return layerId ? 'Layer' : 'Layer 1';
+}
+
+function requireLayersUsed(data, semester) {
+    if (extraLayerIds(sanitizeLayers(data[keys(semester).layers])).length === 0) {
+        throw new ApiError(409, 'layers_not_used', 'This schedule has a single layer. Create a layer first.');
+    }
+}
+
+// Accepts 'default' (or no layer) for the first layer, or an existing layer id.
+function resolveLayerParam(data, semester, layer) {
+    return resolveLayer(data, semester, layer);
+}
+
+function createLayer(data, semester, input, nowSeconds) {
+    const name = input.name !== undefined ? layerName(input.name) : null;
+    const hidden = input.hidden !== undefined ? layerHidden(input.hidden) : false;
+
+    return semesterChange(data, semester, session => {
+        const layers = copyLayers(session, semester);
+        const layerId = newLayerId(layers, nowSeconds);
+        const layer = {
+            name: name || 'Layer ' + (extraLayerIds(layers).length + 2),
+            courses: [],
+            customEvents: {}
+        };
+        if (hidden) {
+            layer.hidden = true;
+        }
+        layers[layerId] = layer;
+        return layerId;
+    });
+}
+
+function updateLayer(data, semester, layer, input) {
+    if (input.name === undefined && input.hidden === undefined) {
+        throw new ApiError(400, 'missing_field', 'Send name, hidden or both.');
+    }
+    requireLayersUsed(data, semester);
+    const layerId = resolveLayerParam(data, semester, layer);
+    const name = input.name !== undefined ? layerName(input.name) : undefined;
+    const hidden = input.hidden !== undefined ? layerHidden(input.hidden) : undefined;
+
+    return semesterChange(data, semester, session => {
+        const layers = copyLayers(session, semester);
+        const key = layerId || 'default';
+        layers[key] = layers[key] || {};
+        if (name !== undefined) {
+            layers[key].name = name;
+        }
+        if (hidden === true) {
+            layers[key].hidden = true;
+        } else if (hidden === false) {
+            delete layers[key].hidden;
+        }
+        if (Object.keys(layers.default || {}).length === 0) {
+            delete layers.default;
+        }
+        return layerId || 'default';
+    });
+}
+
+function deleteLayer(data, semester, layer) {
+    requireLayersUsed(data, semester);
+    const layerId = resolveLayerParam(data, semester, layer);
+
+    return semesterChange(data, semester, session => {
+        const k = keys(semester);
+        const layers = copyLayers(session, semester);
+        const colors = sessionColors(session, semester);
+
+        sessionLayerCourses(session, semester, layerId).forEach(course => {
+            delete session[k.lessons(course, layerId)];
+        });
+
+        // The colors of the removed custom events are no longer needed. Course colors of the
+        // first layer are kept, same as when removing a course, since its keys are reused.
+        Object.keys(sessionLayerCustomEvents(session, semester, layerId)).forEach(eventId => {
+            delete colors[customEventColorKey(eventId)];
+        });
+
+        const removeLayerCourseColors = id => {
+            Object.keys(colors).forEach(colorKey => {
+                if (colorKey.startsWith(id + '_')) {
+                    delete colors[colorKey];
+                }
+            });
+        };
+
+        if (layerId) {
+            removeLayerCourseColors(layerId);
+            delete layers[layerId];
+            return;
+        }
+
+        // The first layer can't be removed, since its keys are those of a schedule without
+        // layers. The next layer is moved into it instead.
+        const nextLayerId = extraLayerIds(layers)[0];
+        const nextLayer = layers[nextLayerId];
+
+        session[k.courses] = nextLayer.courses;
+        nextLayer.courses.forEach(course => {
+            const nextKey = k.lessons(course, nextLayerId);
+            session[k.lessons(course, '')] = isPlainObject(session[nextKey]) ? session[nextKey] : {};
+            delete session[nextKey];
+
+            const fromColorKey = courseColorKey(course, nextLayerId);
+            if (colors[fromColorKey]) {
+                colors[course] = colors[fromColorKey];
+            } else {
+                delete colors[course];
+            }
+        });
+        removeLayerCourseColors(nextLayerId);
+
+        session[k.customEvents] = nextLayer.customEvents;
+
+        layers.default = { name: nextLayer.name };
+        if (nextLayer.hidden) {
+            layers.default.hidden = true;
+        }
+        delete layers[nextLayerId];
+    });
+}
+
+function duplicateLayer(data, semester, layer, nowSeconds) {
+    const layerId = resolveLayerParam(data, semester, layer);
+
+    return semesterChange(data, semester, session => {
+        const k = keys(semester);
+        const layers = copyLayers(session, semester);
+        const colors = sessionColors(session, semester);
+        const newId = newLayerId(layers, nowSeconds);
+
+        const courses = sessionLayerCourses(session, semester, layerId).slice();
+        const copy = {
+            name: layerDisplayName(layers, layerId) + ' (copy)',
+            courses: courses,
+            customEvents: {}
+        };
+        layers[newId] = copy;
+
+        courses.forEach(course => {
+            const lessons = session[k.lessons(course, layerId)];
+            session[k.lessons(course, newId)] = isPlainObject(lessons) ? JSON.parse(JSON.stringify(lessons)) : {};
+            if (colors[courseColorKey(course, layerId)]) {
+                colors[courseColorKey(course, newId)] = colors[courseColorKey(course, layerId)];
+            }
+        });
+
+        // Custom event ids are unique across the layers.
+        const usedEventIds = new Set();
+        [''].concat(extraLayerIds(layers)).forEach(otherLayerId => {
+            Object.keys(sessionLayerCustomEvents(session, semester, otherLayerId)).forEach(id => usedEventIds.add(id));
+        });
+        let eventIdCounter = nowSeconds;
+        const customEvents = sessionLayerCustomEvents(session, semester, layerId);
+        Object.keys(customEvents).sort().forEach(eventId => {
+            while (usedEventIds.has(String(eventIdCounter))) {
+                eventIdCounter++;
+            }
+            const newEventId = String(eventIdCounter);
+            usedEventIds.add(newEventId);
+            copy.customEvents[newEventId] = JSON.parse(JSON.stringify(customEvents[eventId]));
+            if (colors[customEventColorKey(eventId)]) {
+                colors[customEventColorKey(newEventId)] = colors[customEventColorKey(eventId)];
+            }
+        });
+
+        return newId;
+    });
+}
+
+function moveCourse(data, semester, course, fromLayer, toLayer) {
+    const fromLayerId = resolveLayerParam(data, semester, fromLayer);
+    if (typeof toLayer !== 'string' || toLayer === '') {
+        throw new ApiError(400, 'missing_field', 'to is required: the id of the layer to move the course to.');
+    }
+    const toLayerId = resolveLayerParam(data, semester, toLayer);
+    requireCourse(data, semester, course, fromLayerId);
+    if (fromLayerId === toLayerId) {
+        throw new ApiError(400, 'same_layer', 'The course is already in this layer.');
+    }
+    if (layerCourses(data, semester, toLayerId).includes(course)) {
+        throw new ApiError(409, 'course_exists', 'Course ' + course + ' is already in the target layer.');
+    }
+
+    return semesterChange(data, semester, session => {
+        const k = keys(semester);
+        copyLayers(session, semester);
+        const colors = sessionColors(session, semester);
+
+        setSessionLayerCourses(session, semester, fromLayerId,
+            sessionLayerCourses(session, semester, fromLayerId).filter(item => item !== course));
+        setSessionLayerCourses(session, semester, toLayerId,
+            sessionLayerCourses(session, semester, toLayerId).concat([course]));
+
+        const fromKey = k.lessons(course, fromLayerId);
+        session[k.lessons(course, toLayerId)] = isPlainObject(session[fromKey]) ? session[fromKey] : {};
+        delete session[fromKey];
+
+        // The color moves with the course.
+        const fromColorKey = courseColorKey(course, fromLayerId);
+        const toColorKey = courseColorKey(course, toLayerId);
+        if (colors[fromColorKey]) {
+            colors[toColorKey] = colors[fromColorKey];
+        } else {
+            delete colors[toColorKey];
+        }
+        delete colors[fromColorKey];
+
+        return toLayerId || 'default';
+    });
+}
+
+// Hebrew day names in the catalog, from Sunday.
+const CATALOG_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function minutes(time) {
+    const [hours, mins] = time.split(':').map(value => parseInt(value, 10));
+    return hours * 60 + mins;
+}
+
+// Overlapping items of a layer: the meetings of its selected lessons and its custom events.
+// lessonsOfCourse(course) returns the catalog lessons of a course, see Catalog.lessons.
+function findConflicts(data, semester, layer, lessonsOfCourse, courseName) {
+    const formatted = readLayer(data, semester, layer);
+    const items = [];
+
+    formatted.courses.forEach(entry => {
+        const lessons = lessonsOfCourse(entry.course);
+        Object.keys(entry.lessons).forEach(type => {
+            const number = entry.lessons[type];
+            lessons.filter(lesson => lesson.type === type && lesson.number === number).forEach(lesson => {
+                const day = CATALOG_DAYS.indexOf(lesson.day);
+                const time = /^(\d{1,2}:\d\d)\s*-\s*(\d{1,2}:\d\d)$/.exec(String(lesson.time || '').trim());
+                if (day === -1 || !time) {
+                    return;
+                }
+                items.push({
+                    key: 'lesson:' + entry.course + ':' + type + ':' + number,
+                    day: day,
+                    start: minutes(time[1]),
+                    end: minutes(time[2]),
+                    item: {
+                        kind: 'lesson',
+                        course: entry.course,
+                        name: courseName(entry.course),
+                        type: type,
+                        number: number,
+                        day: DAYS[day],
+                        startTime: time[1].padStart(5, '0'),
+                        endTime: time[2].padStart(5, '0')
+                    }
+                });
+            });
+        });
+    });
+
+    formatted.customEvents.forEach(event => {
+        if (!event.day) {
+            return;
+        }
+        items.push({
+            key: 'customEvent:' + event.id,
+            day: DAYS.indexOf(event.day),
+            start: minutes(event.startTime),
+            end: event.endTime === '24:00' ? 24 * 60 : minutes(event.endTime),
+            item: {
+                kind: 'customEvent',
+                id: event.id,
+                title: event.title,
+                day: event.day,
+                startTime: event.startTime,
+                endTime: event.endTime
+            }
+        });
+    });
+
+    const conflicts = [];
+    items.forEach((a, i) => {
+        items.slice(i + 1).forEach(b => {
+            if (a.key !== b.key && a.day === b.day && a.start < b.end && b.start < a.end) {
+                conflicts.push([a.item, b.item]);
+            }
+        });
+    });
+    return { layer: formatted.id, conflicts: conflicts };
+}
+
+// Whether a semester document has courses or custom events, in any layer.
+function hasSchedule(data, semester) {
+    if (allCourses(data, semester).length > 0) {
+        return true;
+    }
+    const layers = sanitizeLayers(data[keys(semester).layers]);
+    return [''].concat(extraLayerIds(layers)).some(layerId =>
+        Object.keys(customEventsOf(data, semester, layerId)).length > 0);
+}
+
 function documentPath(uid, semester) {
     if (SEMESTERS_WITHOUT_SUB_COLLECTION.includes(semester)) {
         return 'users/' + uid;
@@ -484,5 +900,13 @@ module.exports = {
     addCustomEvent,
     updateCustomEvent,
     removeCustomEvent,
-    setCustomEventColor
+    setCustomEventColor,
+    createLayer,
+    updateLayer,
+    deleteLayer,
+    duplicateLayer,
+    moveCourse,
+    findConflicts,
+    hasSchedule,
+    SEMESTERS_WITHOUT_SUB_COLLECTION
 };

@@ -50,7 +50,8 @@ its own, so don't rely on getting exactly 60 requests or on being stopped at exa
 
 Schedules with layers (alternative plans) keep separate courses, lessons and custom events
 per layer. Endpoints that change these use the first layer by default. Add `?layer=layer1`
-(an id from the `layers` list in `GET /schedule`) to use another layer.
+(an id from `GET /layers`) to use another layer. The first layer's id is `default`. See
+[Layers](#layers-1) for managing the layers themselves.
 
 ## Endpoints
 
@@ -59,6 +60,24 @@ per layer. Endpoints that change these use the first layer by default. Add `?lay
 | Method | Path  | Description |
 | ------ | ----- | ----------- |
 | GET    | `/me` | The user the key belongs to: `{"uid": "...", "displayName": "..."}` |
+
+### Semesters
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/semesters` | The semesters on the site, newest first, and which ones you have a schedule in |
+
+```json
+{
+  "latest": "202601",
+  "semesters": [
+    {"semester": "202601", "start": "2026-10-28", "end": "2027-01-28", "hasSchedule": true}
+  ]
+}
+```
+
+`latest` is the semester the site opens by default. `hasSchedule` is true if the semester
+has courses or custom events in any layer.
 
 ### Schedule
 
@@ -94,9 +113,26 @@ offered in that semester, and a lesson can be chosen only if the course has it.
 
 | Method | Path | Description |
 | ------ | ---- | ----------- |
+| GET | `/semesters/{semester}/catalog?q={query}` | Search courses by number or name |
 | GET | `/semesters/{semester}/catalog/{course}` | A course's catalog details and all of its lessons |
 
-Use it to find the lesson numbers to choose. Each lesson has its `type`, `number`, `group`,
+Search with at least 2 characters: part of a course number (`0234`, also the old 6-digit
+form such as `234114`) or of its name, in the catalog's language (Hebrew), ignoring
+quotes and gershayim. Exact numbers come first, then numbers that start with the query.
+Results are paged with `limit` (1–100, default 20) and `offset`:
+
+```json
+{
+  "semester": "202601",
+  "query": "0234",
+  "total": 87,
+  "offset": 0,
+  "limit": 20,
+  "courses": [{"course": "02340114", "name": "מבוא למדעי המחשב מ'", "points": 4}]
+}
+```
+
+Use the course details to find the lesson numbers to choose. Each lesson has its `type`, `number`, `group`,
 `day`, `time`, `building`, `room` and `staff`, in the catalog's language (Hebrew).
 
 ### Custom events
@@ -126,6 +162,55 @@ Events repeat every week, so they have a day and times but no date:
 `color` is optional. When you change an event, send only the fields that change. Responses
 also include the event's `id`, and the `start` and `end` values that the site stores.
 
+### Layers
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/semesters/{semester}/layers` | The layers, with their names, visibility and counts |
+| POST | `/semesters/{semester}/layers` | Add an empty layer. Optional body: `{"name": "Plan B", "hidden": false}` |
+| PATCH | `/semesters/{semester}/layers/{layer}` | Rename, hide or show a layer. Body: `{"name": "Plan A"}`, `{"hidden": true}` or both |
+| DELETE | `/semesters/{semester}/layers/{layer}` | Delete a layer with its courses and custom events |
+| POST | `/semesters/{semester}/layers/{layer}/duplicate` | Copy a layer with its courses, lessons, custom events and colors |
+| POST | `/semesters/{semester}/courses/{course}/move` | Move a course to another layer. Body: `{"to": "layer1"}` |
+
+Layers work as on the site:
+
+- A schedule starts with one layer, `default`. Adding a layer starts using layers.
+- Names have up to 20 characters. New layers are named "Layer 2", "Layer 3" and so on unless
+  you give a name, and a copy is named "<name> (copy)".
+- Hidden layers keep their courses but aren't shown in the calendar or exported.
+- Renaming or hiding `default`, and deleting any layer, need at least two layers
+  (`409 layers_not_used` otherwise). Deleting `default` moves the next layer into it, with
+  its name. When one layer is left, the schedule no longer uses layers.
+- Moving a course takes its chosen lessons and color along. It moves from the first layer,
+  or from `?layer=`. The responses of `POST` and `PATCH` describe the layer like
+  `GET /courses` and `GET /custom-events` together.
+
+### Conflicts
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/semesters/{semester}/conflicts` | The overlapping lessons and custom events of a layer |
+
+It checks the meetings of the chosen lessons and the custom events of the first layer, or of
+`?layer=`. Each conflict is a pair of overlapping items:
+
+```json
+{
+  "semester": "202601",
+  "layer": "default",
+  "conflicts": [[
+    {"kind": "lesson", "course": "02340114", "name": "מבוא למדעי המחשב מ'", "type": "הרצאה",
+     "number": 10, "day": "sunday", "startTime": "10:30", "endTime": "12:30"},
+    {"kind": "customEvent", "id": "1700000000", "title": "Gym", "day": "sunday",
+     "startTime": "11:00", "endTime": "12:00"}
+  ]]
+}
+```
+
+Items that only touch, such as one ending at 12:30 and another starting at 12:30, don't
+conflict.
+
 ## Examples
 
 ```sh
@@ -134,6 +219,9 @@ API=https://api.cf.talisrae.li/v1
 
 # View your courses
 curl -H "Authorization: Bearer $KEY" $API/semesters/202601/courses
+
+# Find a course
+curl -H "Authorization: Bearer $KEY" "$API/semesters/202601/catalog?q=0234"
 
 # Add a course and choose its lecture
 curl -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \

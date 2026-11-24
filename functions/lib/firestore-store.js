@@ -1,7 +1,7 @@
 'use strict';
 
 const { FieldPath, FieldValue, Timestamp } = require('firebase-admin/firestore');
-const { DELETE, documentPath } = require('./schedule');
+const { DELETE, documentPath, SEMESTERS_WITHOUT_SUB_COLLECTION } = require('./schedule');
 
 const LAST_USED_RESOLUTION_MS = 60 * 60 * 1000;
 
@@ -60,6 +60,23 @@ function createFirestoreStore(db, auth) {
 
         async userInfo(uid) {
             return { uid: uid, displayName: await displayName(uid) };
+        },
+
+        // Returns { semester: data } for every semester document of the user. The earliest
+        // semesters are saved in the user document itself, see documentPath.
+        async readAll(uid) {
+            const userRef = db.collection('users').doc(uid);
+            const [userDoc, semesterDocs] = await Promise.all([userRef.get(), userRef.collection('semesters').get()]);
+            const result = {};
+            semesterDocs.forEach(doc => {
+                result[doc.id] = doc.data();
+            });
+            if (userDoc.exists) {
+                SEMESTERS_WITHOUT_SUB_COLLECTION.forEach(semester => {
+                    result[semester] = userDoc.data();
+                });
+            }
+            return result;
         },
 
         async read(uid, semester) {

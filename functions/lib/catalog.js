@@ -119,6 +119,41 @@ class Catalog {
         return resolved;
     }
 
+    // Courses whose number or name contains the query, best matches first: an exact number,
+    // then numbers that start with it, then the rest by number. Numbers match in the current
+    // 8-digit form and in the old 6-digit one, and names ignore case, quotes and gershayim.
+    search(query) {
+        const normalize = text => String(text).toLowerCase().replace(/["'׳״]/g, '').replace(/\s+/g, ' ').trim();
+        const q = normalize(query);
+        const digits = /^\d+$/.test(q);
+        const rank = course => {
+            const numbers = [course, this.manager.toOldCourseNumber(course)];
+            if (numbers.includes(q)) {
+                return 0;
+            }
+            return numbers.some(number => number.startsWith(q)) ? 1 : 2;
+        };
+
+        // The course manager runs in its own context, so its arrays are converted to this one's.
+        return Array.from(this.manager.getAllCourses()).filter(course => {
+            if (digits) {
+                return course.includes(q) || this.manager.toOldCourseNumber(course).includes(q);
+            }
+            return normalize(this.name(course) || '').includes(q);
+        }).map(course => ({ course: course, rank: digits ? rank(course) : 2 }))
+            .sort((a, b) => a.rank - b.rank || a.course.localeCompare(b.course))
+            .map(item => ({
+                course: item.course,
+                name: this.name(item.course),
+                points: this.points(item.course)
+            }));
+    }
+
+    points(course) {
+        const points = parseFloat(this.manager.getGeneralInfo(course)['נקודות']);
+        return Number.isNaN(points) ? null : points;
+    }
+
     requireLesson(course, type, number) {
         const found = this.lessons(course).some(lesson => lesson.type === type && lesson.number === number);
         if (!found) {
