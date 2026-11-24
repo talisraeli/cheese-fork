@@ -123,6 +123,34 @@ test('clearing the storage in another tab empties the signed-out schedule', () =
     }
 });
 
+test('undo keeps changes made in another tab', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        const savedLesson = '{"05d405e805e605d005d4":10}';
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', '{}');
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+        const undoButton = window.$('#top-navbar-undo');
+
+        // Another tab selects the lecture.
+        window.localStorage.setItem('202601_01040001', savedLesson);
+        window.dispatchEvent(new window.StorageEvent('storage', { key: '202601_01040001' }));
+        assert.equal(window.$('#course-calendar').fullCalendar('clientEvents')[0].selected, true);
+        assert.ok(undoButton.hasClass('d-none'), 'a change made elsewhere has nothing to undo here');
+
+        // Unselecting it here and undoing restores the other tab's selection, not the initial one.
+        window.$('#course-calendar .fc-event').trigger('click');
+        assert.equal(window.localStorage.getItem('202601_01040001'), '{}');
+        assert.ok(!undoButton.hasClass('d-none'));
+        undoButton.find('a').trigger('click');
+        assert.equal(window.localStorage.getItem('202601_01040001'), savedLesson);
+    } finally {
+        dom.window.close();
+    }
+});
+
 test('English weekday headings adapt to narrow calendars without changing selected lessons', () => {
     const dom = createPage();
     try {
