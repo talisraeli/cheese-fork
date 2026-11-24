@@ -37,6 +37,14 @@
     // here because cheeseforkInit() below can show the popup before the rest of the script runs.
     var whatsNewVersion = 2;
 
+    // The iCalendar export, declared here for the same reason. The days off of the semester, once
+    // loaded. And the automatic upload of an exported calendar (see calendarAutoUploadSchedule):
+    // exported is null if unknown, or true or false once checked.
+    var calendarDaysOff = null;
+    var calendarAutoUpload = { uid: null, exported: null, timer: null, uploading: false, pending: false };
+    // Several changes in a row, such as choosing lessons, cause a single upload.
+    var CALENDAR_AUTO_UPLOAD_DELAY_MS = 5000;
+
     // UI components.
     var loginDialog = null;
     var courseSelect = null;
@@ -836,67 +844,8 @@
 
             $(this).find('[data-toggle="tooltip"]').tooltip('hide');
 
-            var extraCalendarHeaders = [
-                'NAME:' + IcsText.escapeText(semesterFriendlyName(currentSemester)),
-
-                // Suggested minimum interval for polling for changes.
-                'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
-                'X-PUBLISHED-TTL:PT1H',
-
-                // Timezone data.
-                'BEGIN:VTIMEZONE',
-                'TZID:Asia/Jerusalem',
-                'X-LIC-LOCATION:Asia/Jerusalem',
-                'BEGIN:DAYLIGHT',
-                'TZNAME:IDT',
-                'TZOFFSETFROM:+0200',
-                'TZOFFSETTO:+0300',
-                'DTSTART:19700327T020000',
-                'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1FR',
-                'END:DAYLIGHT',
-                'BEGIN:STANDARD',
-                'TZNAME:IST',
-                'TZOFFSETFROM:+0300',
-                'TZOFFSETTO:+0200',
-                'DTSTART:19701025T020000',
-                'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
-                'END:STANDARD',
-                'END:VTIMEZONE'
-            ];
-
-            // Generate a unique UID every time to avoid overriding old events.
-            // https://github.com/michael-maltsev/cheese-fork/issues/19
-            var icsCal = IcsText.wrap(ics('cheesefork.cf-' + Date.now(), 'CheeseFork²', extraCalendarHeaders, 'Asia/Jerusalem'));
-
-            // Schedule.
-            var dateFrom = availableSemesters[currentSemester].start;
-            var dateTo = availableSemesters[currentSemester].end;
-
-            // This is a workaround for a crazy Outlook bug. Recurring events
-            // that start from 26 or 27 of March 2023 are shifted by several
-            // hours.
-            if (dateFrom === '2023-03-21') {
-                dateFrom = '2023-03-19';
-            }
-
-            var calendarEventsUrl = 'https://michael-maltsev.github.io/technion-calendar-events/' + currentSemester + '.json';
-
-            function doExport(daysOff) {
-                courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo, daysOff);
-
-                // Exams.
-                getVisibleCourseNumbers().forEach(function (course) {
-                    var general = courseManager.getGeneralInfo(course);
-                    ['מועד א', 'מועד ב'].forEach(function (moed) {
-                        if (general[moed]) {
-                            var parsedDate = courseManager.parseExamDateTime(general[moed]);
-                            if (parsedDate) {
-                                var title = courseManager.getFieldLabel(moed) + ' – ' + general['שם מקצוע'];
-                                icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
-                            }
-                        }
-                    });
-                });
+            loadCalendarDaysOff(function (daysOff) {
+                var icsCal = buildScheduleCalendar(daysOff);
 
                 var errorEmptySchedule = function () {
                     BootstrapDialog.show({
@@ -920,12 +869,8 @@
                     return;
                 }
 
-                var calFilePath = firebase.auth().currentUser.uid + '/' + semesterFriendlyNameForFileName(currentSemester) + '.ics';
-                // Token-less download URL: stable across re-uploads, access is
-                // governed by the Storage security rules (public read).
-                var calendarUrl = 'https://firebasestorage.googleapis.com/v0/b/' +
-                    firebase.app().options.storageBucket + '/o/' +
-                    encodeURIComponent(calFilePath) + '?alt=media';
+                var uid = firebase.auth().currentUser.uid;
+                var calendarUrl = calendarFileUrl(uid);
 
                 var exportCalendarDialog = BootstrapDialog.show({
                     title: CheeseI18n.t('shell.export.title'),
@@ -954,17 +899,11 @@
                     }]
                 });
 
-                var storageRef = firebaseStorage.ref();
-                var calFileRef = storageRef.child(calFilePath);
+                uploadCalendarFile(uid, calendar).then(function () {
+                    // From now on, schedule changes update the file automatically.
+                    calendarAutoUpload.uid = uid;
+                    calendarAutoUpload.exported = true;
 
-                calFileRef.putString(calendar, 'raw', {
-                    // Ask browsers not to cache the request.
-                    // https://stackoverflow.com/q/42788488
-                    // https://stackoverflow.com/q/41938969
-                    cacheControl: 'public, max-age=0',
-                    // Required by the Storage rules, and served to calendar apps.
-                    contentType: 'text/calendar; charset=utf-8'
-                }).then(function (snapshot) {
                     var urlElement = $('<a target="_blank" rel="noopener">').text(CheeseI18n.t('shell.export.download')).prop('href', calendarUrl);
                     exportCalendarDialog.getModalBody().find('.calendar-link-placeholder').html(urlElement);
 
@@ -972,23 +911,213 @@
                 }, function (error) {
                     alert(CheeseI18n.t('shell.error.saveCalendar', {error: error.message}));
                 });
-            }
-
-            $.getJSON(calendarEventsUrl)
-                .done(function (data) {
-                    doExport(data.daysOff || []);
-                })
-                .fail(function (jqXHR) {
-                    if (jqXHR.status === 404) {
-                        doExport([]);
-                    } else {
-                        BootstrapDialog.show({
-                            title: CheeseI18n.t('shell.dialog.danger'),
-                            message: CheeseI18n.t('shell.export.holidaysError'),
-                            size: BootstrapDialog.SIZE_SMALL
-                        });
-                    }
+            }, function () {
+                BootstrapDialog.show({
+                    title: CheeseI18n.t('shell.dialog.danger'),
+                    message: CheeseI18n.t('shell.export.holidaysError'),
+                    size: BootstrapDialog.SIZE_SMALL
                 });
+            });
+        });
+    }
+
+    // iCalendar export
+
+    // Calls onLoaded with the days off of the current semester, or onError if they couldn't be
+    // loaded. The days off don't change while the page is open, so they're loaded once
+    // (see calendarDaysOff).
+    function loadCalendarDaysOff(onLoaded, onError) {
+        if (calendarDaysOff) {
+            onLoaded(calendarDaysOff);
+            return;
+        }
+
+        var calendarEventsUrl = 'https://michael-maltsev.github.io/technion-calendar-events/' + currentSemester + '.json';
+
+        $.getJSON(calendarEventsUrl)
+            .done(function (data) {
+                calendarDaysOff = data.daysOff || [];
+                onLoaded(calendarDaysOff);
+            })
+            .fail(function (jqXHR) {
+                if (jqXHR.status === 404) {
+                    calendarDaysOff = [];
+                    onLoaded(calendarDaysOff);
+                } else {
+                    onError();
+                }
+            });
+    }
+
+    // Returns the iCalendar of the shown schedule, an ics.js calendar wrapped with IcsText.wrap:
+    // the selected lessons and custom events of the visible layers, and the exams of their courses.
+    function buildScheduleCalendar(daysOff) {
+        var extraCalendarHeaders = [
+            'NAME:' + IcsText.escapeText(semesterFriendlyName(currentSemester)),
+
+            // Suggested minimum interval for polling for changes.
+            'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
+            'X-PUBLISHED-TTL:PT1H',
+
+            // Timezone data.
+            'BEGIN:VTIMEZONE',
+            'TZID:Asia/Jerusalem',
+            'X-LIC-LOCATION:Asia/Jerusalem',
+            'BEGIN:DAYLIGHT',
+            'TZNAME:IDT',
+            'TZOFFSETFROM:+0200',
+            'TZOFFSETTO:+0300',
+            'DTSTART:19700327T020000',
+            'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1FR',
+            'END:DAYLIGHT',
+            'BEGIN:STANDARD',
+            'TZNAME:IST',
+            'TZOFFSETFROM:+0300',
+            'TZOFFSETTO:+0200',
+            'DTSTART:19701025T020000',
+            'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+            'END:STANDARD',
+            'END:VTIMEZONE'
+        ];
+
+        // Generate a unique UID every time to avoid overriding old events.
+        // https://github.com/michael-maltsev/cheese-fork/issues/19
+        var icsCal = IcsText.wrap(ics('cheesefork.cf-' + Date.now(), 'CheeseFork²', extraCalendarHeaders, 'Asia/Jerusalem'));
+
+        // Schedule.
+        var dateFrom = availableSemesters[currentSemester].start;
+        var dateTo = availableSemesters[currentSemester].end;
+
+        // This is a workaround for a crazy Outlook bug. Recurring events
+        // that start from 26 or 27 of March 2023 are shifted by several
+        // hours.
+        if (dateFrom === '2023-03-21') {
+            dateFrom = '2023-03-19';
+        }
+
+        courseCalendar.saveAsIcs(icsCal, dateFrom, dateTo, daysOff);
+
+        // Exams.
+        getVisibleCourseNumbers().forEach(function (course) {
+            var general = courseManager.getGeneralInfo(course);
+            ['מועד א', 'מועד ב'].forEach(function (moed) {
+                if (general[moed]) {
+                    var parsedDate = courseManager.parseExamDateTime(general[moed]);
+                    if (parsedDate) {
+                        var title = courseManager.getFieldLabel(moed) + ' – ' + general['שם מקצוע'];
+                        icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
+                    }
+                }
+            });
+        });
+
+        return icsCal;
+    }
+
+    function calendarFileRef(uid) {
+        return firebaseStorage.ref().child(uid + '/' + semesterFriendlyNameForFileName(currentSemester) + '.ics');
+    }
+
+    // Token-less download URL: stable across re-uploads, access is
+    // governed by the Storage security rules (public read).
+    function calendarFileUrl(uid) {
+        return 'https://firebasestorage.googleapis.com/v0/b/' +
+            firebase.app().options.storageBucket + '/o/' +
+            encodeURIComponent(calendarFileRef(uid).fullPath) + '?alt=media';
+    }
+
+    function uploadCalendarFile(uid, calendar) {
+        return calendarFileRef(uid).putString(calendar, 'raw', {
+            // Ask browsers not to cache the request.
+            // https://stackoverflow.com/q/42788488
+            // https://stackoverflow.com/q/41938969
+            cacheControl: 'public, max-age=0',
+            // Required by the Storage rules, and served to calendar apps.
+            contentType: 'text/calendar; charset=utf-8'
+        });
+    }
+
+    // Once a semester's calendar was exported, its file is kept up to date: shortly after the
+    // schedule changes, or is loaded with changes made elsewhere, such as with the API, the file
+    // is uploaded again. A calendar that was never exported isn't created, since nobody
+    // subscribed to it. Whether it was exported is checked once, with the file's metadata.
+    // The state is in calendarAutoUpload.
+    function calendarAutoUploadSchedule() {
+        if (viewingSharedSchedule || typeof firebase === 'undefined' || firebase.auth().currentUser === null) {
+            return;
+        }
+
+        clearTimeout(calendarAutoUpload.timer);
+        calendarAutoUpload.timer = setTimeout(calendarAutoUploadRun, CALENDAR_AUTO_UPLOAD_DELAY_MS);
+    }
+
+    function calendarAutoUploadRun() {
+        var user = firebase.auth().currentUser;
+        if (!user) {
+            return;
+        }
+
+        if (calendarAutoUpload.uploading) {
+            // Upload again when the current upload is done, it may not include the latest change.
+            calendarAutoUpload.pending = true;
+            return;
+        }
+
+        if (calendarAutoUpload.uid !== user.uid) {
+            calendarAutoUpload.uid = user.uid;
+            calendarAutoUpload.exported = null;
+        }
+
+        whenCalendarExported(user.uid, function () {
+            loadCalendarDaysOff(function (daysOff) {
+                if (firebase.auth().currentUser !== user) {
+                    return; // Signed out in the meantime.
+                }
+
+                // Unlike an export, an empty schedule is uploaded too, to remove the
+                // events of the courses that were removed from the subscribed calendar.
+                var calendar = buildScheduleCalendar(daysOff).build(true);
+
+                calendarAutoUpload.uploading = true;
+                uploadCalendarFile(user.uid, calendar).then(function () {
+                    calendarAutoUploadDone();
+                }, function (error) {
+                    // Not shown, the next change or visit uploads the file again.
+                    gtag('event', 'calendar-auto-upload-error');
+                    calendarAutoUploadDone();
+                });
+            }, function () {
+                // Without the days off, keep the previous file rather than upload a wrong one.
+            });
+        });
+    }
+
+    function calendarAutoUploadDone() {
+        calendarAutoUpload.uploading = false;
+        if (calendarAutoUpload.pending) {
+            calendarAutoUpload.pending = false;
+            calendarAutoUploadSchedule();
+        }
+    }
+
+    function whenCalendarExported(uid, onExported) {
+        if (calendarAutoUpload.exported !== null) {
+            if (calendarAutoUpload.exported) {
+                onExported();
+            }
+            return;
+        }
+
+        calendarFileRef(uid).getMetadata().then(function () {
+            if (calendarAutoUpload.uid === uid) {
+                calendarAutoUpload.exported = true;
+                onExported();
+            }
+        }, function (error) {
+            if (calendarAutoUpload.uid === uid && error && error.code === 'storage/object-not-found') {
+                calendarAutoUpload.exported = false;
+            }
+            // Otherwise it's unknown, and checked again on the next change.
         });
     }
 
@@ -2370,11 +2499,16 @@
 
         $('#top-navbar-undo').addClass('d-none');
         $('#top-navbar-redo').addClass('d-none');
+
+        // The schedule was loaded, possibly with changes made elsewhere, such as with the API.
+        calendarAutoUploadSchedule();
     }
 
     function onSavedSessionChange() {
         $('#top-navbar-undo').removeClass('d-none');
         $('#top-navbar-redo').addClass('d-none');
+
+        calendarAutoUploadSchedule();
     }
 
     function makeUndo() {
@@ -2385,6 +2519,8 @@
 
         $('#top-navbar-undo').addClass('d-none');
         $('#top-navbar-redo').removeClass('d-none');
+
+        calendarAutoUploadSchedule();
     }
 
     function makeRedo() {
@@ -2395,6 +2531,8 @@
 
         $('#top-navbar-redo').addClass('d-none');
         $('#top-navbar-undo').removeClass('d-none');
+
+        calendarAutoUploadSchedule();
     }
 
     function firestoreAuthenticatedUserDoc() {

@@ -62,7 +62,10 @@ var IcsText = (function () {
     }
 
     function fixCalendarText(calendar) {
-        return calendar.split('\r\n').map(function (line) {
+        return calendar.split('\r\n').filter(function (line) {
+            // ics.js leaves an empty line in a calendar without events, which isn't allowed.
+            return line !== '';
+        }).map(function (line) {
             return foldLine(line.replace(/^SUMMARY;LANGUAGE=en-us:/, 'SUMMARY:'));
         }).join('\r\n');
     }
@@ -75,8 +78,9 @@ var IcsText = (function () {
                 return calendar.addEvent(escapeText(subject), escapeText(description), escapeText(location),
                     begin, stop, rrule, exdates);
             },
-            build: function () {
-                var text = calendar.build();
+            // Returns false for a calendar without events, like ics.js, unless allowEmpty is true.
+            build: function (allowEmpty) {
+                var text = allowEmpty ? calendar.calendar() : calendar.build();
                 return text ? fixCalendarText(text) : text;
             },
             // Same as ics.js download, which can't be used since it builds the calendar by itself.
