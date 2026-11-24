@@ -26,7 +26,9 @@
     var previewingFromSelectControl = null;
     var previewingFromSelectControlLayerId = '';
     var stopScheduleWatching = null;
-    var currentSavedSession = null, savedSessionForUndo = null, savedSessionForRedo = null;
+    var currentSavedSession = null;
+    // See onSavedSessionChange.
+    var savedSessionLastState = null, savedSessionUndoStack = [], savedSessionRedoStack = [];
     var metadataDiff = {};
     var customColors = {};
     // The layers of the shown schedule, { id, name, hidden } each. Empty if layers aren't used.
@@ -825,6 +827,8 @@
 
                 gtag('event', 'navbar-undo');
 
+                $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
                 makeUndo();
             });
 
@@ -833,8 +837,12 @@
 
                 gtag('event', 'navbar-redo');
 
+                $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
                 makeRedo();
             });
+
+            initUndoRedoKeyboardShortcuts();
         }
 
         $('#top-navbar-export').click(function (event) {
@@ -2494,45 +2502,111 @@
         courseSelect.filterReset();
     }
 
+    // Undo and redo
+    //
+    // Each change pushes the session from before it to savedSessionUndoStack, so changes are
+    // undone one at a time. Most changes modify currentSavedSession in place before calling
+    // onSavedSessionChange, so savedSessionLastState keeps a copy of the session after the last
+    // change, which is the session from before the next one. Undoing and redoing write the
+    // difference between the sessions, like any other change.
+
+    var SAVED_SESSION_UNDO_LIMIT = 50;
+
+    function sessionCopy(session) {
+        return $.extend(true, {}, session); // make a deep copy
+    }
+
+    function updateUndoRedoButtons() {
+        $('#top-navbar-undo').toggleClass('d-none', savedSessionUndoStack.length === 0);
+        $('#top-navbar-redo').toggleClass('d-none', savedSessionRedoStack.length === 0);
+    }
+
+    // The schedule was loaded, possibly with changes made elsewhere, such as in another tab or
+    // with the API. Undo starts from here, since undoing would revert the change made elsewhere.
     function onSavedSessionReset() {
-        savedSessionForUndo = $.extend(true, {}, currentSavedSession); // make a deep copy
+        savedSessionLastState = sessionCopy(currentSavedSession);
+        savedSessionUndoStack = [];
+        savedSessionRedoStack = [];
+        updateUndoRedoButtons();
 
-        $('#top-navbar-undo').addClass('d-none');
-        $('#top-navbar-redo').addClass('d-none');
-
-        // The schedule was loaded, possibly with changes made elsewhere, such as with the API.
         calendarAutoUploadSchedule();
     }
 
     function onSavedSessionChange() {
-        $('#top-navbar-undo').removeClass('d-none');
-        $('#top-navbar-redo').addClass('d-none');
+        if (JSON.stringify(savedSessionLastState) !== JSON.stringify(currentSavedSession)) {
+            savedSessionUndoStack.push(savedSessionLastState);
+            if (savedSessionUndoStack.length > SAVED_SESSION_UNDO_LIMIT) {
+                savedSessionUndoStack.shift();
+            }
+            savedSessionRedoStack = [];
+            savedSessionLastState = sessionCopy(currentSavedSession);
+        }
+        updateUndoRedoButtons();
 
         calendarAutoUploadSchedule();
     }
 
     function makeUndo() {
-        restoreSavedSession(currentSavedSession, savedSessionForUndo);
+        if (savedSessionUndoStack.length === 0) {
+            return;
+        }
 
-        savedSessionForRedo = currentSavedSession;
-        currentSavedSession = $.extend(true, {}, savedSessionForUndo); // make a deep copy
+        var session = savedSessionUndoStack.pop();
+        restoreSavedSession(currentSavedSession, session);
 
-        $('#top-navbar-undo').addClass('d-none');
-        $('#top-navbar-redo').removeClass('d-none');
+        savedSessionRedoStack.push(currentSavedSession);
+        currentSavedSession = sessionCopy(session);
+        savedSessionLastState = session;
+        updateUndoRedoButtons();
 
         calendarAutoUploadSchedule();
     }
 
     function makeRedo() {
-        restoreSavedSession(currentSavedSession, savedSessionForRedo);
+        if (savedSessionRedoStack.length === 0) {
+            return;
+        }
 
-        currentSavedSession = savedSessionForRedo;
-        savedSessionForRedo = null;
+        var session = savedSessionRedoStack.pop();
+        restoreSavedSession(currentSavedSession, session);
 
-        $('#top-navbar-redo').addClass('d-none');
-        $('#top-navbar-undo').removeClass('d-none');
+        savedSessionUndoStack.push(savedSessionLastState);
+        currentSavedSession = session;
+        savedSessionLastState = sessionCopy(session);
+        updateUndoRedoButtons();
 
         calendarAutoUploadSchedule();
+    }
+
+    // Ctrl+Z to undo, Ctrl+Shift+Z or Ctrl+Y to redo (Cmd on Mac), unless typing or in a dialog.
+    function initUndoRedoKeyboardShortcuts() {
+        $(document).on('keydown', function (event) {
+            if (!(event.ctrlKey || event.metaKey) || event.altKey) {
+                return;
+            }
+
+            var target = event.target;
+            if ($(target).is('input, textarea, select, [contenteditable], [contenteditable] *') ||
+                $('.modal.show').length > 0) {
+                return;
+            }
+
+            var key = String(event.key).toLowerCase();
+            var redo = (key === 'z' && event.shiftKey) || (key === 'y' && !event.shiftKey);
+            var undo = key === 'z' && !event.shiftKey;
+            if (!undo && !redo) {
+                return;
+            }
+
+            // Like the browser's own undo, which does nothing on the page.
+            event.preventDefault();
+
+            // The same as clicking the button, if it's shown.
+            var button = $(undo ? '#top-navbar-undo' : '#top-navbar-redo');
+            if (!button.hasClass('d-none')) {
+                button.find('a').trigger('click');
+            }
+        });
     }
 
     function firestoreAuthenticatedUserDoc() {

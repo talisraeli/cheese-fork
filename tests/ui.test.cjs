@@ -194,6 +194,88 @@ test('a schedule change that fails to save is reported once', () => {
     }
 });
 
+test('undo and redo step through changes one at a time, with keyboard shortcuts', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        const lecture = '{"05d405e805e605d005d4":10}';
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', lecture);
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+        const saved = () => window.localStorage.getItem('202601_01040001');
+        const toggleLecture = () => window.$('#course-calendar .fc-event').trigger('click');
+        const undoButton = window.$('#top-navbar-undo');
+        const redoButton = window.$('#top-navbar-redo');
+        const undo = () => undoButton.find('a').trigger('click');
+        const redo = () => redoButton.find('a').trigger('click');
+        const key = (key, options = {}) => window.document.dispatchEvent(
+            new window.KeyboardEvent('keydown', Object.assign({ key, ctrlKey: true, bubbles: true }, options)));
+
+        // Bootstrap's tooltip moves the title to data-original-title.
+        assert.equal(window.$('#top-navbar-undo a').attr('data-original-title'), 'Undo the last change (Ctrl+Z / ⌘Z)');
+        assert.ok(undoButton.hasClass('d-none'));
+
+        toggleLecture(); // Unselect.
+        toggleLecture(); // Select.
+        toggleLecture(); // Unselect.
+        assert.equal(saved(), '{}');
+
+        undo();
+        assert.equal(saved(), lecture);
+        assert.ok(!redoButton.hasClass('d-none'));
+        undo();
+        assert.equal(saved(), '{}');
+        undo();
+        assert.equal(saved(), lecture, 'back to the loaded schedule');
+        assert.ok(undoButton.hasClass('d-none'), 'nothing more to undo');
+        undo();
+        assert.equal(saved(), lecture);
+
+        redo();
+        assert.equal(saved(), '{}');
+        redo();
+        assert.equal(saved(), lecture);
+        assert.ok(!undoButton.hasClass('d-none'));
+
+        // A new change clears what can be redone.
+        undo();
+        assert.equal(saved(), '{}');
+        toggleLecture();
+        assert.equal(saved(), lecture);
+        assert.ok(redoButton.hasClass('d-none'));
+
+        // Keyboard shortcuts: Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y, and Cmd on Mac.
+        key('z');
+        assert.equal(saved(), '{}');
+        key('Z', { shiftKey: true });
+        assert.equal(saved(), lecture);
+        key('z', { ctrlKey: false, metaKey: true });
+        assert.equal(saved(), '{}');
+        key('y');
+        assert.equal(saved(), lecture);
+
+        // Not while typing, where Ctrl+Z undoes the typing.
+        const input = window.$('<input type="text">').appendTo(window.document.body).get(0);
+        input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+        assert.equal(saved(), lecture);
+        input.remove();
+
+        // Only the last 50 changes can be undone.
+        for (let i = 0; i < 60; i++) {
+            toggleLecture();
+        }
+        let undone = 0;
+        while (!undoButton.hasClass('d-none')) {
+            undo();
+            undone++;
+        }
+        assert.equal(undone, 50);
+    } finally {
+        dom.window.close();
+    }
+});
+
 test('English weekday headings adapt to narrow calendars without changing selected lessons', () => {
     const dom = createPage();
     try {
