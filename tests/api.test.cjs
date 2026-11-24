@@ -141,6 +141,23 @@ test('unknown paths and methods are rejected', async () => {
     assert.equal((await call('GET', '/v1/semesters/2026/courses')).body.error.code, 'invalid_semester');
 });
 
+test('malformed percent-encodings are rejected without an internal error', async () => {
+    const logged = [];
+    const api = createApi({
+        store: { findKeyOwner: async () => 'user1' },
+        loadCatalog: async () => null,
+        nowSeconds: () => 0,
+        logError: error => logged.push(error)
+    });
+
+    for (const path of [base + '/courses/%E0', '/v1/semesters/%', base + '/catalog/%zz']) {
+        const response = await api({ method: 'GET', path: path, query: {}, headers: {} });
+        assert.equal(response.status, 400, path);
+        assert.equal(response.body.error.code, 'invalid_path', path);
+    }
+    assert.deepEqual(logged, []);
+});
+
 test('courses are added and listed as the site saves them', async () => {
     const { call, doc } = setup();
 

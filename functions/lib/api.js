@@ -223,8 +223,17 @@ function createRoutes(deps) {
     ];
 }
 
+function decodePathSegment(segment) {
+    try {
+        return decodeURIComponent(segment);
+    } catch (e) {
+        // A malformed percent-encoding such as "%E0" is a client error, not an internal one.
+        throw new ApiError(400, 'invalid_path', 'The request path has a malformed percent-encoding.');
+    }
+}
+
 function matchRoute(routes, method, pathname) {
-    const parts = pathname.replace(/\/+$/, '').split('/').slice(1).map(decodeURIComponent);
+    const parts = pathname.replace(/\/+$/, '').split('/').slice(1).map(decodePathSegment);
     let pathMatched = false;
 
     for (const [routeMethod, pattern, handler] of routes) {
