@@ -37,7 +37,7 @@
     // The version of the popup that introduces the features CheeseFork² adds over the original
     // CheeseFork. Bump it when new features are added to the popup, to show it again. Declared
     // here because cheeseforkInit() below can show the popup before the rest of the script runs.
-    var whatsNewVersion = 2;
+    var whatsNewVersion = 3;
 
     // The iCalendar export, declared here for the same reason. The days off of the semester, once
     // loaded. And the automatic upload of an exported calendar (see calendarAutoUploadSchedule):
@@ -482,11 +482,12 @@
         });
     }
 
-    // Calls onDone right away if the popup isn't shown, otherwise after it's closed.
-    function showWhatsNewPopup(onDone) {
+    // Calls onDone right away if the popup isn't shown, otherwise after it's closed. It's shown
+    // once for each whatsNewVersion, or always with force, as the user guide button does.
+    function showWhatsNewPopup(onDone, force) {
         try {
             var seenVersion = parseInt(localStorage.getItem('whatsNewSeenVersion'), 10);
-            if (seenVersion >= whatsNewVersion) {
+            if (!force && seenVersion >= whatsNewVersion) {
                 onDone();
                 return;
             }
@@ -494,52 +495,144 @@
             // localStorage is not available in IE/Edge when running from a local file.
         }
 
-        var features = [{
-            icon: 'fas fa-layer-group',
-            title: CheeseI18n.t('shell.whatsNew.layers.title'),
-            text: CheeseI18n.t('shell.whatsNew.layers.text')
-        }, {
-            icon: 'fas fa-palette',
-            title: CheeseI18n.t('shell.whatsNew.colors.title'),
-            text: CheeseI18n.t('shell.whatsNew.colors.text')
-        }, {
-            icon: 'fas fa-hand-pointer',
-            title: CheeseI18n.t('shell.whatsNew.touchDrag.title'),
-            text: CheeseI18n.t('shell.whatsNew.touchDrag.text')
-        }, {
-            icon: 'fas fa-globe',
-            title: CheeseI18n.t('shell.whatsNew.language.title'),
-            text: CheeseI18n.t('shell.whatsNew.language.text')
-        }, {
-            icon: 'fas fa-key',
-            title: CheeseI18n.t('shell.whatsNew.api.title'),
-            text: CheeseI18n.t('shell.whatsNew.api.text')
-        }];
+        // Each feature has shell.whatsNew.<key>.title, .text (a summary), .steps (lines of the
+        // "How to use it" list) and optionally .note.
+        var features = [
+            {key: 'layers', icon: 'fas fa-layer-group'},
+            {key: 'colors', icon: 'fas fa-palette'},
+            {key: 'calendar', icon: 'fas fa-calendar-check'},
+            {key: 'language', icon: 'fas fa-globe'},
+            {key: 'api', icon: 'fas fa-key'}
+        ];
 
-        var message = $('<div class="whats-new"></div>');
-        message.append($('<p></p>').text(CheeseI18n.t('shell.whatsNew.intro')));
+        var t = function (feature, name) {
+            return CheeseI18n.t('shell.whatsNew.' + feature.key + '.' + name);
+        };
+        var hasText = function (feature, name) {
+            var key = 'shell.whatsNew.' + feature.key + '.' + name;
+            return CheeseI18n.t(key) !== key;
+        };
+        var featureIcon = function (feature) {
+            return $('<span class="whats-new-icon text-warning" aria-hidden="true"></span>')
+                .append($('<i></i>').addClass(feature.icon));
+        };
 
-        var list = $('<ul class="list-unstyled mb-0"></ul>');
-        features.forEach(function (feature) {
-            var item = $('<li class="whats-new-item mb-3"></li>');
-            item.append($('<div class="whats-new-icon text-warning"></div>')
-                .append($('<i></i>').addClass(feature.icon)));
-            item.append($('<h6 class="mb-1 font-weight-bold"></h6>').text(feature.title));
-            item.append($('<div></div>').text(feature.text));
-            list.append(item);
+        // The first page introduces the features, and each feature has a page of its own.
+        var pages = [];
+
+        var welcomePage = $('<div class="whats-new-page"></div>');
+        welcomePage.append($('<p></p>').text(CheeseI18n.t('shell.whatsNew.intro')));
+        var overview = $('<ul class="list-unstyled mb-2"></ul>');
+        features.forEach(function (feature, i) {
+            var item = $('<button type="button" class="whats-new-item"></button>')
+                .append(featureIcon(feature))
+                .append($('<span class="whats-new-item-text"></span>')
+                    .append($('<h6 class="mb-0 font-weight-bold"></h6>').text(t(feature, 'title'))))
+                .click(function () {
+                    showPage(i + 1);
+                });
+            overview.append($('<li></li>').append(item));
         });
-        message.append(list);
+        welcomePage.append(overview);
+        welcomePage.append($('<p class="small text-muted mb-0"></p>').text(CheeseI18n.t('shell.whatsNew.overviewHint')));
+        pages.push(welcomePage);
+
+        features.forEach(function (feature) {
+            var page = $('<div class="whats-new-page"></div>');
+            page.append($('<div class="whats-new-page-header"></div>')
+                .append(featureIcon(feature))
+                .append($('<h5 class="mb-0 font-weight-bold"></h5>').text(t(feature, 'title'))));
+            page.append($('<p></p>').text(t(feature, 'text')));
+
+            page.append($('<h6 class="font-weight-bold"></h6>').text(CheeseI18n.t('shell.whatsNew.howTo')));
+            var steps = $('<ol class="whats-new-steps"></ol>');
+            t(feature, 'steps').split('\n').forEach(function (step) {
+                steps.append($('<li></li>').text(step));
+            });
+            page.append(steps);
+
+            if (hasText(feature, 'note')) {
+                page.append($('<div class="whats-new-note"></div>')
+                    .append($('<strong></strong>').text(CheeseI18n.t('shell.whatsNew.note') + ': '))
+                    .append($('<span></span>').text(t(feature, 'note'))));
+            }
+            pages.push(page);
+        });
+
+        var pagesContainer = $('<div class="whats-new-pages"></div>');
+        pages.forEach(function (page) {
+            pagesContainer.append(page);
+        });
+
+        var dots = $('<div class="whats-new-dots"></div>');
+        pages.forEach(function (page, i) {
+            dots.append($('<button type="button" class="whats-new-dot"></button>')
+                .attr('aria-label', CheeseI18n.t('shell.whatsNew.goToPage', {number: i + 1, count: pages.length}))
+                .click(function () {
+                    showPage(i);
+                }));
+        });
+
+        var message = $('<div class="whats-new"></div>').append(pagesContainer, dots);
+
+        var dialog = null;
+        var currentPage = 0;
+
+        function showPage(index) {
+            currentPage = Math.max(0, Math.min(index, pages.length - 1));
+            pages.forEach(function (page, i) {
+                page.toggleClass('d-none', i !== currentPage);
+            });
+            dots.children().each(function (i) {
+                $(this).toggleClass('active', i === currentPage)
+                    .attr('aria-current', i === currentPage ? 'step' : null);
+            });
+            pagesContainer.scrollTop(0);
+
+            if (dialog) {
+                var last = currentPage === pages.length - 1;
+                dialog.getButton('whats-new-previous').toggleClass('d-none', currentPage === 0);
+                dialog.getButton('whats-new-skip').toggleClass('d-none', last);
+                dialog.getButton('whats-new-next').text(CheeseI18n.t(last ? 'shell.tour.done' : 'shell.tour.next'));
+            }
+
+            if (currentPage > 0) {
+                gtag('event', 'whats-new-page-' + features[currentPage - 1].key);
+            }
+        }
+
+        showPage(0);
 
         gtag('event', 'whats-new-show');
 
-        BootstrapDialog.show({
+        dialog = BootstrapDialog.show({
             title: CheeseI18n.t('shell.whatsNew.title'),
             message: message,
+            cssClass: 'whats-new-dialog',
             buttons: [{
-                label: CheeseI18n.t('shell.tour.done'),
-                cssClass: 'btn-primary',
+                id: 'whats-new-skip',
+                label: CheeseI18n.t('shell.tour.skip'),
+                cssClass: 'btn-link whats-new-skip',
                 action: function (dialog) {
                     dialog.close();
+                }
+            }, {
+                id: 'whats-new-previous',
+                label: CheeseI18n.t('shell.tour.previous'),
+                cssClass: 'btn-secondary',
+                action: function () {
+                    showPage(currentPage - 1);
+                }
+            }, {
+                id: 'whats-new-next',
+                label: CheeseI18n.t('shell.tour.next'),
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    if (currentPage === pages.length - 1) {
+                        dialog.close();
+                    } else {
+                        showPage(currentPage + 1);
+                    }
                 }
             }],
             onhide: function () {
@@ -553,6 +646,21 @@
                 onDone();
             }
         });
+
+        // The arrow keys turn the pages, in the reading direction of the language.
+        dialog.getModal().on('keydown', function (event) {
+            if ($(event.target).is('input, textarea, select')) {
+                return;
+            }
+            var forward = CheeseI18n.isRTL() ? 'ArrowLeft' : 'ArrowRight';
+            var backward = CheeseI18n.isRTL() ? 'ArrowRight' : 'ArrowLeft';
+            if (event.key === forward || event.key === backward) {
+                event.preventDefault();
+                showPage(currentPage + (event.key === forward ? 1 : -1));
+            }
+        });
+
+        showPage(0);
     }
 
     function showIntro() {
@@ -748,6 +856,14 @@
     function navbarInit() {
         $('#top-navbar-print-section-title').text(semesterFriendlyName(currentSemester));
         $('#top-navbar-dropdown-semester-name').text(semesterFriendlyName(currentSemester));
+
+        $('#top-navbar-guide').click(function (event) {
+            event.preventDefault();
+
+            gtag('event', 'navbar-guide');
+
+            showWhatsNewPopup(function () {}, true);
+        });
 
         if (!viewingSharedSchedule) {
             var semesterSelect = $('#top-navbar-semester').find('.dropdown-menu');

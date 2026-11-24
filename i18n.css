@@ -391,16 +391,6 @@ html[dir="ltr"] .introjs-bullets ul li {
 
 /* CheeseFork² additions */
 
-html[dir="ltr"] .whats-new-item {
-    padding-right: 0;
-    padding-left: 3.25rem;
-}
-
-html[dir="ltr"] .whats-new-icon {
-    right: auto;
-    left: 0;
-}
-
 html[dir="ltr"] .course-button-list-layer-header {
     border-right: 0;
     border-left: 3px solid transparent;

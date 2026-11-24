@@ -372,15 +372,119 @@ test('the API dialog creates a key, shows it once and revokes it', async () => {
     }
 });
 
+// Loads the site with the given "what's new" version seen, and returns the welcome dialog, if shown.
+function loadWelcome(seenVersion, language = 'en') {
+    const dom = createPage('index.html', language);
+    const window = loadUI(dom.window);
+    window.localStorage.setItem('dontShowIntro', String(Date.now()));
+    if (seenVersion) {
+        window.localStorage.setItem('whatsNewSeenVersion', seenVersion);
+    }
+    const dialogs = [];
+    const show = window.BootstrapDialog.show;
+    window.BootstrapDialog.show = options => {
+        const dialog = show(options);
+        dialogs.push(dialog);
+        return dialog;
+    };
+    load(window, 'cheesefork.js');
+    const welcome = dialogs.find(dialog => dialog.getTitle() === window.CheeseI18n.t('shell.whatsNew.title'));
+    return { dom, window, welcome };
+}
+
+const FEATURE_TITLES = ['Layers', 'Your choice of colors', 'A calendar that stays up to date', 'English interface', 'API access'];
+
 test('the welcome popup lists the new features again for visitors who saw an older version', () => {
-    for (const [seenVersion, shown] of [[null, true], ['1', true], ['2', false]]) {
-        const dom = createPage();
+    for (const [seenVersion, shown] of [[null, true], ['1', true], ['2', true], ['3', false]]) {
+        const { dom, welcome } = loadWelcome(seenVersion);
         try {
-            const window = loadUI(dom.window);
-            window.localStorage.setItem('dontShowIntro', String(Date.now()));
-            if (seenVersion) {
-                window.localStorage.setItem('whatsNewSeenVersion', seenVersion);
+            assert.equal(!!welcome, shown, 'seen version ' + seenVersion);
+            if (welcome) {
+                const titles = Array.from(welcome.getModalBody().find('.whats-new-item h6'), element => element.textContent);
+                assert.deepEqual(titles, FEATURE_TITLES);
+                welcome.close();
             }
+        } finally {
+            dom.window.close();
+        }
+    }
+});
+
+test('the welcome popup has a page with how-to steps for each feature', () => {
+    const { dom, window, welcome } = loadWelcome(null);
+    try {
+        const body = welcome.getModalBody();
+        const pages = body.find('.whats-new-page');
+        const visible = () => pages.filter((i, page) => !window.$(page).hasClass('d-none'));
+        const visibleTitle = () => visible().find('.whats-new-page-header h5').text();
+        const next = welcome.getButton('whats-new-next');
+        const previous = welcome.getButton('whats-new-previous');
+        const skip = welcome.getButton('whats-new-skip');
+
+        // The welcome page and a page per feature, with a dot for each.
+        assert.equal(pages.length, 1 + FEATURE_TITLES.length);
+        assert.equal(body.find('.whats-new-dot').length, pages.length);
+        assert.equal(visible().length, 1);
+        assert.equal(visible().find('.whats-new-item').length, FEATURE_TITLES.length);
+        // The overview has only the titles, the descriptions are on the feature pages.
+        assert.deepEqual(Array.from(visible().find('.whats-new-item'), item => item.textContent), FEATURE_TITLES);
+        assert.ok(previous.hasClass('d-none'));
+        assert.ok(!skip.hasClass('d-none'));
+        assert.equal(next.text(), 'Next');
+        assert.equal(body.find('.whats-new-dot').first().attr('aria-label'), 'Go to page 1 of 6');
+        assert.equal(body.find('.whats-new-dot.active').index(), 0);
+
+        // Next goes through the features in order, each with steps.
+        for (const [i, title] of FEATURE_TITLES.entries()) {
+            next.trigger('click');
+            assert.equal(visibleTitle(), title);
+            assert.equal(body.find('.whats-new-dot.active').index(), i + 1);
+            assert.ok(visible().find('.whats-new-steps li').length >= 2, title + ' has steps');
+            assert.equal(visible().find('h6').first().text(), 'How to use it');
+        }
+        assert.match(visible().find('.whats-new-note').text(), /^Good to know: Anyone with your key/);
+        assert.equal(visible().find('.whats-new-steps li').first().text(), 'Sign in and click API in the navigation bar.');
+
+        // On the last page, Next becomes the button that closes the dialog, and Skip is hidden.
+        assert.equal(next.text(), "Let's get started");
+        assert.ok(skip.hasClass('d-none'));
+        assert.ok(!previous.hasClass('d-none'));
+
+        // Previous, the dots, the overview and the arrow keys turn the pages too.
+        previous.trigger('click');
+        assert.equal(visibleTitle(), 'English interface');
+        assert.equal(next.text(), 'Next');
+        body.find('.whats-new-dot').eq(0).trigger('click');
+        assert.equal(visible().find('.whats-new-item').length, FEATURE_TITLES.length);
+        visible().find('.whats-new-item').eq(2).trigger('click');
+        assert.equal(visibleTitle(), 'A calendar that stays up to date');
+        const key = key => welcome.getModal().trigger(window.$.Event('keydown', { key }));
+        key('ArrowRight');
+        assert.equal(visibleTitle(), 'English interface');
+        key('ArrowLeft');
+        key('ArrowLeft');
+        assert.equal(visibleTitle(), 'Your choice of colors');
+
+        // On the last page, the button closes the dialog. (Bootstrap doesn't finish showing it in
+        // jsdom, so it doesn't close here, which is checked by calling close instead.)
+        let closed = 0;
+        welcome.close = () => closed++;
+        body.find('.whats-new-dot').last().trigger('click');
+        next.trigger('click');
+        assert.equal(closed, 1);
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('the user guide button shows the welcome dialog again, even after it was seen', () => {
+    for (const [language, label, title] of [['en', 'User guide', 'Welcome to CheeseFork²'], ['he', 'מדריך שימוש', 'ברוכים הבאים ל-CheeseFork²']]) {
+        const { dom, window, welcome } = loadWelcome('3', language);
+        try {
+            assert.equal(welcome, undefined, 'not shown on load once seen');
+            const button = window.$('#top-navbar-guide a');
+            assert.equal(button.text().trim(), label);
+
             const dialogs = [];
             const show = window.BootstrapDialog.show;
             window.BootstrapDialog.show = options => {
@@ -388,18 +492,31 @@ test('the welcome popup lists the new features again for visitors who saw an old
                 dialogs.push(dialog);
                 return dialog;
             };
-            load(window, 'cheesefork.js');
-
-            const welcome = dialogs.find(dialog => dialog.getTitle() === 'Welcome to CheeseFork²');
-            assert.equal(!!welcome, shown, 'seen version ' + seenVersion);
-            if (welcome) {
-                const titles = Array.from(welcome.getModalBody().find('.whats-new-item h6'), element => element.textContent);
-                assert.deepEqual(titles, ['Layers', 'Your choice of colors', 'Dragging on touch screens', 'English interface', 'API access']);
-                assert.ok(welcome.getModalBody().find('.fa-key').length === 1);
-                welcome.close();
-            }
+            button.trigger('click');
+            assert.equal(dialogs.length, 1);
+            assert.equal(dialogs[0].getTitle(), title);
+            const visible = dialogs[0].getModalBody().find('.whats-new-page').not('.d-none');
+            assert.equal(visible.find('.whats-new-item').length, FEATURE_TITLES.length, 'starts at the overview');
+            dialogs[0].close();
         } finally {
             dom.window.close();
         }
+    }
+});
+
+test('in Hebrew, the arrow keys turn the pages in the reading direction', () => {
+    const { dom, window, welcome } = loadWelcome(null, 'he');
+    try {
+        const pages = welcome.getModalBody().find('.whats-new-page');
+        const index = () => pages.toArray().findIndex(page => !window.$(page).hasClass('d-none'));
+        const key = key => welcome.getModal().trigger(window.$.Event('keydown', { key }));
+        key('ArrowLeft');
+        assert.equal(index(), 1);
+        key('ArrowRight');
+        assert.equal(index(), 0);
+        assert.equal(welcome.getButton('whats-new-next').text(), 'הבא');
+        welcome.close();
+    } finally {
+        dom.window.close();
     }
 });
