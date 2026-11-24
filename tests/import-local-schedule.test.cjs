@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createPage, loadUI, load, installFakeFirebase } = require('./helpers.cjs');
+const { createPage, loadUI, load, installFakeFirebase, waitUntil, pageLoaded } = require('./helpers.cjs');
 
 const LECTURE = '05d405e805e605d005d4';
 const ALPHA = '01040001';
@@ -55,16 +55,14 @@ async function signInWithLocalSchedule(local, account) {
 
     const firebase = installFakeFirebase(window, { signedOut: true, data: account });
     load(window, 'cheesefork.js');
-    await wait();
+    await waitUntil(() => pageLoaded(window), 'the signed-out schedule is loaded');
+    // Signing in shows the page loader until the account's schedule is loaded, and the import
+    // dialog, if any, is shown right after it's hidden.
     firebase.signIn();
-    await wait();
+    await waitUntil(() => pageLoaded(window), "the account's schedule is loaded");
 
     const importDialogs = () => dialogs.filter(item => item.title === 'Schedule from this browser').map(item => item.dialog);
     return { dom, window, firebase, importDialogs };
-}
-
-function wait() {
-    return new Promise(resolve => setTimeout(resolve, 100));
 }
 
 test('merging adds the local courses, custom events, colors and layers to the account', async () => {
