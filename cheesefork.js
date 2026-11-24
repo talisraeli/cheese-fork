@@ -2198,7 +2198,11 @@
                     // Note: Setting displayName serves two purposes, saving the
                     // name and actually creating the document for the semester
                     // if it doesn't exist yet. So set it even if it's null.
-                    doc.set({ displayName: firebase.auth().currentUser.displayName }, { merge: true });
+                    // Only when needed, since a write costs more than the read of each page load.
+                    var displayName = firebase.auth().currentUser.displayName;
+                    if (!result.exists || result.get('displayName') !== displayName) {
+                        doc.set({ displayName: displayName }, { merge: true });
+                    }
                 }
 
                 var session = savedSessionFromFirestoreData(result.exists ? result.data() : {});

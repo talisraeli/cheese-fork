@@ -136,21 +136,26 @@ function installFakeFirebase(window, options = {}) {
         });
     }
 
+    // A document without fields doesn't exist yet, like a semester the user never opened.
+    const writes = [];
     const doc = {
         collection: () => ({ doc: () => doc }),
         onSnapshot(callback) {
             setTimeout(() => callback({
                 metadata: { hasPendingWrites: false },
-                exists: true,
-                data: () => JSON.parse(JSON.stringify(data))
+                exists: Object.keys(data).length > 0,
+                data: () => JSON.parse(JSON.stringify(data)),
+                get: field => data[field] === undefined ? undefined : JSON.parse(JSON.stringify(data[field]))
             }), 0);
             return () => {};
         },
         set(value) {
+            writes.push({ type: 'set', value: JSON.parse(JSON.stringify(value)) });
             update(value);
             return resolved();
         },
         update(input) {
+            writes.push({ type: 'update', fields: Object.keys(input) });
             update(input);
             return resolved();
         }
@@ -215,7 +220,7 @@ function installFakeFirebase(window, options = {}) {
         }
     };
 
-    return { user, data, uploads, metadataChecks, signIn };
+    return { user, data, uploads, metadataChecks, writes, signIn };
 }
 
 // Waits until condition() is true, failing after timeoutMs. For page work whose duration varies,
