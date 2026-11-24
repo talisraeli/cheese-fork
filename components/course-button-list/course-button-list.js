@@ -1015,7 +1015,7 @@ var CourseButtonList = (function () {
         setInfoDialogContent(dialog, course, that.courseManager);
     };
 
-    // Custom events are shown in the list only if layers are used, for moving them between layers.
+    // Custom events are shown in the list for removing them, or for moving them between layers.
     CourseButtonList.prototype.addCustomEvent = function (eventId, title, layerId) {
         var that = this;
 
