@@ -1962,9 +1962,10 @@
         } else {
             var onStorageEvent = function (e) {
                 var prefix = currentSemester + '_';
-                // Check if the line starts with a required prefix.
+                // The key is null if the storage was cleared, which removes the schedule too.
+                // Otherwise, check if the key starts with the semester prefix.
                 // https://stackoverflow.com/a/4579228
-                if (e.key.lastIndexOf(prefix, 0) === 0) {
+                if (e.key === null || e.key.lastIndexOf(prefix, 0) === 0) {
                     var session = savedSessionFromLocalStorage();
                     setScheduleFromSavedSession(session, true);
 
