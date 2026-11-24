@@ -4,31 +4,34 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createPage, loadUI, load, englishContent } = require('./helpers.cjs');
 
-for (const file of ['index.html', 'course-widget-histograms.html', 'share-histograms.html']) {
-    test(file + ': English static content and accessible labels are localized', () => {
-        const dom = createPage(file);
+for (const [language, name, dir] of [['en', 'English', 'ltr'], ['ar', 'Arabic', 'rtl']]) for (const file of ['index.html', 'course-widget-histograms.html', 'share-histograms.html']) {
+    test(file + ': ' + name + ' static content and accessible labels are localized', () => {
+        const dom = createPage(file, language);
         try {
             if (file === 'share-histograms.html') {
                 loadUI(dom.window);
                 dom.window.$('#share-guide').append(dom.window.HistogramBrowser.createShareGuide());
             }
             const { document } = dom.window;
-            assert.equal(document.documentElement.lang, 'en');
-            assert.equal(document.documentElement.dir, 'ltr');
+            assert.equal(document.documentElement.lang, language);
+            assert.equal(document.documentElement.dir, dir);
             assert.doesNotMatch(englishContent(document.documentElement), /[\u0590-\u05ff]/);
             document.querySelectorAll('[data-i18n], [data-i18n-title], [data-i18n-placeholder], [data-i18n-alt], [data-i18n-aria-label], [data-i18n-data-intro]').forEach(element => {
                 for (const name of ['title', 'placeholder', 'alt', 'aria-label', 'data-intro']) {
                     assert.doesNotMatch(element.getAttribute(name) || '', /[\u0590-\u05ff]/);
                 }
             });
-            assert.ok(document.querySelector('select[data-language-switch]'));
+            const languageSwitch = document.querySelector('select[data-language-switch]');
+            assert.ok(languageSwitch);
+            assert.deepEqual(Array.from(languageSwitch.options, option => option.value), ['en', 'he', 'ar']);
+            assert.equal(languageSwitch.value, language);
         } finally {
             dom.window.close();
         }
     });
 }
 
-for (const language of ['en', 'he']) {
+for (const language of ['en', 'he', 'ar']) {
     test(language + ': standalone review dialogs localize their accessible close button', () => {
         const dom = createPage('course-widget-histograms.html', language);
         try {
@@ -64,11 +67,16 @@ for (const language of ['en', 'he']) {
             assert.equal(window.localStorage.getItem('202601_01040001'), '{}');
             window.$('#course-calendar .fc-event').trigger('click');
             assert.equal(window.localStorage.getItem('202601_01040001'), savedLesson);
-            if (language === 'en') {
+            if (language !== 'he') {
                 assert.doesNotMatch(englishContent(window.document.body), /[\u0590-\u05ff]/);
                 const placeholder = window.document.querySelector('.selectize-input input').placeholder;
                 assert.doesNotMatch(placeholder, /[\u0590-\u05ff]/);
-            } else {
+            }
+            if (language === 'ar') {
+                assert.match(window.document.querySelector('#general-info').textContent, /[\u0600-\u06ff]/);
+                assert.equal(window.document.documentElement.dir, 'rtl');
+                assert.equal(window.$('#course-calendar').fullCalendar('option', 'isRTL'), true);
+            } else if (language === 'he') {
                 assert.match(window.document.querySelector('#general-info').textContent, /[\u0590-\u05ff]/);
             }
             const firstLink = window.document.querySelector('#top-navbar-semester .dropdown-item');
@@ -78,6 +86,40 @@ for (const language of ['en', 'he']) {
         }
     });
 }
+
+test('Arabic translates catalog labels and writes dates and times with Western digits', () => {
+    const dom = createPage('index.html', 'ar');
+    try {
+        const window = loadUI(dom.window);
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', '{"05d405e805e605d005d4":10}');
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+
+        const manager = new window.CourseManager(window.courses_from_rishum);
+        assert.equal(manager.getLessonTypeLabel('הרצאה'), 'محاضرة');
+        assert.equal(manager.getDayLabel('ראשון'), 'الأحد');
+        assert.equal(manager.getFacultyLabel('הפקולטה למתמטיקה'), 'الرياضيات');
+        assert.equal(manager.getFrameworkLabel('לימודי הסמכה'), 'اللقب الأول');
+        // Counts as labels, since Arabic nouns change with the number, and the Arabic comma.
+        assert.equal(window.document.querySelector('#general-info').textContent, 'مساق واحد، نقاط الاستحقاق: 3');
+
+        // The saved lecture is restored as selected, which depends on the displayed week being
+        // found regardless of the locale's first day of the week.
+        const events = window.$('#course-calendar').fullCalendar('clientEvents');
+        assert.equal(events[0].selected, true);
+
+        assert.equal(window.moment.locale(), 'ar');
+        assert.equal(window.moment('2017-01-01T10:30:00').format('dddd HH:mm'), 'الأحد 10:30');
+        const body = window.document.body.textContent;
+        // The time axis of the calendar.
+        assert.match(window.$('#course-calendar .fc-axis').text(), /10:30/);
+        assert.match(window.$('#course-exam-info').text(), /05\/02/);
+        assert.doesNotMatch(body, /[\u0660-\u0669]/, 'no Eastern Arabic digits');
+    } finally {
+        dom.window.close();
+    }
+});
 
 test('English course details translate labels while preserving source data', () => {
     const dom = createPage();
@@ -392,7 +434,7 @@ function loadWelcome(seenVersion, language = 'en') {
     return { dom, window, welcome };
 }
 
-const FEATURE_TITLES = ['Layers', 'Your choice of colors', 'A calendar that stays up to date', 'English interface', 'API access'];
+const FEATURE_TITLES = ['Layers', 'Your choice of colors', 'A calendar that stays up to date', 'English and Arabic interface', 'API access'];
 
 test('the welcome popup lists the new features again for visitors who saw an older version', () => {
     for (const [seenVersion, shown] of [[null, true], ['1', true], ['2', true], ['3', false]]) {
@@ -452,7 +494,7 @@ test('the welcome popup has a page with how-to steps for each feature', () => {
 
         // Previous, the dots, the overview and the arrow keys turn the pages too.
         previous.trigger('click');
-        assert.equal(visibleTitle(), 'English interface');
+        assert.equal(visibleTitle(), 'English and Arabic interface');
         assert.equal(next.text(), 'Next');
         body.find('.whats-new-dot').eq(0).trigger('click');
         assert.equal(visible().find('.whats-new-item').length, FEATURE_TITLES.length);
@@ -460,7 +502,7 @@ test('the welcome popup has a page with how-to steps for each feature', () => {
         assert.equal(visibleTitle(), 'A calendar that stays up to date');
         const key = key => welcome.getModal().trigger(window.$.Event('keydown', { key }));
         key('ArrowRight');
-        assert.equal(visibleTitle(), 'English interface');
+        assert.equal(visibleTitle(), 'English and Arabic interface');
         key('ArrowLeft');
         key('ArrowLeft');
         assert.equal(visibleTitle(), 'Your choice of colors');

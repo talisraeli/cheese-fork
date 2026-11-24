@@ -5,13 +5,15 @@
     var defaultLocale = "he";
     var messages = {
         en: Object.create(null),
-        he: Object.create(null)
+        he: Object.create(null),
+        ar: Object.create(null)
     };
+    var rtlLocales = ["he", "ar"];
     var translatedAttributes = ["title", "placeholder", "alt", "aria-label", "content", "data-intro"];
     var locale = getInitialLocale();
 
     function isSupportedLocale(value) {
-        return value === "en" || value === "he";
+        return Object.prototype.hasOwnProperty.call(messages, value);
     }
 
     function decodeQueryPart(value) {
@@ -168,7 +170,7 @@
     }
 
     document.documentElement.setAttribute("lang", locale);
-    document.documentElement.setAttribute("dir", locale === "he" ? "rtl" : "ltr");
+    document.documentElement.setAttribute("dir", rtlLocales.indexOf(locale) !== -1 ? "rtl" : "ltr");
 
     window.CheeseI18n = {
         addMessages: addMessages,
@@ -177,7 +179,7 @@
             return locale;
         },
         isRTL: function () {
-            return locale === "he";
+            return rtlLocales.indexOf(locale) !== -1;
         },
         apply: apply,
         setLocale: setLocale,

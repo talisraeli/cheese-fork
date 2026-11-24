@@ -3,7 +3,8 @@ let cheeseforkShareHistograms = function () {
 
     const scriptUrl = document.currentScript && document.currentScript.src;
     const requestedLocale = scriptUrl ? new URL(scriptUrl).searchParams.get('lang') : null;
-    const locale = requestedLocale === 'en' ? 'en' : 'he';
+    const locale = requestedLocale === 'en' || requestedLocale === 'ar' ? requestedLocale : 'he';
+    const rtl = locale !== 'en';
     const messages = {
         "he": {
             "sharing.overlay.heading": "שיתוף היסטוגרמות",
@@ -82,6 +83,45 @@ let cheeseforkShareHistograms = function () {
             "sharing.overlay.semester.winter": "Winter {year}–{nextYear}",
             "sharing.overlay.semester.spring": "Spring {year}",
             "sharing.overlay.semester.summer": "Summer {year}"
+        },
+        "ar": {
+            "sharing.overlay.heading": "مشاركة مخططات العلامات",
+            "sharing.overlay.title": "مشاركة مخططات العلامات: {status}",
+            "sharing.overlay.loading": "جارٍ تحميل البيانات...",
+            "sharing.overlay.share": "مشاركة مخططات العلامات",
+            "sharing.overlay.retry": "إعادة المحاولة",
+            "sharing.overlay.close": "إغلاق نافذة المشاركة",
+            "sharing.overlay.semester": "الفصل الدراسي",
+            "sharing.overlay.course": "المساق",
+            "sharing.overlay.courseName": "اسم المساق",
+            "sharing.overlay.staff": "الطاقم",
+            "sharing.overlay.examA": "امتحان موعد أ",
+            "sharing.overlay.finalA": "العلامة النهائية موعد أ",
+            "sharing.overlay.examB": "امتحان موعد ب",
+            "sharing.overlay.finalB": "العلامة النهائية موعد ب",
+            "sharing.overlay.examC": "امتحان موعد ج",
+            "sharing.overlay.finalC": "العلامة النهائية موعد ج",
+            "sharing.overlay.finals": "العلامة النهائية",
+            "sharing.overlay.available": "توجد بيانات للمشاركة",
+            "sharing.overlay.unavailable": "لا توجد بيانات للمشاركة",
+            "sharing.overlay.ready": "جاهز",
+            "sharing.overlay.sharing": "جارٍ المشاركة...",
+            "sharing.overlay.error": "خطأ",
+            "sharing.overlay.errorDetails": "خطأ: {message}",
+            "sharing.overlay.complete": "اكتملت المشاركة",
+            "sharing.overlay.uploading": "جارٍ مشاركة البيانات...",
+            "sharing.overlay.exists": "البيانات موجودة مسبقًا",
+            "sharing.overlay.success": "تمت مشاركة البيانات بنجاح",
+            "sharing.overlay.failed": "تعذّرت مشاركة البيانات",
+            "sharing.overlay.getTreeFailed": "قراءة قائمة الملفات من GitHub أعادت الحالة {status}",
+            "sharing.overlay.putFileFailed": "حفظ ملف في GitHub أعاد الحالة {status}",
+            "sharing.overlay.fetchFailed": "تحميل {resource} أعاد الحالة {status}",
+            "sharing.overlay.resource.coursePage": "صفحة المساق",
+            "sharing.overlay.resource.histogramPage": "صفحة مخطط العلامات",
+            "sharing.overlay.resource.histogramImage": "صورة مخطط العلامات",
+            "sharing.overlay.semester.winter": "شتاء {year}–{nextYear}",
+            "sharing.overlay.semester.spring": "ربيع {year}",
+            "sharing.overlay.semester.summer": "صيف {year}"
         }
     };
     let sharingRoot;
@@ -126,7 +166,7 @@ let cheeseforkShareHistograms = function () {
     }
 
     function uiCreateTable(courses) {
-        let html = '<button type="button" id="grabber_close_button" style="float:' + (locale === 'he' ? 'left' : 'right') + ';">' +
+        let html = '<button type="button" id="grabber_close_button" style="float:' + (rtl ? 'left' : 'right') + ';">' +
             escapeHtml(t('sharing.overlay.close')) + '</button>' +
             '<div class="HeaderWarp"><div id="grabber_title" role="status" aria-live="polite">' +
             escapeHtml(t('sharing.overlay.title', {status: t('sharing.overlay.loading')})) +
@@ -167,11 +207,11 @@ let cheeseforkShareHistograms = function () {
             sharingRoot = document.createElement('section');
             sharingRoot.id = 'cheesefork-histogram-sharing';
             sharingRoot.lang = locale;
-            sharingRoot.dir = locale === 'he' ? 'rtl' : 'ltr';
+            sharingRoot.dir = rtl ? 'rtl' : 'ltr';
             sharingRoot.setAttribute('role', 'region');
             sharingRoot.setAttribute('aria-label', t('sharing.overlay.heading'));
             sharingRoot.style.cssText = 'position:fixed;top:12px;right:12px;bottom:12px;left:12px;z-index:2147483647;overflow:auto;background:#fff;color:#212529;border:1px solid #777;padding:20px;text-align:' +
-                (locale === 'he' ? 'right' : 'left') + ';font:14px Arial,sans-serif;box-sizing:border-box;';
+                (rtl ? 'right' : 'left') + ';font:14px Arial,sans-serif;box-sizing:border-box;';
             document.body.appendChild(sharingRoot);
         }
         sharingRoot.innerHTML = html;

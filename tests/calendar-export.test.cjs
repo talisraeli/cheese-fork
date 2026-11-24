@@ -26,7 +26,7 @@ function createCalendar(language) {
     return { dom, window, calendar };
 }
 
-for (const language of ['en', 'he']) {
+for (const language of ['en', 'he', 'ar']) {
     test(language + ': a saved lesson retains its Sunday time and exports one localized recurring event', () => {
         const { dom, window, calendar } = createCalendar(language);
         try {
@@ -51,7 +51,7 @@ for (const language of ['en', 'he']) {
             assert.equal(count, 1);
             assert.equal(calls.length, 1);
             const [subject, description, location, start, end, recurrence, holidays] = calls[0];
-            assert.equal(subject, language === 'en' ? 'Lecture 10 – Course Alpha' : 'הרצאה 10 – Course Alpha');
+            assert.equal(subject, { en: 'Lecture 10 – Course Alpha', he: 'הרצאה 10 – Course Alpha', ar: 'محاضرة 10 – Course Alpha' }[language]);
             assert.equal(description, 'Professor Example');
             assert.equal(location, 'Example Building 101');
             assert.equal(window.moment.parseZone(start).format('YYYY-MM-DDTHH:mm:ss'), '2026-10-25T10:30:00');

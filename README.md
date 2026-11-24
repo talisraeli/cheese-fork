@@ -30,22 +30,31 @@ compatibility lint; they do not replace visual checks in a real browser.
 ## Localization
 
 `i18n.js` provides `CheeseI18n.t(key, parameters)` and explicit `data-i18n`
-attributes for static text. The complete catalogs are `locales/he.js` and
-`locales/en.js`. Keep their keys and `{parameter}` placeholders in sync; the tests
-check both. Use separate elements for translated text and existing icons or links.
-Use `.text()` or escape interpolated values when building HTML, including quotes
-when placing text inside an attribute.
+attributes for static text. The complete catalogs are `locales/he.js`,
+`locales/en.js` and `locales/ar.js`. Keep their keys and `{parameter}` placeholders
+in sync; the tests check all three, and that only Hebrew has Hebrew text. Use
+separate elements for translated text and existing icons or links. Use `.text()` or
+escape interpolated values when building HTML, including quotes when placing text
+inside an attribute.
 
-Locale selection also sets the document's `lang` and `dir`. `i18n.css` supplies
-the LTR adjustments for the existing RTL styles. Internal links should use
-`CheeseI18n.withLocale(url)`, including links to standalone widgets. Keep raw
+Locale selection also sets the document's `lang` and `dir`. Hebrew and Arabic are
+right to left; `i18n.css` supplies the LTR adjustments for the existing RTL styles.
+The catalog's values, such as lesson types, days and faculties, are in Hebrew, and
+`course-manager.js` translates them for every other language. Internal links should
+use `CheeseI18n.withLocale(url)`, including links to standalone widgets. Keep raw
 Technion data keys and saved lesson identifiers independent of their displayed
 translations.
+
+`moment-locale.js` sets moment's locale after the FullCalendar locale files, each of
+which makes itself the global one. In Arabic it keeps Western digits, like the
+catalog. Don't rely on moment's `week()`, whose weeks start on a different day in
+Arabic; `course-calendar.js` numbers its weeks with `calendarWeek`.
 
 The histogram-sharing script runs inside the Technion grades portal, so its small
 translation catalog is isolated inside `share-histograms.js`. It reads `lang`
 from its own script URL and changes only its overlay, preserving the host page's
-language and direction. Old sharing links continue to default to Hebrew.
+language and direction. It supports the same three languages, and old sharing links
+continue to default to Hebrew.
 
 ## API
 

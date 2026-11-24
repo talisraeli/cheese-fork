@@ -6,7 +6,7 @@
 
 (function () {
     CheeseI18n.apply(document);
-    moment.locale(CheeseI18n.getLocale());
+    moment.locale(CheeseI18n.getLocale()); // See moment-locale.js.
 
     $('dark-mode-toggle').attr({
         light: CheeseI18n.t('shell.theme.toDark'),
@@ -1508,7 +1508,7 @@
                 text = CheeseI18n.t('shell.summary.courses', {count: courses});
             }
 
-            text += ', ';
+            text += CheeseI18n.t('shell.summary.separator');
             if (points === '1') {
                 text += CheeseI18n.t('shell.summary.oneCredit');
             } else {
@@ -3589,7 +3589,9 @@
         var busy = true;
 
         function formatTime(millis) {
-            return millis ? new Date(millis).toLocaleString(CheeseI18n.getLocale()) : CheeseI18n.t('shell.api.never');
+            // Western digits in Arabic too, see moment-locale.js.
+            var dateLocale = CheeseI18n.getLocale() === 'ar' ? 'ar-u-nu-latn' : CheeseI18n.getLocale();
+            return millis ? new Date(millis).toLocaleString(dateLocale) : CheeseI18n.t('shell.api.never');
         }
 
         function showStatus(result) {
