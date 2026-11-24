@@ -102,6 +102,27 @@ test('English course details translate labels while preserving source data', () 
     }
 });
 
+test('clearing the storage in another tab empties the signed-out schedule', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', '{"05d405e805e605d005d4":10}');
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+        assert.equal(window.$('#course-calendar').fullCalendar('clientEvents').length, 1);
+
+        // Another tab's localStorage.clear() fires a storage event whose key is null.
+        window.localStorage.clear();
+        window.dispatchEvent(new window.StorageEvent('storage', { key: null }));
+
+        assert.equal(window.$('#course-calendar').fullCalendar('clientEvents').length, 0);
+        assert.ok(!window.document.querySelector('#course-button-list').textContent.includes('Course Alpha'));
+    } finally {
+        dom.window.close();
+    }
+});
+
 test('English weekday headings adapt to narrow calendars without changing selected lessons', () => {
     const dom = createPage();
     try {
