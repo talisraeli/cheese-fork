@@ -40,7 +40,7 @@
     // The version of the popup that introduces the features CheeseFork² adds over the original
     // CheeseFork. Bump it when new features are added to the popup, to show it again. Declared
     // here because cheeseforkInit() below can show the popup before the rest of the script runs.
-    var whatsNewVersion = 3;
+    var whatsNewVersion = 4;
 
     // The iCalendar export, declared here for the same reason. The days off of the semester, once
     // loaded. And the automatic upload of an exported calendar (see calendarAutoUploadSchedule):
@@ -504,6 +504,7 @@
             {key: 'layers', icon: 'fas fa-layer-group'},
             {key: 'colors', icon: 'fas fa-palette'},
             {key: 'calendar', icon: 'fas fa-calendar-check'},
+            {key: 'import', icon: 'fas fa-file-upload'},
             {key: 'language', icon: 'fas fa-globe'},
             {key: 'api', icon: 'fas fa-key'}
         ];

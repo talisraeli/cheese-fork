@@ -449,10 +449,10 @@ function loadWelcome(seenVersion, language = 'en') {
     return { dom, window, welcome };
 }
 
-const FEATURE_TITLES = ['Layers', 'Your choice of colors', 'A calendar that stays up to date', 'English and Arabic interface', 'API access'];
+const FEATURE_TITLES = ['Layers', 'Your choice of colors', 'A calendar that stays up to date', 'Import from the original CheeseFork', 'English and Arabic interface', 'API access'];
 
 test('the welcome popup lists the new features again for visitors who saw an older version', () => {
-    for (const [seenVersion, shown] of [[null, true], ['1', true], ['2', true], ['3', false]]) {
+    for (const [seenVersion, shown] of [[null, true], ['1', true], ['2', true], ['3', true], ['4', false]]) {
         const { dom, welcome } = loadWelcome(seenVersion);
         try {
             assert.equal(!!welcome, shown, 'seen version ' + seenVersion);
@@ -488,7 +488,7 @@ test('the welcome popup has a page with how-to steps for each feature', () => {
         assert.ok(previous.hasClass('d-none'));
         assert.ok(!skip.hasClass('d-none'));
         assert.equal(next.text(), 'Next');
-        assert.equal(body.find('.whats-new-dot').first().attr('aria-label'), 'Go to page 1 of 6');
+        assert.equal(body.find('.whats-new-dot').first().attr('aria-label'), 'Go to page 1 of 7');
         assert.equal(body.find('.whats-new-dot.active').index(), 0);
 
         // Next goes through the features in order, each with steps.
@@ -517,7 +517,7 @@ test('the welcome popup has a page with how-to steps for each feature', () => {
         assert.equal(visibleTitle(), 'A calendar that stays up to date');
         const key = key => welcome.getModal().trigger(window.$.Event('keydown', { key }));
         key('ArrowRight');
-        assert.equal(visibleTitle(), 'English and Arabic interface');
+        assert.equal(visibleTitle(), 'Import from the original CheeseFork');
         key('ArrowLeft');
         key('ArrowLeft');
         assert.equal(visibleTitle(), 'Your choice of colors');
@@ -536,7 +536,7 @@ test('the welcome popup has a page with how-to steps for each feature', () => {
 
 test('the user guide button shows the welcome dialog again, even after it was seen', () => {
     for (const [language, label, title] of [['en', 'User guide', 'Welcome to CheeseFork²'], ['he', 'מדריך שימוש', 'ברוכים הבאים ל-CheeseFork²']]) {
-        const { dom, window, welcome } = loadWelcome('3', language);
+        const { dom, window, welcome } = loadWelcome('4', language);
         try {
             assert.equal(welcome, undefined, 'not shown on load once seen');
             const button = window.$('#top-navbar-guide a');
