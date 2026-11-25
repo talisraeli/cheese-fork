@@ -1369,5 +1369,8 @@ var CourseCalendar = (function () {
         updateCalendarMaxDayAndTime(calendar);
     };
 
+    // The key that a selected lesson of the course is saved under.
+    CourseCalendar.getLessonTypeKey = getLessonType;
+
     return CourseCalendar;
 })();

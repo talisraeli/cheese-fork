@@ -1,6 +1,6 @@
 'use strict';
 
-/* global introJs, ColorHash, BootstrapDialog, ics, IcsText, JsDiff, firebase, firebaseui, gtag, CheeseI18n, moment */
+/* global introJs, ColorHash, BootstrapDialog, ics, IcsText, IcsImport, CourseCalendar, JsDiff, firebase, firebaseui, gtag, CheeseI18n, moment */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
 /* global courses_from_rishum, courses_english, availableSemesters, currentSemester, scheduleSharingUserId */
 
@@ -1021,6 +1021,37 @@
             });
 
             initUndoRedoKeyboardShortcuts();
+
+            $('#top-navbar-import').removeClass('d-none').click(function (event) {
+                event.preventDefault();
+
+                gtag('event', 'navbar-import');
+
+                $(this).find('[data-toggle="tooltip"]').tooltip('hide');
+
+                // Choosing the same file again should import it again.
+                $('#import-ics-file').val('').trigger('click');
+            });
+
+            $('#import-ics-file').on('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) {
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function () {
+                    offerIcsImport(String(reader.result));
+                };
+                reader.onerror = function () {
+                    BootstrapDialog.show({
+                        title: CheeseI18n.t('shell.dialog.danger'),
+                        message: CheeseI18n.t('shell.importIcs.readError'),
+                        size: BootstrapDialog.SIZE_SMALL
+                    });
+                };
+                reader.readAsText(file);
+            });
         }
 
         $('#top-navbar-export').click(function (event) {
@@ -2667,6 +2698,105 @@
                 label: CheeseI18n.t('shell.importLocal.keepAccount'),
                 action: function (dialog) {
                     choose(dialog, 'keep');
+                }
+            }]
+        });
+    }
+
+    // Importing an iCalendar file exported by the original CheeseFork
+    //
+    // The lessons of the file are matched to the catalog of the current semester (see
+    // IcsImport.match) and added to the schedule like a merge of a schedule built while signed
+    // out: courses already in the schedule keep their lessons, and it can be undone.
+
+    // Returns a session with the courses, lessons and custom events of an IcsImport.match result.
+    function sessionFromIcsImport(result) {
+        var session = {};
+        session[currentSemester + '_courses'] = result.courseOrder.slice();
+        result.courseOrder.forEach(function (course) {
+            session[currentSemester + '_' + course] = $.extend({}, result.courses[course]);
+        });
+
+        // Custom events are saved in the week of 2017-01-01, a Sunday, see onSelect in
+        // course-calendar.js, and their ids are numbers, see onCustomEventAdded.
+        var customEvents = {};
+        var eventId = Math.round(Date.now() / 1000);
+        result.customEvents.forEach(function (customEvent) {
+            var date = '2017-01-0' + (customEvent.day + 1) + 'T';
+            customEvents[String(eventId++)] = {
+                title: customEvent.title,
+                start: date + customEvent.start + ':00',
+                end: date + customEvent.end + ':00'
+            };
+        });
+        session[currentSemester + '_custom_events'] = customEvents;
+        session[currentSemester + '_colors'] = {};
+        session[currentSemester + '_layers'] = {};
+        return session;
+    }
+
+    function offerIcsImport(text) {
+        var result = IcsImport.match(text, courseManager, CourseCalendar.getLessonTypeKey);
+
+        var message = $('<div></div>');
+        var unmatchedList = function () {
+            if (result.unmatched.length === 0) {
+                return;
+            }
+            message.append($('<p class="mb-1"></p>').text(CheeseI18n.t('shell.importIcs.unmatched', {
+                semester: semesterFriendlyName(currentSemester)
+            })));
+            var list = $('<ul class="mb-0"></ul>');
+            result.unmatched.forEach(function (summary) {
+                list.append($('<li dir="auto"></li>').text(summary));
+            });
+            message.append(list);
+        };
+
+        if (result.courseOrder.length === 0 && result.customEvents.length === 0) {
+            message.append($('<p></p>').text(CheeseI18n.t('shell.importIcs.nothing')));
+            unmatchedList();
+            BootstrapDialog.show({
+                title: CheeseI18n.t('shell.importIcs.title'),
+                message: message,
+                buttons: [{
+                    label: CheeseI18n.t('shell.dialog.close'),
+                    action: function (dialog) {
+                        dialog.close();
+                    }
+                }]
+            });
+            return;
+        }
+
+        message.append($('<p></p>').text(CheeseI18n.t('shell.importIcs.found', {
+            courses: result.courseOrder.length,
+            events: result.customEvents.length,
+            semester: semesterFriendlyName(currentSemester)
+        })));
+        unmatchedList();
+        message.append($('<p class="mt-3 mb-0 small text-muted"></p>').text(CheeseI18n.t('shell.importIcs.existingNote')));
+
+        BootstrapDialog.show({
+            title: CheeseI18n.t('shell.importIcs.title'),
+            message: message,
+            buttons: [{
+                id: 'import-ics-confirm',
+                label: CheeseI18n.t('shell.importIcs.import'),
+                cssClass: 'btn-primary',
+                action: function (dialog) {
+                    dialog.close();
+                    gtag('event', 'import-ics');
+
+                    var newSession = sessionsMerge(currentSavedSession, sessionFromIcsImport(result));
+                    restoreSavedSession(currentSavedSession, newSession);
+                    currentSavedSession = sessionCopy(newSession);
+                    onSavedSessionChange();
+                }
+            }, {
+                label: CheeseI18n.t('shell.dialog.cancel'),
+                action: function (dialog) {
+                    dialog.close();
                 }
             }]
         });
