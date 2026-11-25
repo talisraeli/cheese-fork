@@ -54,6 +54,7 @@ function loadUI(window) {
         'modules/color-hash/color-hash.js',
         'modules/ics.js/ics.deps.min.js',
         'ics-text.js',
+        'ics-import.js',
         'modules/jsdiff/diff.min.js',
         'modules/intro.js/intro.min.js',
         'modules/reparse.js',
