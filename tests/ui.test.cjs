@@ -297,6 +297,21 @@ test('undo and redo step through changes one at a time, with keyboard shortcuts'
         key('y');
         assert.equal(saved(), lecture);
 
+        // On a Hebrew keyboard the same keys type ז and ט, so the physical key decides.
+        key('ז', { code: 'KeyZ' });
+        assert.equal(saved(), '{}');
+        key('ז', { code: 'KeyZ', shiftKey: true });
+        assert.equal(saved(), lecture);
+        key('ז', { code: 'KeyZ' });
+        assert.equal(saved(), '{}');
+        key('ט', { code: 'KeyY' });
+        assert.equal(saved(), lecture);
+        // On a Latin layout the letter decides, such as German, where Z is on the Y key.
+        key('z', { code: 'KeyY' });
+        assert.equal(saved(), '{}');
+        key('y', { code: 'KeyZ' });
+        assert.equal(saved(), lecture);
+
         // Not while typing, where Ctrl+Z undoes the typing.
         const input = window.$('<input type="text">').appendTo(window.document.body).get(0);
         input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));

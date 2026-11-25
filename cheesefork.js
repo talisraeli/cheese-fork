@@ -3115,6 +3115,17 @@
             }
 
             var key = String(event.key).toLowerCase();
+            if (!/^[a-z]$/.test(key)) {
+                // A non-Latin layout, such as Hebrew, where the Z key types "ז". Like the
+                // browser's own shortcuts, use the key's Latin letter instead. jQuery's event
+                // doesn't copy code, so it's read from the original event.
+                var code = event.originalEvent && event.originalEvent.code;
+                if (code === 'KeyZ' || event.keyCode === 90) {
+                    key = 'z';
+                } else if (code === 'KeyY' || event.keyCode === 89) {
+                    key = 'y';
+                }
+            }
             var redo = (key === 'z' && event.shiftKey) || (key === 'y' && !event.shiftKey);
             var undo = key === 'z' && !event.shiftKey;
             if (!undo && !redo) {
