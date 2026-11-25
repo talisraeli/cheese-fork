@@ -1003,17 +1003,23 @@ var CourseButtonList = (function () {
 
         modalBody.find('.course-information').html(courseInfo);
 
-        // Course feedback is shown only on the original CheeseFork.
+        // Course feedback is shown only on the original CheeseFork, in a floating window. The link
+        // still opens it in a new tab with a middle click or Ctrl+click.
+        var originalFeedbackUrl = getOriginalFeedbackUrl(courseManager, course);
         var originalFeedbackLink = $('<a>', {
             class: 'btn btn-primary',
-            href: 'https://cheesefork.cf/course-widget-comments.html?course=' +
-                encodeURIComponent(courseManager.toNewCourseNumber(course)),
+            href: originalFeedbackUrl,
             target: '_blank',
             rel: 'noopener',
             role: 'button',
             text: CheeseI18n.t('courses.originalFeedback.button')
-        }).click(function () {
+        }).click(function (event) {
+            if (event.ctrlKey || event.metaKey || event.shiftKey) {
+                return;
+            }
+            event.preventDefault();
             gtag('event', 'course-feedback-original-site-click');
+            showOriginalFeedbackWindow(originalFeedbackUrl, courseManager.getCourseName(course));
         });
         var originalFeedbackNote = $('<div>', {
             class: 'small text-muted mt-1',
@@ -1024,6 +1030,149 @@ var CourseButtonList = (function () {
 
         var histogramBrowser = new HistogramBrowser(modalBody.find('.inline-histograms'), {});
         histogramBrowser.loadHistograms(courseManager.toNewCourseNumber(course));
+    }
+
+    function getOriginalFeedbackUrl(courseManager, course) {
+        return 'https://cheesefork.cf/course-widget-comments.html?course=' +
+            encodeURIComponent(courseManager.toNewCourseNumber(course));
+    }
+
+    // A floating window with the reviews page of the original CheeseFork. It stays above the
+    // dialogs, can be dragged by its header, and is reused for the next course. The page is
+    // loaded only when the window is opened.
+    var originalFeedbackWindow = null;
+    // The size the floating window was resized to, kept when it's opened again.
+    var originalFeedbackWindowSize = null;
+    var originalFeedbackWindowMinSize = {width: 260, height: 220};
+
+    function showOriginalFeedbackWindow(url, courseName) {
+        var title = CheeseI18n.t('courses.originalFeedback.windowTitle', {course: courseName});
+
+        if (!originalFeedbackWindow) {
+            originalFeedbackWindow = $('<div class="course-feedback-window bg-light border shadow" role="dialog" aria-modal="false"></div>');
+
+            var header = $('<div class="course-feedback-window-header"></div>');
+            var heading = $('<h2 class="course-feedback-window-title" id="course-feedback-window-title"></h2>');
+            var newWindowLink = $('<a class="course-feedback-window-button" target="_blank" rel="noopener"></a>')
+                .attr('aria-label', CheeseI18n.t('courses.originalFeedback.newWindow'))
+                .attr('title', CheeseI18n.t('courses.originalFeedback.newWindow'))
+                .append('<i class="fas fa-external-link-alt" aria-hidden="true"></i>');
+            var closeButton = $('<button type="button" class="close course-feedback-window-button"></button>')
+                .attr('aria-label', CheeseI18n.t('courses.close'))
+                .append('<span aria-hidden="true">&times;</span>')
+                .click(function () {
+                    // Unload the page, so that it doesn't keep running in the background.
+                    originalFeedbackWindow.find('iframe').attr('src', 'about:blank');
+                    originalFeedbackWindow.addClass('d-none');
+                });
+            header.append(heading, newWindowLink, closeButton);
+
+            var frame = $('<iframe class="course-feedback-window-frame" referrerpolicy="no-referrer"></iframe>');
+            var note = $('<div class="course-feedback-window-note small text-muted"></div>')
+                .text(CheeseI18n.t('courses.originalFeedback.note'));
+
+            originalFeedbackWindow.attr('aria-labelledby', 'course-feedback-window-title')
+                .append(header, frame, note)
+                .appendTo('body');
+
+            if (originalFeedbackWindow.draggable) {
+                originalFeedbackWindow.draggable({
+                    handle: '.course-feedback-window-header',
+                    cancel: '.course-feedback-window-button',
+                    containment: 'window',
+                    // The iframe would swallow the mouse events while dragging over it.
+                    iframeFix: true
+                });
+            }
+
+            if (originalFeedbackWindow.resizable) {
+                originalFeedbackWindow.resizable({
+                    handles: 'n, e, s, w, ne, nw, se, sw',
+                    minWidth: originalFeedbackWindowMinSize.width,
+                    minHeight: originalFeedbackWindowMinSize.height,
+                    start: function () {
+                        // Like iframeFix of draggable: the iframe would swallow the mouse events.
+                        originalFeedbackWindow.addClass('course-feedback-window-resizing');
+                    },
+                    stop: function (event, ui) {
+                        originalFeedbackWindow.removeClass('course-feedback-window-resizing');
+                        originalFeedbackWindowSize = {
+                            width: ui.size.width,
+                            height: ui.size.height
+                        };
+                        fitOriginalFeedbackWindow(false);
+                    }
+                });
+                // A grip in the bottom corner at the end of the reading direction.
+                originalFeedbackWindow.find(CheeseI18n.isRTL() ? '.ui-resizable-sw' : '.ui-resizable-se')
+                    .addClass('course-feedback-window-grip');
+            }
+
+            // Keep it inside the screen when its size changes, such as when a phone is rotated.
+            // jQuery UI's resize events of the window bubble up to the browser window too, and
+            // only the browser's own resize is the screen size changing.
+            $(window).on('resize', function (event) {
+                if (event.target === window && !originalFeedbackWindow.hasClass('d-none')) {
+                    fitOriginalFeedbackWindow(false);
+                }
+            });
+        }
+
+        originalFeedbackWindow.find('.course-feedback-window-title').text(title);
+        originalFeedbackWindow.find('.course-feedback-window-button[target]').attr('href', url);
+        originalFeedbackWindow.find('iframe').attr({src: url, title: title});
+        originalFeedbackWindow.removeClass('d-none');
+        fitOriginalFeedbackWindow(true);
+    }
+
+    // The default size of the floating window: 60% of the screen's width and 85% of its height,
+    // or all of the screen but the margins on phones, and at least the minimum size where the
+    // screen allows.
+    function getOriginalFeedbackWindowDefaultSize(screenWidth, screenHeight, margin) {
+        var phone = screenWidth < 576;
+        var width = screenWidth * (phone ? 1 : 0.6);
+        var height = screenHeight * (phone ? 1 : 0.85);
+
+        var grow = Math.max(1, originalFeedbackWindowMinSize.width / width, originalFeedbackWindowMinSize.height / height);
+        var shrink = Math.min(1, (screenWidth - 2 * margin) / (width * grow), (screenHeight - 2 * margin) / (height * grow));
+        return {width: width * grow * shrink, height: height * grow * shrink};
+    }
+
+    // Sizes the floating window to the size it was resized to, or the default size, shrunk to
+    // fit the visible part of the screen, and centers it, or with center false, moves it back
+    // inside the screen if needed. innerWidth and innerHeight are the visible size, also on
+    // phones, where 100vh can be taller than what's shown.
+    function fitOriginalFeedbackWindow(center) {
+        var screenWidth = window.innerWidth || document.documentElement.clientWidth;
+        var screenHeight = window.innerHeight || document.documentElement.clientHeight;
+        var margin = screenWidth < 576 ? 8 : 16;
+        var size = originalFeedbackWindowSize || getOriginalFeedbackWindowDefaultSize(screenWidth, screenHeight, margin);
+        var width = Math.round(Math.max(0, Math.min(size.width, screenWidth - 2 * margin)));
+        var height = Math.round(Math.max(0, Math.min(size.height, screenHeight - 2 * margin)));
+
+        if (originalFeedbackWindow.resizable && originalFeedbackWindow.hasClass('ui-resizable')) {
+            originalFeedbackWindow.resizable('option', {
+                maxWidth: Math.max(originalFeedbackWindowMinSize.width, screenWidth - 2 * margin),
+                maxHeight: Math.max(originalFeedbackWindowMinSize.height, screenHeight - 2 * margin)
+            });
+        }
+
+        var left, top;
+        if (center) {
+            left = (screenWidth - width) / 2;
+            top = (screenHeight - height) / 2;
+        } else {
+            var position = originalFeedbackWindow.position();
+            left = Math.min(Math.max(margin, position.left), screenWidth - width - margin);
+            top = Math.min(Math.max(margin, position.top), screenHeight - height - margin);
+        }
+
+        originalFeedbackWindow.css({
+            width: width,
+            height: height,
+            left: Math.round(Math.max(0, left)),
+            top: Math.round(Math.max(0, top))
+        });
     }
 
     CourseButtonList.prototype.setFloatingCourseInfo = function (course) {
