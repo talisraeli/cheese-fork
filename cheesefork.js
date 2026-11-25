@@ -2,7 +2,7 @@
 
 /* global introJs, ColorHash, BootstrapDialog, ics, IcsText, JsDiff, firebase, firebaseui, gtag, CheeseI18n, moment */
 /* global CourseManager, CourseSelect, CourseButtonList, CourseExamInfo, CourseCalendar */
-/* global courses_from_rishum, availableSemesters, currentSemester, scheduleSharingUserId */
+/* global courses_from_rishum, courses_english, availableSemesters, currentSemester, scheduleSharingUserId */
 
 (function () {
     CheeseI18n.apply(document);
@@ -18,7 +18,10 @@
     }));
     $('#course-list-crawler-link').prop('href', crawlerUrl({course: 'all'}));
 
-    var courseManager = new CourseManager(courses_from_rishum);
+    // The English catalog, from SAP, is loaded by index.html in English only. Hebrew and Arabic
+    // show the catalog's Hebrew text.
+    var courseManager = new CourseManager(courses_from_rishum,
+        CheeseI18n.getLocale() === 'en' && typeof courses_english !== 'undefined' ? courses_english : null);
     var colorHash = new ColorHash();
     var firestoreDb = null;
     var firebaseStorage = null;
@@ -1187,7 +1190,7 @@
                 if (general[moed]) {
                     var parsedDate = courseManager.parseExamDateTime(general[moed]);
                     if (parsedDate) {
-                        var title = courseManager.getFieldLabel(moed) + ' – ' + general['שם מקצוע'];
+                        var title = courseManager.getFieldLabel(moed) + ' – ' + courseManager.getCourseName(course);
                         icsCal.addEvent(title, '', '', parsedDate.start, parsedDate.end);
                     }
                 }
@@ -3375,8 +3378,7 @@
                 var courseDiff = metadataDiff[course];
                 var general, courseTitle;
                 if (courseDiff.exists) {
-                    general = courseManager.getGeneralInfo(course);
-                    courseTitle = general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
+                    courseTitle = courseManager.getTitle(course);
                     result.append(sourceText(courseTitle, '<h3>'));
 
                     courseDiff.changes.forEach(function (diff) {
@@ -3871,7 +3873,7 @@
                         staffContents.append(', ');
                     }
                     var staffUrl = crawlerUrl({staff: name});
-                    var staffLink = sourceText(name, '<a>').prop('href', staffUrl);
+                    var staffLink = sourceText(courseManager.getStaffLabel(name), '<a>').prop('href', staffUrl);
                     staffContents.append(staffLink);
                 });
                 content.append(staffContents);
@@ -3888,13 +3890,13 @@
             var roomUrl;
             var roomLink;
             if (lesson['בניין'] && lesson['חדר']) {
-                content.append($('<div>').text(courseManager.getFieldLabel('בניין') + ': ').append(sourceText(lesson['בניין'])));
+                content.append($('<div>').text(courseManager.getFieldLabel('בניין') + ': ').append(sourceText(courseManager.getBuildingLabel(lesson['בניין']))));
                 roomUrl = crawlerUrl({room: lesson['בניין'] + ' ' + lesson['חדר']});
                 roomLink = sourceText(lesson['חדר'], '<a>').prop('href', roomUrl);
                 content.append($('<div>').text(courseManager.getFieldLabel('חדר') + ': ').append(roomLink));
             } else if (lesson['בניין']) {
                 roomUrl = crawlerUrl({room: lesson['בניין']});
-                roomLink = sourceText(lesson['בניין'], '<a>').prop('href', roomUrl);
+                roomLink = sourceText(courseManager.getBuildingLabel(lesson['בניין']), '<a>').prop('href', roomUrl);
                 content.append($('<div>').text(courseManager.getFieldLabel('בניין') + ': ').append(roomLink));
             } else if (lesson['חדר']) {
                 content.append($('<div>').text(courseManager.getFieldLabel('חדר') + ': ').append(sourceText(lesson['חדר'])));

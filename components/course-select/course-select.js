@@ -45,8 +45,9 @@ var CourseSelect = (function () {
                             'data-boundary': 'viewport'
                         });
 
-                    return $('<div>').addClass('option source-content').attr({lang: /[א-ת]/.test(general['שם מקצוע']) ? 'he' : 'en', dir: 'auto'}).append(courseNumber)
-                        .append(document.createTextNode(' – ' + general['שם מקצוע'])).get(0);
+                    var courseName = that.courseManager.getCourseName(course);
+                    return $('<div>').addClass('option source-content').attr({lang: /[א-ת]/.test(courseName) ? 'he' : 'en', dir: 'auto'}).append(courseNumber)
+                        .append(document.createTextNode(' – ' + courseName)).get(0);
                 }
             },
             onInitialize: function () {
@@ -77,7 +78,7 @@ var CourseSelect = (function () {
 
                 that.onDropdownItemDeactivate(course);
             },
-            searchField: ['text', 'oldCourseNumber']
+            searchField: ['text', 'catalogName', 'oldCourseNumber']
         }).data('selectize');
 
         that.courseSelect.$dropdown
@@ -134,7 +135,9 @@ var CourseSelect = (function () {
             var general = courseManager.getGeneralInfo(course);
             return {
                 value: course,
-                text: course + ' – ' + general['שם מקצוע'],
+                text: course + ' – ' + courseManager.getCourseName(course),
+                // With an English name shown, the Hebrew one can be searched too.
+                catalogName: general['שם מקצוע'],
                 oldCourseNumber: courseManager.toOldCourseNumber(course)
             };
         });

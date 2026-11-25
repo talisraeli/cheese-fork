@@ -2,10 +2,14 @@
 
 /* global moment, BooleanExpression, currentSemester, CheeseI18n */
 
-function CourseManager(allCourses) {
+// englishCatalog is the text that SAP has in English (see ci/english_catalog.py), given for the
+// English interface only. The catalog data itself stays in Hebrew, since it's also used to
+// identify lessons and to track catalog changes; the English text is used only for display.
+function CourseManager(allCourses, englishCatalog) {
     var that = this;
 
     that.coursesHashmap = {};
+    that.englishCatalog = englishCatalog || null;
 
     allCourses.forEach(function (item) {
         var courseNumber = item.general['מספר מקצוע'];
@@ -210,8 +214,33 @@ CourseManager.prototype.getSchedule = function (course) {
 };
 
 CourseManager.prototype.getTitle = function (course) {
-    var general = this.coursesHashmap[course].general;
-    return general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
+    return this.coursesHashmap[course].general['מספר מקצוע'] + ' – ' + this.getCourseName(course);
+};
+
+// A field of a course in the English catalog: name, syllabus, faculty, level, notes or
+// coordinators. Null without an English catalog or if SAP has no English text for it.
+CourseManager.prototype.getEnglishText = function (course, field) {
+    var courses = this.englishCatalog && this.englishCatalog.courses;
+    var text = courses && Object.prototype.hasOwnProperty.call(courses, course) && courses[course][field];
+    return typeof text === 'string' && text !== '' ? text : null;
+};
+
+CourseManager.prototype.getCourseName = function (course) {
+    return this.getEnglishText(course, 'name') || this.coursesHashmap[course].general['שם מקצוע'];
+};
+
+// Staff and buildings are keyed by their text in the Hebrew catalog.
+function englishCatalogLabel(englishCatalog, map, value) {
+    var labels = englishCatalog && englishCatalog[map];
+    return labels && Object.prototype.hasOwnProperty.call(labels, value) ? labels[value] : value;
+}
+
+CourseManager.prototype.getStaffLabel = function (name) {
+    return englishCatalogLabel(this.englishCatalog, 'staff', name);
+};
+
+CourseManager.prototype.getBuildingLabel = function (building) {
+    return englishCatalogLabel(this.englishCatalog, 'buildings', building);
 };
 
 CourseManager.prototype.getFieldLabel = function (key) {
@@ -357,7 +386,7 @@ CourseManager.prototype.getFrameworkLabel = function (value) {
 CourseManager.prototype.getDescription = function (course, options) {
     var that = this;
     var general = that.coursesHashmap[course].general;
-    var header = general['מספר מקצוע'] + ' – ' + general['שם מקצוע'];
+    var header = that.getTitle(course);
     var headerHtml = options.html ? sourceHtml(header) : '';
     var content = '';
     var contentHtml = '';
@@ -391,14 +420,21 @@ CourseManager.prototype.getDescription = function (course, options) {
         }
     }
 
+    // The site's own labels, or SAP's English text for values it doesn't know.
     if (general['פקולטה']) {
-        addHeader('פקולטה', that.getFacultyLabel(general['פקולטה']));
+        var faculty = that.getFacultyLabel(general['פקולטה']);
+        addHeader('פקולטה', faculty === general['פקולטה'] ? that.getEnglishText(course, 'faculty') || faculty : faculty);
     }
 
     if (general['מסגרת לימודים']) {
-        addHeader('מסגרת לימודים', general['מסגרת לימודים'].split('\n').map(function (framework) {
+        var frameworks = general['מסגרת לימודים'].split('\n');
+        var frameworkLabels = frameworks.map(function (framework) {
             return that.getFrameworkLabel(framework);
-        }).join(', '));
+        });
+        var unknownFramework = frameworkLabels.some(function (label, i) {
+            return label === frameworks[i];
+        });
+        addHeader('מסגרת לימודים', unknownFramework && that.getEnglishText(course, 'level') || frameworkLabels.join(', '));
     }
 
     if (general['נקודות']) {
@@ -406,7 +442,7 @@ CourseManager.prototype.getDescription = function (course, options) {
     }
 
     if (general['סילבוס']) {
-        addContent(null, general['סילבוס'], '\n\n');
+        addContent(null, that.getEnglishText(course, 'syllabus') || general['סילבוס'], '\n\n');
     }
 
     if (options.relatedCourseInfo) {
@@ -436,7 +472,7 @@ CourseManager.prototype.getDescription = function (course, options) {
     }
 
     if (general['אחראים']) {
-        addContent('אחראים', general['אחראים'], '\n\n');
+        addContent('אחראים', that.getEnglishText(course, 'coordinators') || general['אחראים'], '\n\n');
     }
 
     [
@@ -465,7 +501,7 @@ CourseManager.prototype.getDescription = function (course, options) {
     });
 
     if (general['הערות']) {
-        addContent('הערות', general['הערות'], '\n\n');
+        addContent('הערות', that.getEnglishText(course, 'notes') || general['הערות'], '\n\n');
     }
 
     if (!options.html) {
