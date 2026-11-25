@@ -57,7 +57,7 @@ function openPage(language = 'en') {
 
 async function chooseFile(window, dialogs, text) {
     const count = dialogs.length;
-    window.$('#top-navbar-import a').trigger('click');
+    window.$('#top-navbar-import').trigger('click');
     const input = window.document.getElementById('import-ics-file');
     Object.defineProperty(input, 'files', { value: [new window.File([text], 'schedule.ics', { type: 'text/calendar' })], configurable: true });
     input.dispatchEvent(new window.Event('change'));
@@ -69,7 +69,10 @@ test('importing a file from the original CheeseFork adds its lessons and custom 
     const { dom, window, dialogs } = openPage();
     try {
         assert.ok(!window.$('#top-navbar-import').hasClass('d-none'));
-        assert.equal(window.$('#top-navbar-import a span').text(), 'Import from CheeseFork');
+        // Export and import share the Calendar menu of the navigation bar.
+        assert.equal(window.$('#top-navbar-calendar > .dropdown-toggle span').text(), 'Calendar');
+        assert.deepEqual(Array.from(window.$('#top-navbar-calendar .dropdown-menu .dropdown-item'), item => item.id), ['top-navbar-export', 'top-navbar-import']);
+        assert.equal(window.$('#top-navbar-import span').text(), 'Import from CheeseFork');
 
         const dialog = await chooseFile(window, dialogs, FILE);
         const body = dialog.getModalBody();

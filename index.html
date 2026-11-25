@@ -123,17 +123,21 @@
                         <span data-i18n="shell.nav.api">API</span>
                     </a>
                 </li>
-                <li id="top-navbar-export" class="nav-item">
-                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" data-i18n-title="shell.nav.exportTooltip" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
-                        <i class="fas fa-file-download"></i>
-                        <span data-i18n="shell.nav.export">ייצוא לקובץ iCalendar</span>
+                <li id="top-navbar-calendar" class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="top-navbar-dropdown-calendar" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-calendar"></i>
+                        <span data-i18n="shell.nav.calendar">לוח שנה</span>
                     </a>
-                </li>
-                <li id="top-navbar-import" class="nav-item d-none">
-                    <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" data-i18n-title="shell.nav.importTooltip" title="הוספת המערכת מקובץ iCalendar שיוצא מ-CheeseFork המקורי">
-                        <i class="fas fa-file-upload"></i>
-                        <span data-i18n="shell.nav.import">ייבוא מ-CheeseFork</span>
-                    </a>
+                    <div class="dropdown-menu" aria-labelledby="top-navbar-dropdown-calendar">
+                        <a id="top-navbar-export" class="dropdown-item" href="#" data-i18n-title="shell.nav.exportTooltip" title="מאפשר לייבא את המערכת לכלי שתומך בקבצי iCalendar כגון Google Calendar">
+                            <i class="fas fa-file-download fa-fw"></i>
+                            <span data-i18n="shell.nav.export">ייצוא לקובץ iCalendar</span>
+                        </a>
+                        <a id="top-navbar-import" class="dropdown-item d-none" href="#" data-i18n-title="shell.nav.importTooltip" title="הוספת המערכת מקובץ iCalendar שיוצא מ-CheeseFork המקורי">
+                            <i class="fas fa-file-upload fa-fw"></i>
+                            <span data-i18n="shell.nav.import">ייבוא מ-CheeseFork</span>
+                        </a>
+                    </div>
                 </li>
                 <li id="top-navbar-undo" class="nav-item d-none">
                     <a class="nav-link" href="#" data-toggle="tooltip" data-placement="bottom" data-trigger="hover" data-i18n-title="shell.nav.undoTooltip" title="ביטול השינוי האחרון (⁦Ctrl+Z / ⌘Z⁩)">

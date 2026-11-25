@@ -1027,8 +1027,6 @@
 
                 gtag('event', 'navbar-import');
 
-                $(this).find('[data-toggle="tooltip"]').tooltip('hide');
-
                 // Choosing the same file again should import it again.
                 $('#import-ics-file').val('').trigger('click');
             });
@@ -1058,8 +1056,6 @@
             event.preventDefault();
 
             gtag('event', 'navbar-export');
-
-            $(this).find('[data-toggle="tooltip"]').tooltip('hide');
 
             loadCalendarDaysOff(function (daysOff) {
                 var icsCal = buildScheduleCalendar(daysOff);
@@ -3959,7 +3955,7 @@
 
         $('#top-navbar-home').removeClass('d-none');
         $('#top-navbar-share').addClass('d-none');
-        $('#top-navbar-export').addClass('d-none');
+        $('#top-navbar-calendar').addClass('d-none');
         $('#top-navbar-semester').addClass('d-none');
         $('#course-select').hide();
 
