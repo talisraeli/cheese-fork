@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="cheesefork.css">
     <link rel="stylesheet" href="i18n.css">
+    <link rel="stylesheet" href="cookie-consent.css">
     <style>
         p {
             margin-bottom: .5rem;
@@ -58,6 +59,8 @@
         <p class="mb-1">
             <span data-i18n="sharing.footer.createdBy">תוכנת על ידי</span> <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener" data-i18n="sharing.footer.author">מיכאל מלצב</a>.
             <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener" data-i18n="sharing.footer.privacy">מדיניות פרטיות</a>.
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/TERMS.md" target="_blank" rel="noopener" data-i18n="sharing.footer.terms">תנאי שימוש</a>.
+            <a href="#" data-cookie-settings data-i18n="consent.settings">הגדרות עוגיות</a>.
         </p>
         <p class="mb-1">
             <span data-i18n="sharing.footer.maintainedBy">מתוחזק על ידי</span> <a href="https://github.com/talisraeli" target="_blank" rel="noopener" data-i18n="sharing.footer.maintainer">טל ישראלי</a>.
@@ -66,13 +69,8 @@
         </p>
     </footer>
 </div>
-<!-- Google tag (Google Tag Manager) -->
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-5QHXJDHX"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-</script>
+<!-- Google tag (Google Tag Manager), loaded only after the visitor allows analytics -->
+<script src="cookie-consent.js"></script>
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
 <script src="components/histogram-browser/histogram-browser.js"></script>
@@ -80,5 +78,7 @@
     $('#share-guide').append(HistogramBrowser.createShareGuide());
     $('#top-navbar a[href="."]').attr('href', CheeseI18n.withLocale('.'));
 </script>
+<!-- Negishot accessibility widget -->
+<script src="https://negishot.co.il/cdn/widget.php?code=NGS_55210E82BE0F"></script>
 </body>
 </html>

@@ -71,6 +71,7 @@
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="cheesefork-print.css" media="print">
     <link rel="stylesheet" href="i18n.css">
+    <link rel="stylesheet" href="cookie-consent.css">
 </head>
 <body class="bg-light">
 <div class="container-fluid">
@@ -347,19 +348,18 @@
             <span class="mx-1" aria-hidden="true">·</span>
             <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener" data-i18n="shell.footer.privacy">מדיניות פרטיות</a>
             <span class="mx-1" aria-hidden="true">·</span>
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/TERMS.md" target="_blank" rel="noopener" data-i18n="shell.footer.terms">תנאי שימוש</a>
+            <span class="mx-1" aria-hidden="true">·</span>
+            <a href="#" data-cookie-settings data-i18n="consent.settings">הגדרות עוגיות</a>
+            <span class="mx-1" aria-hidden="true">·</span>
             <span data-i18n="shell.footer.license">רישיון</span> <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU GPL v3</a>
             <span class="mx-1" aria-hidden="true">·</span>
             <dark-mode-toggle permanent data-i18n-aria-label="shell.theme.label" aria-label="מצב תצוגה"></dark-mode-toggle>
         </p>
     </footer>
 </div>
-<!-- Google tag (Google Tag Manager) -->
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-5QHXJDHX"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-</script>
+<!-- Google tag (Google Tag Manager), loaded only after the visitor allows analytics -->
+<script src="cookie-consent.js"></script>
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/fullcalendar/lib/jquery-ui.min.js"></script>
 <script src="modules/jquery.ui.touch-punch/jquery.ui.touch-punch.min.js"></script>
@@ -506,5 +506,7 @@
 <script src="components/histogram-browser/histogram-browser.js"></script>
 <script src="course-manager.js"></script>
 <script src="cheesefork.js"></script>
+<!-- Negishot accessibility widget -->
+<script src="https://negishot.co.il/cdn/widget.php?code=NGS_55210E82BE0F"></script>
 </body>
 </html>

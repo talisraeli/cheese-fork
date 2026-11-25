@@ -25,7 +25,7 @@
         }
     </style>
 </head>
-<body class="bg-light my-3">
+<body class="bg-light my-3" data-cookie-consent-silent>
 <div class="container-fluid">
     <div id="content-container">
         <div class="form-group text-right">
@@ -48,13 +48,8 @@
         </div>
     </div>
 </div>
-<!-- Google tag (Google Tag Manager) -->
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-5QHXJDHX"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-</script>
+<!-- Google tag (Google Tag Manager), loaded only after the visitor allows analytics -->
+<script src="cookie-consent.js"></script>
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/popper/popper.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>

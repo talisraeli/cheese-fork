@@ -51,7 +51,7 @@ test('catalogs have matching keys, interpolation parameters, and English text', 
 test('the Hebrew catalog has no English text, except names and shortcuts', () => {
     const { he } = catalogs();
     // Product names, abbreviations and keyboard shortcuts stay as they are in every language.
-    const names = /CheeseFork|API|AI|iCalendar|Google Calendar|Google|Discord|WhatsApp|Telegram|Facebook|GitHub|Chrome|Firefox|Console|Enter|Ctrl|Shift|URL|WebCourse|Outlook|Claude|ChatGPT|Mac|Apple|Firebase/g;
+    const names = /CheeseFork|API|AI|iCalendar|Google Calendar|Google Analytics|Google|Discord|WhatsApp|Telegram|Facebook|GitHub|Chrome|Firefox|Console|Enter|Ctrl|Shift|URL|WebCourse|Outlook|Claude|ChatGPT|Mac|Apple|Firebase/g;
     const english = Object.keys(he).filter(key =>
         /[A-Za-z]{2,}/.test(he[key].replace(/\{[^{}]+\}/g, '').replace(names, '')));
     assert.deepEqual(english, []);

@@ -1,6 +1,6 @@
 # CheeseFork² Privacy Policy
 
-Last updated: 2026-11-23
+Last updated: 2026-11-25
 
 CheeseFork² is a free, open source schedule builder for Technion students, based on CheeseFork by Michael Maltsev. This policy describes what data the site handles, where it goes, and how you can control it. The full source code is available at https://github.com/talisraeli/cheese-fork under the GNU General Public License v3.0, so everything described here can be verified.
 
@@ -10,7 +10,8 @@ CheeseFork² is a static website. There is no CheeseFork²-operated server that 
 
 - You can use CheeseFork² without an account. Your schedule is then stored only in your browser.
 - Signing in is optional. It enables syncing your schedule across devices, sharing it with a link, and a hosted iCalendar link.
-- The site uses Google Analytics.
+- The site uses Google Analytics only if you allow it.
+- The site includes the Negishot accessibility widget, which remembers your accessibility settings and reports which of its tools are used.
 - CheeseFork² does not collect course feedback. The "הצג חוות דעת בחלון חדש" button opens the course's feedback on the original CheeseFork.
 - Schedules and iCalendar files you share are visible to anyone who has the link.
 - Histogram sharing uploads only aggregate course statistics to a public GitHub repository, never your own grades or identity.
@@ -74,16 +75,19 @@ The extracted data is sent from your browser directly to the GitHub API and comm
 
 ## 8. Analytics
 
-CheeseFork² uses Google Analytics on the main site and on the embeddable histogram widget. Google Analytics collects information such as the pages you visit, your browser and device type, approximate location derived from your IP address, and interaction events (for example, which navigation buttons or popup options were clicked). Google Analytics sets cookies in your browser for this purpose.
+CheeseFork² can use Google Analytics on the main site, the histogram sharing page, and the embeddable histogram widget, but only after you allow it. On your first visit, a cookie notice asks whether to allow analytics. Until you choose "Allow analytics", Google Tag Manager and Google Analytics are not loaded and no analytics data is sent. Your choice is kept in your browser's local storage, and you can change it at any time with the "Cookie settings" link at the bottom of the page. Withdrawing consent stops analytics and removes the Google Analytics cookies from the site. The embeddable histogram widget never shows the notice; it follows the choice you made on the main site, when your browser makes it available to the widget, and otherwise does not load analytics.
 
-CheeseFork² does not send your name, email, user ID, or schedule contents to Google Analytics. You can block Google Analytics with a content blocker or with Google's opt-out browser add-on. Google's own privacy policy is available at https://policies.google.com/privacy.
+When allowed, Google Analytics collects information such as the pages you visit, your browser and device type, approximate location derived from your IP address, and interaction events (for example, which navigation buttons or popup options were clicked). Google Analytics sets cookies in your browser for this purpose.
+
+CheeseFork² does not send your name, email, user ID, or schedule contents to Google Analytics. You can also block Google Analytics with a content blocker or with Google's opt-out browser add-on. Google's own privacy policy is available at https://policies.google.com/privacy.
 
 ## 9. Third-party services and content
 
 Using CheeseFork² causes your browser to contact the following services. Each of them receives standard connection information such as your IP address and browser details, and is governed by its own privacy policy.
 
 - **Google Firebase** (Authentication, Cloud Firestore, Cloud Storage) and Firebase SDKs loaded from www.gstatic.com. Privacy policy: https://firebase.google.com/support/privacy.
-- **Google Analytics**, loaded from www.googletagmanager.com. See section 8.
+- **Google Analytics**, loaded from www.googletagmanager.com only if you allow analytics. See section 8.
+- **Negishot accessibility widget**, loaded from negishot.co.il on the main site and the histogram sharing page. It adds an accessibility menu (for example, text size, contrast, and readable fonts). Your accessibility settings are saved in your browser's local storage and in a `negishot_prefs` cookie that lasts 30 days. When you use one of the widget's tools, the widget sends Negishot the name of the tool and a random identifier that it keeps in your browser's local storage (`negishot_sid`); it does not send your name, email, user ID, or schedule. When you open the menu, the widget may load fonts from fonts.googleapis.com, cdn.jsdelivr.net, and media.getmood.io. Negishot is a separate service with its own privacy policy, available at https://negishot.co.il.
 - **Course catalog and data files** loaded from ug.cheesefork.cf, sap.cheesefork.cf, and michael-maltsev.github.io (hosted on GitHub Pages). These contain only public course information, histograms, and calendar data; no user data is sent to them beyond the request itself.
 - **Facebook Page plugin**. The "weekly graph" popup embeds the CheeseFork Facebook page in an iframe served by Facebook. Facebook may set cookies and collect data when that popup is displayed, according to Facebook's privacy policy. The plugin is only loaded when the popup is shown, and you can disable the popup from within it.
 - **Original CheeseFork** (cheesefork.cf). The "הצג חוות דעת בחלון חדש" button and the old feedback widget address open course feedback there. Nothing is sent to it beyond the request itself.
@@ -93,7 +97,7 @@ The site also contains links to external sites and communities (Technion website
 
 ## 10. Cookies and browser storage
 
-CheeseFork² itself does not set cookies. It uses local storage for the data described in section 1, and Firebase Authentication uses local storage or IndexedDB to keep you signed in. Google Analytics and the Facebook Page plugin may set their own cookies as described above.
+CheeseFork² itself does not set cookies. It uses local storage for the data described in section 1 and for your analytics choice, and Firebase Authentication uses local storage or IndexedDB to keep you signed in. Google Analytics (only if you allow it), the Negishot accessibility widget, and the Facebook Page plugin may set their own cookies and browser storage as described above.
 
 ## 11. Retention and deletion
 

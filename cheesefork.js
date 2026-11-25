@@ -919,7 +919,7 @@
 
                 loginDialog = BootstrapDialog.show({
                     title: CheeseI18n.t('shell.login.title'),
-                    message: $('#firebaseui-auth-container'),
+                    message: $('<div>').append($('#firebaseui-auth-container'), loginTermsNote()),
                     buttons: [{
                         label: CheeseI18n.t('shell.dialog.close'),
                         action: function (dialog) {
@@ -1365,6 +1365,30 @@
         firestoreDb = firebase.firestore();
 
         firebaseStorage = firebase.storage();
+    }
+
+    // "By signing in, you agree to the {terms} and the {privacy}", with both placeholders as links.
+    function loginTermsNote() {
+        var links = {
+            terms: {
+                url: 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/TERMS.md',
+                label: CheeseI18n.t('shell.login.termsLink')
+            },
+            privacy: {
+                url: 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md',
+                label: CheeseI18n.t('shell.login.privacyLink')
+            }
+        };
+        var note = $('<p class="login-terms-note small text-muted text-center mt-3 mb-0">');
+        CheeseI18n.t('shell.login.terms').split(/(\{terms\}|\{privacy\})/).forEach(function (part) {
+            var link = links[part.slice(1, -1)];
+            if (link && part.charAt(0) === '{') {
+                note.append($('<a target="_blank" rel="noopener">').attr('href', link.url).text(link.label));
+            } else if (part) {
+                note.append(document.createTextNode(part));
+            }
+        });
+        return note;
     }
 
     function firebaseAuthUIInit(onInitialized) {
