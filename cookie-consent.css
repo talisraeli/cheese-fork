@@ -1,0 +1,46 @@
+/* A non-blocking card in the bottom corner, above dialogs so it can be answered at any time. */
+.cookie-consent {
+    position: fixed;
+    bottom: 1rem;
+    z-index: 1060;
+    max-width: 26rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+html[dir="ltr"] .cookie-consent {
+    left: 1rem;
+    right: 1rem;
+    margin-right: auto;
+}
+
+html[dir="rtl"] .cookie-consent {
+    right: 1rem;
+    left: 1rem;
+    margin-left: auto;
+}
+
+.cookie-consent-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.cookie-consent-message {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+html[dir="ltr"] .cookie-consent-buttons .btn + .btn {
+    margin-left: 0.5rem;
+}
+
+html[dir="rtl"] .cookie-consent-buttons .btn + .btn {
+    margin-right: 0.5rem;
+}
+
+@media print {
+    .cookie-consent {
+        display: none;
+    }
+}

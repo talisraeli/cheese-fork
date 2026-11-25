@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createPage, loadUI, load, englishContent } = require('./helpers.cjs');
+const { createPage, loadUI, load, englishContent, installFakeFirebase, waitUntil, pageLoaded } = require('./helpers.cjs');
 
 for (const [language, name, dir] of [['en', 'English', 'ltr'], ['ar', 'Arabic', 'rtl']]) for (const file of ['index.html', 'course-widget-histograms.html', 'share-histograms.html']) {
     test(file + ': ' + name + ' static content and accessible labels are localized', () => {
@@ -562,3 +562,42 @@ test('in Hebrew, the arrow keys turn the pages in the reading direction', () => 
         dom.window.close();
     }
 });
+
+for (const language of ['en', 'he', 'ar']) {
+    test(language + ': the sign-in dialog says that signing in accepts the terms and the privacy policy', async () => {
+        const dom = createPage('index.html', language);
+        try {
+            const window = loadUI(dom.window);
+            for (const key of ['dontShowIntro', 'dontShowHistogramsTip', 'dontShowThursdayGraphPopup', 'dontShowTechnionScansPopup']) {
+                window.localStorage.setItem(key, String(Date.now()));
+            }
+            window.localStorage.setItem('whatsNewSeenVersion', '1000');
+            installFakeFirebase(window, { signedOut: true });
+            load(window, 'cheesefork.js');
+            await waitUntil(() => pageLoaded(window), 'the signed-out schedule is loaded');
+
+            let dialog;
+            const show = window.BootstrapDialog.show;
+            window.BootstrapDialog.show = options => (dialog = show(options));
+            window.$('#top-navbar-login').trigger('click');
+            assert.ok(dialog);
+            const body = dialog.getModalBody();
+            const note = body.find('.login-terms-note');
+            assert.equal(note.length, 1);
+            assert.equal(body.find('#firebaseui-auth-container').length, 1);
+
+            const { t } = window.CheeseI18n;
+            const expected = t('shell.login.terms')
+                .replace('{terms}', t('shell.login.termsLink'))
+                .replace('{privacy}', t('shell.login.privacyLink'));
+            assert.equal(note.text(), expected);
+            const links = Array.from(note.find('a'));
+            assert.deepEqual([...links.map(link => link.textContent)], [t('shell.login.termsLink'), t('shell.login.privacyLink')]);
+            assert.match(links[0].href, /\/TERMS\.md$/);
+            assert.match(links[1].href, /\/PRIVACY\.md$/);
+            links.forEach(link => assert.equal(link.rel, 'noopener'));
+        } finally {
+            dom.window.close();
+        }
+    });
+}
