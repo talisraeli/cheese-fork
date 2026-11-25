@@ -5,6 +5,7 @@ export default [
     {
         ignores: [
             "modules/",
+            "catalog-en/",
             "node_modules/",
             "functions/node_modules/",
             "functions/shared/",

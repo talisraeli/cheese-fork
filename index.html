@@ -488,6 +488,15 @@
         }
         script.setAttribute('onerror', 'alert(CheeseI18n.t("shell.error.loadCourses"));');
         document.write(script.outerHTML);
+
+        // The text that SAP has in English, built by ci/english_catalog.py, for the English
+        // interface only. Semesters without it keep the Hebrew text.
+        if (CheeseI18n.getLocale() === 'en' && currentSemester >= '202401') {
+            var englishScript = document.createElement('script');
+            englishScript.src = 'catalog-en/courses_' + currentSemester.slice(0, 4) + '_' +
+                (parseInt(currentSemester.slice(4), 10) - 1 + 200) + '.min.js';
+            document.write(englishScript.outerHTML);
+        }
     })();
 </script>
 <script src="components/course-select/course-select.js"></script>

@@ -45,6 +45,16 @@ use `CheeseI18n.withLocale(url)`, including links to standalone widgets. Keep ra
 Technion data keys and saved lesson identifiers independent of their displayed
 translations.
 
+The course catalog is in Hebrew. For the English interface only, `index.html` also loads
+`catalog-en/courses_<year>_<semester>.min.js`: the text that the Technion's SAP system has in
+English, such as course names, descriptions, notes, staff and buildings. `CourseManager`
+shows it through `getCourseName`, `getStaffLabel`, `getBuildingLabel` and
+`getEnglishText`, and falls back to the Hebrew text. The catalog data itself stays in
+Hebrew, since it also identifies saved lessons and tracks catalog changes. Hebrew and Arabic
+show the Hebrew text. `ci/english_catalog.py` builds the files for the semesters that
+technion-sap-info-fetcher updates, and the "Update the English course catalog" workflow
+runs it weekly.
+
 `moment-locale.js` sets moment's locale after the FullCalendar locale files, each of
 which makes itself the global one. In Arabic it keeps Western digits, like the
 catalog. Don't rely on moment's `week()`, whose weeks start on a different day in

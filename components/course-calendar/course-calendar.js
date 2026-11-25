@@ -492,17 +492,19 @@ var CourseCalendar = (function () {
         var eventId = (layerId ? layerId + '.' : '') + course + '.' + lesson['מס.'] + '.' + lessonType;
         var courseClassName = getCourseClassName(course, layerId);
 
-        var general = courseCalendar.courseManager.getGeneralInfo(course);
+        var courseManager = courseCalendar.courseManager;
 
-        var title = courseCalendar.courseManager.getLessonTypeAndNumber(lesson);
+        var title = courseManager.getLessonTypeAndNumber(lesson);
         if (lesson['בניין']) {
-            title += '\n' + lesson['בניין'];
+            title += '\n' + courseManager.getBuildingLabel(lesson['בניין']);
             if (lesson['חדר']) {
                 title += ' ' + lesson['חדר'];
             }
         }
         if (lesson['מרצה/מתרגל']) {
-            var staffLines = lesson['מרצה/מתרגל'].split('\n');
+            var staffLines = lesson['מרצה/מתרגל'].split('\n').map(function (name) {
+                return courseManager.getStaffLabel(name);
+            });
             if (staffLines.length > 3) {
                 var staffLinesCount = staffLines.length;
                 staffLines = staffLines.slice(0, 2);
@@ -511,7 +513,7 @@ var CourseCalendar = (function () {
 
             title += '\n' + staffLines.join('\n');
         }
-        title += '\n' + general['שם מקצוע'];
+        title += '\n' + courseManager.getCourseName(course);
 
         return {
             id: eventId,
@@ -1307,20 +1309,21 @@ var CourseCalendar = (function () {
                 var description = '';
                 var location = '';
                 if (event.courseNumber !== null) {
-                    var general = that.courseManager.getGeneralInfo(event.courseNumber);
                     var lesson = event.lessonData;
 
                     subject = that.courseManager.getLessonTypeAndNumber(lesson);
-                    subject += ' – ' + general['שם מקצוע'];
+                    subject += ' – ' + that.courseManager.getCourseName(event.courseNumber);
 
                     description = '';
                     if (lesson['מרצה/מתרגל']) {
-                        description = lesson['מרצה/מתרגל'];
+                        description = lesson['מרצה/מתרגל'].split('\n').map(function (name) {
+                            return that.courseManager.getStaffLabel(name);
+                        }).join('\n');
                     }
 
                     location = '';
                     if (lesson['בניין']) {
-                        location = lesson['בניין'];
+                        location = that.courseManager.getBuildingLabel(lesson['בניין']);
                         if (lesson['חדר']) {
                             location += ' ' + lesson['חדר'];
                         }
