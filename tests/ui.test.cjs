@@ -616,3 +616,197 @@ for (const language of ['en', 'he', 'ar']) {
         }
     });
 }
+
+for (const language of ['en', 'he', 'ar']) {
+    test(language + ': the reviews button opens the original CheeseFork in a floating window', () => {
+        const dom = createPage('index.html', language);
+        try {
+            const window = loadUI(dom.window);
+            window.localStorage.setItem('202601_courses', '["01040001"]');
+            window.localStorage.setItem('202601_01040001', '{}');
+            window.localStorage.setItem('dontShowIntro', String(Date.now()));
+            window.localStorage.setItem('whatsNewSeenVersion', '1000');
+            let dialog;
+            const show = window.BootstrapDialog.show;
+            window.BootstrapDialog.show = options => (dialog = show(options));
+            load(window, 'cheesefork.js');
+            const { t } = window.CheeseI18n;
+            const url = 'https://cheesefork.cf/course-widget-comments.html?course=01040001';
+
+            window.$('#course-button-list [data-course-number="01040001"] .badge').trigger('click');
+            assert.ok(dialog);
+            const button = dialog.getModalBody().find('.course-feedback a.btn');
+            assert.equal(button.text(), t('courses.originalFeedback.button'));
+            assert.equal(button.attr('href'), url);
+            // Nothing from the original site is loaded until the button is clicked.
+            assert.equal(window.$('.course-feedback-window').length, 0);
+            assert.equal(window.$('iframe').length, 0);
+
+            // A plain click opens the floating window instead of following the link.
+            const click = window.$.Event('click');
+            button.trigger(click);
+            assert.ok(click.isDefaultPrevented());
+            const floating = window.$('body > .course-feedback-window');
+            assert.equal(floating.length, 1);
+            assert.ok(!floating.hasClass('d-none'));
+            const title = t('courses.originalFeedback.windowTitle', { course: 'Course Alpha' });
+            assert.equal(floating.find('.course-feedback-window-title').text(), title);
+            assert.equal(floating.attr('aria-labelledby'), 'course-feedback-window-title');
+            assert.equal(floating.find('iframe').attr('src'), url);
+            assert.equal(floating.find('iframe').attr('title'), title);
+            const newWindow = floating.find('a[target="_blank"]');
+            assert.equal(newWindow.attr('href'), url);
+            assert.equal(newWindow.attr('rel'), 'noopener');
+            assert.equal(newWindow.attr('aria-label'), t('courses.originalFeedback.newWindow'));
+            assert.ok(floating.hasClass('ui-draggable'));
+
+            // Closing it unloads the page, and opening it again reuses the window.
+            floating.find('button.close').trigger('click');
+            assert.ok(floating.hasClass('d-none'));
+            assert.equal(floating.find('iframe').attr('src'), 'about:blank');
+            button.trigger('click');
+            assert.equal(window.$('.course-feedback-window').length, 1);
+            assert.ok(!floating.hasClass('d-none'));
+            assert.equal(floating.find('iframe').attr('src'), url);
+
+            // Ctrl+click still opens the link in a new tab.
+            const ctrlClick = window.$.Event('click', { ctrlKey: true });
+            button.trigger(ctrlClick);
+            assert.ok(!ctrlClick.isDefaultPrevented());
+        } finally {
+            dom.window.close();
+        }
+    });
+}
+
+test('the floating reviews window opens in the center and stays inside small screens', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        window.localStorage.setItem('202601_courses', '["01040001"]');
+        window.localStorage.setItem('202601_01040001', '{}');
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        window.localStorage.setItem('whatsNewSeenVersion', '1000');
+        let dialog;
+        const show = window.BootstrapDialog.show;
+        window.BootstrapDialog.show = options => (dialog = show(options));
+        load(window, 'cheesefork.js');
+        window.$('#course-button-list [data-course-number="01040001"] .badge').trigger('click');
+        const button = dialog.getModalBody().find('.course-feedback a.btn');
+
+        const setScreen = (width, height) => {
+            Object.defineProperty(window, 'innerWidth', { value: width, configurable: true });
+            Object.defineProperty(window, 'innerHeight', { value: height, configurable: true });
+        };
+        const box = () => {
+            const style = window.$('.course-feedback-window').get(0).style;
+            return [style.left, style.top, style.width, style.height].map(value => parseFloat(value));
+        };
+        const open = () => {
+            window.$('.course-feedback-window button.close').trigger('click');
+            button.trigger('click');
+        };
+
+        // Centered.
+        const ratio = ([, , width, height]) => width / height;
+
+        // Desktop: 60% of the screen's width and 85% of its height.
+        setScreen(1024, 768);
+        button.trigger('click');
+        assert.deepEqual(box(), [205, 58, 614, 653]);
+
+        // A phone: the whole screen but a small margin, in its aspect ratio.
+        setScreen(360, 640);
+        open();
+        assert.deepEqual(box(), [8, 14, 344, 612]);
+        assert.ok(Math.abs(ratio(box()) - 360 / 640) < 0.01);
+
+        // A phone on its side.
+        setScreen(640, 360);
+        open();
+        assert.deepEqual(box(), [128, 27, 384, 306]);
+
+        // When the screen changes while it's open, the default size follows it and stays inside.
+        setScreen(360, 300);
+        window.dispatchEvent(new window.Event('resize'));
+        const [left, top, width, height] = box();
+        assert.equal(width, 341);
+        assert.equal(height, 284);
+        assert.ok(left >= 0 && left + width <= 360, 'inside horizontally');
+        assert.ok(top >= 0 && top + height <= 300, 'inside vertically');
+    } finally {
+        dom.window.close();
+    }
+});
+
+for (const [language, grip] of [['en', 'se'], ['he', 'sw']]) {
+    test(language + ': the floating reviews window can be resized, and keeps its size inside the screen', () => {
+        const dom = createPage('index.html', language);
+        try {
+            const window = loadUI(dom.window);
+            window.localStorage.setItem('202601_courses', '["01040001"]');
+            window.localStorage.setItem('202601_01040001', '{}');
+            window.localStorage.setItem('dontShowIntro', String(Date.now()));
+            window.localStorage.setItem('whatsNewSeenVersion', '1000');
+            let dialog;
+            const show = window.BootstrapDialog.show;
+            window.BootstrapDialog.show = options => (dialog = show(options));
+            load(window, 'cheesefork.js');
+            window.$('#course-button-list [data-course-number="01040001"] .badge').trigger('click');
+            const button = dialog.getModalBody().find('.course-feedback a.btn');
+
+            const setScreen = (width, height) => {
+                Object.defineProperty(window, 'innerWidth', { value: width, configurable: true });
+                Object.defineProperty(window, 'innerHeight', { value: height, configurable: true });
+            };
+            setScreen(1024, 768);
+            button.trigger('click');
+            const floating = window.$('.course-feedback-window');
+            const box = () => ['left', 'top', 'width', 'height'].map(name => parseFloat(floating.get(0).style[name]));
+
+            // Handles on every edge and corner, with a grip in the bottom corner at the end of
+            // the reading direction.
+            assert.ok(floating.hasClass('ui-resizable'));
+            for (const handle of ['n', 'e', 's', 'w', 'ne', 'nw', 'se', 'sw']) {
+                assert.equal(floating.children('.ui-resizable-' + handle).length, 1, handle);
+            }
+            assert.equal(floating.find('.course-feedback-window-grip').length, 1);
+            assert.ok(floating.find('.ui-resizable-' + grip).hasClass('course-feedback-window-grip'));
+            assert.equal(floating.resizable('option', 'minWidth'), 260);
+            assert.equal(floating.resizable('option', 'maxWidth'), 1024 - 32);
+            assert.equal(floating.resizable('option', 'maxHeight'), 768 - 32);
+
+            // Resizing, as jQuery UI does it: start, the size changes with a resize event on the
+            // window element after each mouse move, then stop with the new size. (jsdom has no
+            // layout, so jQuery UI can't run a real drag here.) The resize events bubble up to
+            // the browser window, and must not be taken for the screen size changing.
+            const resize = (width, height) => {
+                floating.resizable('option', 'start')();
+                assert.ok(floating.hasClass('course-feedback-window-resizing'));
+                floating.css({ width, height });
+                floating.trigger('resize');
+                assert.deepEqual(box().slice(2), [width, height], 'the size is kept while resizing');
+                floating.resizable('option', 'stop')(window.$.Event('resizestop'), { size: { width, height } });
+                assert.ok(!floating.hasClass('course-feedback-window-resizing'));
+            };
+            resize(700, 400);
+            assert.deepEqual(box().slice(2), [700, 400]);
+
+            // Opening it again keeps the size, centered.
+            floating.find('button.close').trigger('click');
+            button.trigger('click');
+            assert.deepEqual(box(), [162, 184, 700, 400]);
+
+            // On a smaller screen, the size is shrunk to fit, and the maximum follows the screen.
+            setScreen(360, 640);
+            window.dispatchEvent(new window.Event('resize'));
+            const [left, top, width, height] = box();
+            assert.deepEqual([width, height], [344, 400]);
+            assert.ok(left >= 0 && left + width <= 360);
+            assert.ok(top >= 0 && top + height <= 640);
+            assert.equal(floating.resizable('option', 'maxWidth'), 344);
+        } finally {
+            dom.window.close();
+        }
+    });
+}

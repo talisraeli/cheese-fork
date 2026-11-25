@@ -154,4 +154,23 @@ img[src="assets/icon-students.png"] {
     filter: brightness(2);
 }
 
+/* The floating window with the reviews of the original CheeseFork. */
+.course-feedback-window .close {
+    color: white;
+    text-shadow: none;
+    opacity: 0.85;
+}
+
+.course-feedback-window .close:not(:disabled):not(.disabled):hover,
+.course-feedback-window .close:not(:disabled):not(.disabled):focus {
+    color: white;
+    opacity: 1;
+}
+
+.course-feedback-window,
+.course-feedback-window-header,
+.course-feedback-window-note {
+    border-color: #495057 !important;
+}
+
 }

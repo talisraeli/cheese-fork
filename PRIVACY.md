@@ -1,6 +1,6 @@
 # CheeseFork² Privacy Policy
 
-Last updated: 2026-11-25
+Last updated: 2026-11-26
 
 CheeseFork² is a free, open source schedule builder for Technion students, based on CheeseFork by Michael Maltsev. This policy describes what data the site handles, where it goes, and how you can control it. The full source code is available at https://github.com/talisraeli/cheese-fork under the GNU General Public License v3.0, so everything described here can be verified.
 
@@ -12,7 +12,7 @@ CheeseFork² is a static website. There is no CheeseFork²-operated server that 
 - Signing in is optional. It enables syncing your schedule across devices, sharing it with a link, and a hosted iCalendar link.
 - The site uses Google Analytics only if you allow it.
 - The site includes the Negishot accessibility widget, which remembers your accessibility settings and reports which of its tools are used.
-- CheeseFork² does not collect course feedback. The "הצג חוות דעת בחלון חדש" button opens the course's feedback on the original CheeseFork.
+- CheeseFork² does not collect course feedback. The "הצג חוות דעת" button shows the course's feedback from the original CheeseFork.
 - Schedules and iCalendar files you share are visible to anyone who has the link.
 - Histogram sharing uploads only aggregate course statistics to a public GitHub repository, never your own grades or identity.
 
@@ -63,7 +63,7 @@ If you are signed in, the file is uploaded to Firebase Cloud Storage and made av
 
 ## 6. Course feedback
 
-CheeseFork² does not collect or show course feedback (reviews). In a course's details, the "הצג חוות דעת בחלון חדש" ("Show reviews in a new window") button opens that course's feedback on the original CheeseFork at https://cheesefork.cf/, a separate site run by Michael Maltsev under its own privacy policy. The old embeddable feedback widget address redirects there too.
+CheeseFork² does not collect or store course feedback (reviews). In a course's details, the "הצג חוות דעת" ("Show reviews") button opens a floating window on the page with that course's reviews page from the original CheeseFork at https://cheesefork.cf/, a separate site run by Michael Maltsev under its own privacy policy. The window's "Open in a new window" button opens the same page in a new tab. The page is loaded only when you click the button, directly by your browser from cheesefork.cf, and runs that site's own scripts, which load Google Analytics and Google Firebase. The analytics choice you make in CheeseFork²'s cookie notice does not apply to it. Closing the window unloads the page. The old embeddable feedback widget address redirects there too.
 
 ## 7. Sharing histograms
 
@@ -90,7 +90,7 @@ Using CheeseFork² causes your browser to contact the following services. Each o
 - **Negishot accessibility widget**, loaded from negishot.co.il on the main site and the histogram sharing page. It adds an accessibility menu (for example, text size, contrast, and readable fonts). Your accessibility settings are saved in your browser's local storage and in a `negishot_prefs` cookie that lasts 30 days. When you use one of the widget's tools, the widget sends Negishot the name of the tool and a random identifier that it keeps in your browser's local storage (`negishot_sid`); it does not send your name, email, user ID, or schedule. When you open the menu, the widget may load fonts from fonts.googleapis.com, cdn.jsdelivr.net, and media.getmood.io. Negishot is a separate service with its own privacy policy, available at https://negishot.co.il.
 - **Course catalog and data files** loaded from ug.cheesefork.cf, sap.cheesefork.cf, and michael-maltsev.github.io (hosted on GitHub Pages). These contain only public course information, histograms, and calendar data; no user data is sent to them beyond the request itself.
 - **Facebook Page plugin**. The "weekly graph" popup embeds the CheeseFork Facebook page in an iframe served by Facebook. Facebook may set cookies and collect data when that popup is displayed, according to Facebook's privacy policy. The plugin is only loaded when the popup is shown, and you can disable the popup from within it.
-- **Original CheeseFork** (cheesefork.cf). The "הצג חוות דעת בחלון חדש" button and the old feedback widget address open course feedback there. Nothing is sent to it beyond the request itself.
+- **Original CheeseFork** (cheesefork.cf). The "הצג חוות דעת" button shows course feedback from there, and the old feedback widget address redirects there. CheeseFork² sends it only the course number, in the page address. See section 6.
 - **Hosting**. The site itself is served by GitHub Pages, which may keep standard server access logs.
 
 The site also contains links to external sites and communities (Technion websites, Technion scans, WhatsApp, Telegram, Discord, Facebook groups, the Chrome Web Store). Following a link takes you to a site with its own policy, and CheeseFork² does not share your data with them.
