@@ -34,8 +34,13 @@
     var savedSessionLastState = null, savedSessionUndoStack = [], savedSessionRedoStack = [];
     var metadataDiff = {};
     var customColors = {};
-    // The layers of the shown schedule, { id, name, hidden } each. Empty if layers aren't used.
+    // The layers of the shown schedule, { id, name, hidden, collapsed } each. Empty if layers aren't used.
     var currentLayers = [];
+    // The ids of the collapsed layers of the current semester, by 'default' for the first layer
+    // and the id for the others. A view preference of this device, so it's kept in its own
+    // localStorage item rather than in the schedule. Not saved for a shared schedule.
+    var collapsedLayerIds = {};
+    var COLLAPSED_LAYERS_STORAGE_KEY = 'collapsedLayers';
 
     // The version of the popup that introduces the features CheeseFork² adds over the original
     // CheeseFork. Bump it when new features are added to the popup, to show it again. Declared
@@ -82,6 +87,10 @@
 
         viewingSharedSchedule = scheduleSharingUserId ? true : false;
 
+        if (!viewingSharedSchedule) {
+            collapsedLayerIds = collapsedLayersLoad();
+        }
+
         navbarInit();
 
         if (!viewingSharedSchedule) {
@@ -89,6 +98,7 @@
                 courseManager: courseManager,
                 onItemAdd: function (course) {
                     var layerId = courseButtonList.getActiveLayerId();
+                    courseButtonList.expandLayer(layerId);
                     if (!courseButtonList.isCourseInList(course, layerId)) {
                         courseButtonList.addCourse(course, layerId);
                         if (isLayerVisible(layerId)) {
@@ -190,6 +200,7 @@
             onLayerRename: layerRename,
             onLayerDelete: layerDelete,
             onLayerVisibilityChange: layerVisibilityChange,
+            onLayerCollapseChange: layerCollapseChange,
             onCustomEventHoverIn: function (eventId) {
                 courseCalendar.setCustomEventHighlighted(eventId, true);
             },
@@ -271,6 +282,7 @@
                 selectedLessonUnsave(course, lessonNumber, lessonType, layerId);
             },
             onCustomEventAdded: function (eventId, eventData, layerId) {
+                courseButtonList.expandLayer(layerId);
                 courseButtonList.addCustomEvent(eventId, eventData.title, layerId);
                 customEventSave(eventId, eventData, layerId);
             },
@@ -1989,8 +2001,96 @@
         });
     }
 
+    // Returns the collapsed layer ids of the current semester, see collapsedLayerIds.
+    function collapsedLayersLoad() {
+        var result = {};
+        try {
+            var saved = JSON.parse(localStorage.getItem(COLLAPSED_LAYERS_STORAGE_KEY));
+            var ids = saved && saved[currentSemester];
+            if (Array.isArray(ids)) {
+                ids.forEach(function (id) {
+                    if (typeof id === 'string' && id) {
+                        result[id] = true;
+                    }
+                });
+            }
+        } catch (e) {
+            // Unavailable or invalid, all layers are expanded.
+        }
+        return result;
+    }
+
+    function collapsedLayersSave() {
+        if (viewingSharedSchedule) {
+            return;
+        }
+
+        try {
+            var saved = null;
+            try {
+                saved = JSON.parse(localStorage.getItem(COLLAPSED_LAYERS_STORAGE_KEY));
+            } catch (e) {
+                // Invalid, replace it.
+            }
+            if (!saved || typeof saved !== 'object' || Array.isArray(saved)) {
+                saved = {};
+            }
+
+            var ids = Object.keys(collapsedLayerIds);
+            if (ids.length > 0) {
+                saved[currentSemester] = ids;
+            } else {
+                delete saved[currentSemester];
+            }
+
+            if (Object.keys(saved).length > 0) {
+                localStorage.setItem(COLLAPSED_LAYERS_STORAGE_KEY, JSON.stringify(saved));
+            } else {
+                localStorage.removeItem(COLLAPSED_LAYERS_STORAGE_KEY);
+            }
+        } catch (e) {
+            // localStorage is not available in IE/Edge when running from a local file.
+        }
+    }
+
+    function isLayerCollapsed(layerId) {
+        return !!collapsedLayerIds[layerId || 'default'];
+    }
+
+    function layerCollapseChange(layerId, collapsed) {
+        var key = layerId || 'default';
+        if (collapsed) {
+            collapsedLayerIds[key] = true;
+        } else {
+            delete collapsedLayerIds[key];
+        }
+
+        currentLayers.forEach(function (layer) {
+            if (layer.id === layerId) {
+                layer.collapsed = collapsed;
+            }
+        });
+
+        collapsedLayersSave();
+    }
+
     // Deletes the layer with its courses and custom events.
     function layerDelete(layerId) {
+        // Deleting the first layer moves the next layer into it, so its collapsed state moves too.
+        var collapsedKey = layerId;
+        if (!layerId) {
+            collapsedKey = currentLayers[1] && currentLayers[1].id;
+            if (collapsedKey && isLayerCollapsed(collapsedKey)) {
+                collapsedLayerIds.default = true;
+            } else {
+                delete collapsedLayerIds.default;
+            }
+        }
+        if (collapsedKey) {
+            delete collapsedLayerIds[collapsedKey];
+        }
+        collapsedLayersSave();
+
         var semesterCoursesKey = currentSemester + '_courses';
         var semesterCustomEventsKey = currentSemester + '_custom_events';
         var semesterLayersKey = currentSemester + '_layers';
@@ -3075,6 +3175,9 @@
         courseButtonList.clear();
 
         currentLayers = layersFromSavedSession(session);
+        currentLayers.forEach(function (layer) {
+            layer.collapsed = isLayerCollapsed(layer.id);
+        });
         courseButtonList.setLayers(currentLayers);
 
         var schedule = {};

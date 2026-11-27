@@ -125,6 +125,8 @@ CheeseI18n.addMessages('en', {
     "courses.layers.renameTitle": "Rename layer",
     "courses.layers.save": "Save",
     "courses.layers.toggleVisibility": "Show or hide the layer",
+    "courses.layers.collapse": "Collapse the layer",
+    "courses.layers.expand": "Expand the layer",
     "courses.lessonTypes.laboratory": "Laboratory",
     "courses.lessonTypes.lecture": "Lecture",
     "courses.lessonTypes.project": "Project",

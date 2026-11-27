@@ -125,6 +125,8 @@ CheeseI18n.addMessages('ar', {
     "courses.layers.renameTitle": "إعادة تسمية الطبقة",
     "courses.layers.save": "حفظ",
     "courses.layers.toggleVisibility": "إظهار الطبقة أو إخفاؤها",
+    "courses.layers.collapse": "طي الطبقة",
+    "courses.layers.expand": "توسيع الطبقة",
     "courses.lessonTypes.laboratory": "مختبر",
     "courses.lessonTypes.lecture": "محاضرة",
     "courses.lessonTypes.project": "مشروع",

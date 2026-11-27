@@ -24,6 +24,8 @@ var CourseButtonList = (function () {
         this.onLayerRename = options.onLayerRename;
         this.onLayerDelete = options.onLayerDelete;
         this.onLayerVisibilityChange = options.onLayerVisibilityChange;
+        // Called with the layer id and whether it's collapsed, when the user collapses or expands it.
+        this.onLayerCollapseChange = options.onLayerCollapseChange || function () {};
         this.onCustomEventHoverIn = options.onCustomEventHoverIn;
         this.onCustomEventHoverOut = options.onCustomEventHoverOut;
         this.onCustomEventMove = options.onCustomEventMove;
@@ -121,7 +123,20 @@ var CourseButtonList = (function () {
 
         var name = $('<span class="course-button-list-layer-name"></span>').text(layer.name);
 
-        header.append(visibility, name);
+        // Collapsing only folds the layer's list, the layer stays on the calendar.
+        // It's a view preference, so it's available in a readonly schedule too.
+        var collapse = $('<span class="course-button-list-layer-collapse" role="button" tabindex="0"><i class="fas fa-fw"></i></span>');
+        collapse.on('click', function () {
+            setLayerCollapsed(that, layer, !layer.collapsed);
+            that.onLayerCollapseChange(layer.id, layer.collapsed);
+        }).on('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                $(this).trigger('click');
+            }
+        });
+
+        header.append(collapse, visibility, name);
 
         if (that.readonly) {
             return header;
@@ -146,7 +161,7 @@ var CourseButtonList = (function () {
         header.click(function (e) {
             // Clicking on the header selects the layer for adding new
             // courses and events, unless one of the controls was clicked.
-            if ($(e.target).closest('.course-button-list-layer-visibility, .course-button-list-layer-menu').length === 0) {
+            if ($(e.target).closest('.course-button-list-layer-collapse, .course-button-list-layer-visibility, .course-button-list-layer-menu').length === 0) {
                 that.setActiveLayer(layer.id);
             }
         });
@@ -235,15 +250,37 @@ var CourseButtonList = (function () {
         });
     }
 
+    // Shows the layer's list folded or unfolded, and updates its header's toggle to match.
+    function setLayerCollapsed(that, layer, collapsed) {
+        layer.collapsed = collapsed;
+
+        getLayerList(that, layer.id).toggleClass('course-button-list-layer-collapsed', collapsed);
+
+        var header = that.element.find('.course-button-list-layer-header').filter(function () {
+            return $(this).attr('data-layer-id') === layer.id;
+        });
+        header.toggleClass('course-button-list-layer-header-collapsed', collapsed);
+
+        var collapsedIcon = CheeseI18n.isRTL() ? 'fa-caret-left' : 'fa-caret-right';
+        header.find('.course-button-list-layer-collapse')
+            .attr({
+                title: CheeseI18n.t(collapsed ? 'courses.layers.expand' : 'courses.layers.collapse'),
+                'aria-expanded': collapsed ? 'false' : 'true'
+            })
+            .find('i')
+            .removeClass('fa-caret-down fa-caret-left fa-caret-right')
+            .addClass(collapsed ? collapsedIcon : 'fa-caret-down');
+    }
+
     function removeLayers(that) {
         that.element.find('.course-button-list-layer-header').remove();
         getAllLists(that).not(that.badgeContainer).remove();
-        that.badgeContainer.removeClass('course-button-list-layer-hidden course-button-list-layer-active');
+        that.badgeContainer.removeClass('course-button-list-layer-hidden course-button-list-layer-active course-button-list-layer-collapsed');
         that.element.removeClass('course-button-list-with-layers');
         that.layers = [];
     }
 
-    // Sets the layers to show, an array of { id, name, hidden } with the first layer (which
+    // Sets the layers to show, an array of { id, name, hidden, collapsed } with the first layer (which
     // has an empty id) first, or an empty array for no layers. Call it for an empty list,
     // before adding the courses.
     CourseButtonList.prototype.setLayers = function (layers) {
@@ -277,12 +314,27 @@ var CourseButtonList = (function () {
 
             list.toggleClass('course-button-list-layer-hidden', !!layer.hidden);
             makeLayerHeader(that, layer).insertBefore(list);
+            setLayerCollapsed(that, layer, !!layer.collapsed);
         });
 
         that.setActiveLayer(that.activeLayerId);
 
         // Empty layers should be able to receive courses.
         that.initializeSortableIfNeeded();
+    };
+
+    // Unfolds the layer if it's collapsed, for example to show an item which was added to it.
+    CourseButtonList.prototype.expandLayer = function (layerId) {
+        var that = this;
+
+        var layer = that.layers.filter(function (layer) {
+            return layer.id === layerId;
+        })[0];
+
+        if (layer && layer.collapsed) {
+            setLayerCollapsed(that, layer, false);
+            that.onLayerCollapseChange(layer.id, false);
+        }
     };
 
     // The active layer is the layer to which new courses and custom events are added.

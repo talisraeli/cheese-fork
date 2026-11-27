@@ -125,6 +125,8 @@ CheeseI18n.addMessages('he', {
     "courses.layers.renameTitle": "שינוי שם השכבה",
     "courses.layers.save": "שמור",
     "courses.layers.toggleVisibility": "הצגה/הסתרה של השכבה",
+    "courses.layers.collapse": "כיווץ השכבה",
+    "courses.layers.expand": "הרחבת השכבה",
     "courses.lessonTypes.laboratory": "מעבדה",
     "courses.lessonTypes.lecture": "הרצאה",
     "courses.lessonTypes.project": "פרויקט",

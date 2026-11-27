@@ -1,6 +1,6 @@
 # CheeseFork² Privacy Policy
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
 CheeseFork² is a free, open source schedule builder for Technion students, based on CheeseFork by Michael Maltsev. This policy describes what data the site handles, where it goes, and how you can control it. The full source code is available at https://github.com/talisraeli/cheese-fork under the GNU General Public License v3.0, so everything described here can be verified.
 
@@ -25,7 +25,8 @@ The site also stores small preference values in local storage, such as:
 - the last semester you viewed;
 - your selected interface language;
 - whether you dismissed the intro tour, tips, and reminder popups (weekly graph, histogram sharing, Technion scans);
-- your light/dark mode choice.
+- your light/dark mode choice;
+- which schedule layers you collapsed, per semester. Unlike hiding a layer, this is not saved with your schedule, even when you are signed in.
 
 This data stays on your device until you clear the site's data in your browser.
 

@@ -16,7 +16,10 @@ function event(title) {
 // lecture and a custom event, and the hidden "Plan B" with the course and no lessons.
 function loadLayers() {
     const dom = createPage();
-    const window = loadUI(dom.window);
+    return loadLayersInto(dom, loadUI(dom.window));
+}
+
+function loadLayersInto(dom, window) {
     const saved = {
         '202601_courses': [ALPHA],
         ['202601_' + ALPHA]: { [LECTURE]: 10 },
@@ -94,6 +97,203 @@ test('a copy of a hidden layer is visible and keeps the layer colors', () => {
         assert.deepEqual(stored(copyId + '_' + ALPHA), {});
         assert.equal(stored('colors')[copyId + '_' + ALPHA], '#123456');
         assert.equal(stored('layers')[PLAN_B].hidden, true);
+    } finally {
+        dom.window.close();
+    }
+});
+
+// Loads the layers of loadLayers, with the collapsedLayers localStorage item set to saved if given.
+function loadCollapsibleLayers(saved) {
+    const dom = createPage();
+    const window = loadUI(dom.window);
+    if (saved !== undefined) {
+        window.localStorage.setItem('collapsedLayers', saved);
+    }
+    const dialogs = [];
+    const show = window.BootstrapDialog.show;
+    window.BootstrapDialog.show = options => {
+        const dialog = show(options);
+        dialogs.push(dialog);
+        return dialog;
+    };
+    const lastDialog = () => dialogs[dialogs.length - 1];
+    const loaded = loadLayersInto(dom, window);
+    const header = layerId => window.$('.course-button-list-layer-header[data-layer-id="' + layerId + '"]');
+    const toggle = layerId => header(layerId).find('.course-button-list-layer-collapse');
+    const list = layerId => layerId
+        ? window.$('.course-button-list-badge-container[data-layer-id="' + layerId + '"]')
+        : window.$('#course-button-list .course-button-list-badge-container').first();
+    const isCollapsed = layerId => list(layerId).hasClass('course-button-list-layer-collapsed');
+    const savedCollapsed = () => JSON.parse(window.localStorage.getItem('collapsedLayers'));
+    const deleteLayer = layerId => {
+        header(layerId).find('.course-button-list-layer-delete').trigger('click');
+        lastDialog().getModalFooter().find('button')
+            .filter((i, button) => window.$(button).text() === 'Delete').trigger('click');
+    };
+    return Object.assign(loaded, { header, toggle, list, isCollapsed, savedCollapsed, deleteLayer, lastDialog });
+}
+
+test('collapsing a layer folds its list on this device only, and keeps it on the calendar', () => {
+    const { dom, window, stored, header, toggle, isCollapsed, savedCollapsed } = loadCollapsibleLayers();
+    try {
+        const layersBefore = stored('layers');
+        const eventsBefore = window.$('#course-calendar').fullCalendar('clientEvents').length;
+        assert.ok(eventsBefore > 0);
+
+        assert.equal(isCollapsed(''), false);
+        assert.equal(toggle('').attr('aria-expanded'), 'true');
+        assert.equal(toggle('').attr('title'), 'Collapse the layer');
+        assert.ok(toggle('').find('i').hasClass('fa-caret-down'));
+
+        toggle('').trigger('click');
+        assert.equal(isCollapsed(''), true);
+        assert.equal(isCollapsed(PLAN_B), false);
+        assert.equal(toggle('').attr('aria-expanded'), 'false');
+        assert.equal(toggle('').attr('title'), 'Expand the layer');
+        assert.ok(toggle('').find('i').hasClass('fa-caret-right'), 'English is left to right');
+        assert.deepEqual(savedCollapsed(), { 202601: ['default'] });
+
+        // The schedule, the calendar and the active layer are unchanged, and nothing is added to undo.
+        assert.deepEqual(stored('layers'), layersBefore);
+        assert.equal(window.$('#course-calendar').fullCalendar('clientEvents').length, eventsBefore);
+        assert.ok(header('').hasClass('course-button-list-layer-active'));
+        toggle(PLAN_B).trigger('click');
+        assert.ok(!header(PLAN_B).hasClass('course-button-list-layer-active'));
+        assert.ok(window.$('#top-navbar-undo').hasClass('d-none'));
+        assert.deepEqual(savedCollapsed(), { 202601: ['default', PLAN_B] });
+
+        // The keyboard toggles it too.
+        toggle('').trigger(window.$.Event('keydown', { key: 'Enter' }));
+        assert.equal(isCollapsed(''), false);
+        toggle(PLAN_B).trigger(window.$.Event('keydown', { key: ' ' }));
+        assert.equal(isCollapsed(PLAN_B), false);
+        assert.equal(window.localStorage.getItem('collapsedLayers'), null, 'nothing collapsed, nothing saved');
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('right to left interfaces point the collapsed caret left', () => {
+    const dom = createPage('index.html', 'he');
+    try {
+        const window = loadUI(dom.window);
+        loadLayersInto(dom, window);
+        const toggle = window.$('.course-button-list-layer-header[data-layer-id=""] .course-button-list-layer-collapse');
+        toggle.trigger('click');
+        assert.ok(toggle.find('i').hasClass('fa-caret-left'));
+        assert.equal(toggle.attr('title'), 'הרחבת השכבה');
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('collapsed layers are restored on load and after the schedule changes', () => {
+    const { dom, window, header, isCollapsed, savedCollapsed } = loadCollapsibleLayers(
+        JSON.stringify({ 202601: [PLAN_B], 202602: ['default'] }));
+    try {
+        assert.equal(isCollapsed(''), false);
+        assert.equal(isCollapsed(PLAN_B), true);
+
+        // Showing the hidden layer rebuilds the list from the schedule.
+        header(PLAN_B).find('.course-button-list-layer-visibility').trigger('click');
+        assert.ok(!window.$('.course-button-list-badge-container[data-layer-id="' + PLAN_B + '"]').hasClass('course-button-list-layer-hidden'));
+        assert.equal(isCollapsed(PLAN_B), true);
+        assert.deepEqual(savedCollapsed(), { 202601: [PLAN_B], 202602: ['default'] }, 'other semesters are kept');
+    } finally {
+        dom.window.close();
+    }
+});
+
+for (const saved of ['not json', '[1, 2]', '{"202601": "default"}', '{"202601": [3, ""]}']) {
+    test('an invalid collapsedLayers item (' + saved + ') leaves the layers expanded and is replaced', () => {
+        const { dom, toggle, isCollapsed, savedCollapsed } = loadCollapsibleLayers(saved);
+        try {
+            assert.equal(isCollapsed(''), false);
+            assert.equal(isCollapsed(PLAN_B), false);
+            toggle(PLAN_B).trigger('click');
+            assert.deepEqual(savedCollapsed()[202601], [PLAN_B]);
+        } finally {
+            dom.window.close();
+        }
+    });
+}
+
+test('deleting a collapsed layer forgets it', () => {
+    const { dom, stored, toggle, deleteLayer, savedCollapsed } = loadCollapsibleLayers();
+    try {
+        toggle('').trigger('click');
+        toggle(PLAN_B).trigger('click');
+        deleteLayer(PLAN_B);
+        assert.equal(stored('layers'), null, 'the layer was deleted, leaving one');
+        assert.deepEqual(savedCollapsed(), { 202601: ['default'] });
+    } finally {
+        dom.window.close();
+    }
+});
+
+for (const nextCollapsed of [true, false]) {
+    test('deleting the first layer moves the next layer\'s collapsed state (' + nextCollapsed + ') into it', () => {
+        const { dom, window, stored, toggle, list, deleteLayer } = loadCollapsibleLayers();
+        try {
+            toggle(nextCollapsed ? PLAN_B : '').trigger('click');
+            deleteLayer('');
+            assert.equal(stored('layers'), null, 'only one layer is left');
+            const expected = nextCollapsed ? JSON.stringify({ 202601: ['default'] }) : null;
+            assert.equal(window.localStorage.getItem('collapsedLayers'), expected);
+
+            // Without layers there's no header, so the list is always shown.
+            assert.equal(window.$('.course-button-list-layer-header').length, 0);
+            assert.ok(!list('').hasClass('course-button-list-layer-collapsed'));
+        } finally {
+            dom.window.close();
+        }
+    });
+}
+
+test('adding a course or an event to a collapsed layer expands it', () => {
+    const { dom, window, toggle, isCollapsed, lastDialog } = loadCollapsibleLayers();
+    try {
+        toggle('').trigger('click');
+        window.$('#course-select').data('selectize').addItem(ALPHA);
+        assert.equal(isCollapsed(''), false);
+        assert.equal(window.localStorage.getItem('collapsedLayers'), null);
+
+        toggle('').trigger('click');
+        assert.equal(isCollapsed(''), true);
+        const before = window.$('#course-button-list .course-button-list-custom-event').length;
+        window.$('#course-calendar').fullCalendar('option', 'select')(
+            window.moment('2017-01-03T10:00:00'), window.moment('2017-01-03T11:00:00'));
+        lastDialog().getModalBody().find('textarea').val('Run');
+        lastDialog().getModalFooter().find('button.btn-primary').trigger('click');
+        assert.equal(window.$('#course-button-list .course-button-list-custom-event').length, before + 1, 'the event was added');
+        assert.equal(isCollapsed(''), false);
+        assert.equal(window.localStorage.getItem('collapsedLayers'), null);
+    } finally {
+        dom.window.close();
+    }
+});
+
+test('a readonly list can collapse layers too', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        const changes = [];
+        const list = new window.CourseButtonList(window.$('#course-button-list'), {
+            courseManager: new window.CourseManager(window.courses_from_rishum),
+            colorGenerator: () => '#000000',
+            readonly: true,
+            onLayerCollapseChange: (layerId, collapsed) => changes.push([layerId, collapsed])
+        });
+        list.setLayers([{ id: '', name: 'A' }, { id: 'b', name: 'B', collapsed: true }]);
+        const toggle = layerId => window.$('.course-button-list-layer-header[data-layer-id="' + layerId + '"] .course-button-list-layer-collapse');
+        assert.ok(window.$('.course-button-list-badge-container[data-layer-id="b"]').hasClass('course-button-list-layer-collapsed'));
+        toggle('b').trigger('click');
+        toggle('').trigger('click');
+        assert.deepEqual(changes, [['b', false], ['', true]]);
+        list.expandLayer('');
+        list.expandLayer('');
+        list.expandLayer('missing');
+        assert.deepEqual(changes, [['b', false], ['', true], ['', false]], 'expanding an expanded or missing layer does nothing');
     } finally {
         dom.window.close();
     }
