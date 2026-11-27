@@ -290,6 +290,25 @@
     cursor: pointer;
 }
 
+/* Collapsing a layer folds its list, it stays on the calendar */
+.course-button-list-layer-collapse {
+    cursor: pointer;
+}
+
+/* Keep the checkbox close to the caret before it */
+.course-button-list-layer-collapse + .course-button-list-layer-visibility {
+    padding-right: 2px;
+}
+
+html[dir="ltr"] .course-button-list-layer-collapse + .course-button-list-layer-visibility {
+    padding-right: 8px;
+    padding-left: 2px;
+}
+
+.course-button-list-with-layers .course-button-list-badge-container.course-button-list-layer-collapsed {
+    display: none;
+}
+
 .course-button-list-readonly .course-button-list-layer-visibility {
     cursor: default;
 }
