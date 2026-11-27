@@ -50,6 +50,10 @@ var CourseCalendar = (function () {
             selectOverlap: true,
             select: onSelect.bind(that),
             dayClick: onDayClick.bind(that),
+            eventDragStart: onEventInteractionStart.bind(that),
+            eventDragStop: onEventInteractionStop.bind(that),
+            eventResizeStart: onEventInteractionStart.bind(that),
+            eventResizeStop: onEventInteractionStop.bind(that),
             eventDrop: onCustomEventMoveResize.bind(that),
             eventResize: onCustomEventMoveResize.bind(that),
             eventClick: onEventClick.bind(that),
@@ -64,6 +68,12 @@ var CourseCalendar = (function () {
         });
 
         element.on('mouseleave', function () {
+            // Re-rendering in the middle of a drag or a resize breaks it, and leaves a copy
+            // of the time grid behind. It's done when the drag or the resize stops instead.
+            if (that.eventInteractionActive) {
+                return;
+            }
+
             updateCalendarMaxDayAndTime(element, true);
         });
 
@@ -713,6 +723,25 @@ var CourseCalendar = (function () {
             // The option is undefined unless set, use FullCalendar's default in this case.
             var slotDuration = moment.duration(calendar.fullCalendar('option', 'slotDuration') || '00:30:00');
             calendar.fullCalendar('select', date, date.clone().add(slotDuration));
+        }, 0);
+    }
+
+    function onEventInteractionStart() {
+        this.eventInteractionActive = true;
+    }
+
+    function onEventInteractionStop() {
+        var that = this;
+
+        that.eventInteractionActive = false;
+
+        // FullCalendar is still finishing the drag or the resize, and the event is only
+        // moved after this callback, so update the range once it's done. The range shrinks
+        // now if the pointer was released outside of the calendar, otherwise when it leaves.
+        setTimeout(function () {
+            if (!that.eventInteractionActive) {
+                updateCalendarMaxDayAndTime(that.element);
+            }
         }, 0);
     }
 
