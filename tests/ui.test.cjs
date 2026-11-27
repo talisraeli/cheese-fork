@@ -810,3 +810,54 @@ for (const [language, grip] of [['en', 'se'], ['he', 'sw']]) {
         }
     });
 }
+
+test('course search closes a course number\'s tooltip when typing or closing hides it (#58)', () => {
+    const dom = createPage();
+    try {
+        const window = loadUI(dom.window);
+        const beta = JSON.parse(JSON.stringify(window.courses_from_rishum[0]));
+        beta.general['מספר מקצוע'] = '01040002';
+        beta.general['שם מקצוע'] = 'Course Beta';
+        window.courses_from_rishum.push(beta);
+        window.localStorage.setItem('dontShowIntro', String(Date.now()));
+        load(window, 'cheesefork.js');
+
+        const selectize = window.$('#course-select').data('selectize');
+        const tooltips = () => window.document.querySelectorAll('.tooltip').length;
+        const type = text => {
+            selectize.$control_input.val(text).trigger('keyup');
+        };
+        const courseNumber = course => selectize.$dropdown_content
+            .find('.option[data-value="' + course + '"] [data-toggle=tooltip]');
+        const hover = course => courseNumber(course).trigger('mouseover');
+
+        selectize.focus();
+        type('Course');
+        assert.equal(selectize.$dropdown_content.find('.option').length, 2);
+
+        // The issue's steps: hover a course number, then type more of the name.
+        hover('01040001');
+        assert.equal(tooltips(), 1);
+        type('Course Beta');
+        assert.equal(courseNumber('01040001').length, 0, 'the hovered option is filtered out');
+        assert.equal(tooltips(), 0);
+
+        // A course number still listed after typing shows its tooltip again on the next hover.
+        hover('01040002');
+        assert.equal(tooltips(), 1);
+        type('Course Bet');
+        assert.equal(tooltips(), 0);
+        hover('01040002');
+        assert.equal(tooltips(), 1);
+
+        // Closing the dropdown (Esc or leaving the field) while hovering closes it too.
+        selectize.close();
+        assert.equal(tooltips(), 0);
+
+        // Typing with no tooltip open is harmless.
+        type('Course');
+        assert.equal(tooltips(), 0);
+    } finally {
+        dom.window.close();
+    }
+});

@@ -81,11 +81,37 @@ var CourseSelect = (function () {
             searchField: ['text', 'catalogName', 'oldCourseNumber']
         }).data('selectize');
 
+        // The course number and the description tooltip shown for it, if any.
+        var optionTooltip = null;
+
         that.courseSelect.$dropdown
             .tooltip({selector: '[data-toggle=tooltip]'})
+            .on('inserted.bs.tooltip', '[data-toggle=tooltip]', function () {
+                optionTooltip = {
+                    element: this,
+                    tip: $(this).data('bs.tooltip').getTipElement()
+                };
+            })
             .on('mousedown click', '[data-toggle=tooltip]', function () {
                 $(this).tooltip('hide');
             });
+
+        // Typing re-renders the options, and closing hides them, without a
+        // mouseleave on the hovered course number, which would leave its
+        // tooltip floating over the page. Dispose of it rather than hiding it,
+        // since a hidden tooltip still counts as hovered and wouldn't show on
+        // the next hover. Remove the tip directly as well, since re-rendering
+        // clears the jQuery data of the removed options, and with it the
+        // tooltip instance that dispose needs.
+        var disposeOptionTooltip = function () {
+            if (optionTooltip) {
+                $(optionTooltip.element).tooltip('dispose').removeAttr('aria-describedby');
+                $(optionTooltip.tip).remove();
+                optionTooltip = null;
+            }
+        };
+        that.courseSelect.on('type', disposeOptionTooltip);
+        that.courseSelect.on('dropdown_close', disposeOptionTooltip);
 
         filterInit(that.courseManager);
     }
