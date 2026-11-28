@@ -74,7 +74,7 @@ test('documents live in docs/, and only the README stays at the root', () => {
 
 test("links to this repository's files on GitHub point to files that exist", () => {
     const repoUrl =
-        /https:\/\/(?:github\.com\/talisraeli\/cheese-fork\/blob|raw\.githubusercontent\.com\/talisraeli\/cheese-fork)\/gh-pages\/([^\s'")#?]+)/g;
+        /https:\/\/(?:github\.com\/talisraeli\/cheese-fork\/blob|raw\.githubusercontent\.com\/talisraeli\/cheese-fork)\/main\/([^\s'")#?]+)/g;
     const sources = [
         ...pages,
         'README.md',

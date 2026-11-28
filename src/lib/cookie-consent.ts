@@ -145,7 +145,7 @@ function showBanner(): void {
     message.textContent = `${CheeseI18n.t('consent.message')} `;
 
     const privacy = document.createElement('a');
-    privacy.href = 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/PRIVACY.md';
+    privacy.href = 'https://github.com/talisraeli/cheese-fork/blob/main/docs/PRIVACY.md';
     privacy.target = '_blank';
     privacy.rel = 'noopener';
     privacy.textContent = CheeseI18n.t('consent.privacy');

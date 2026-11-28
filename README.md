@@ -41,7 +41,7 @@ every command.
 
 The site is hosted on [Azure Static Web Apps](https://learn.microsoft.com/azure/static-web-apps/).
 `.github/workflows/azure-deploy.yml` builds it and uploads `out/` on every push to
-`gh-pages`, after the scheduled data updates, and as a preview for each pull request.
+`main`, after the scheduled data updates, and as a preview for each pull request.
 `staticwebapp.config.json` keeps the headers that GitHub Pages used to send, so that other
 sites can still read the site's files.
 

@@ -1,16 +1,16 @@
 name: Azure Static Web Apps CI/CD
 
 # Builds the site into out/ with `pnpm build` and uploads only out/ to Azure Static Web Apps:
-# production from gh-pages, and a preview environment for each pull request.
+# production from main, and a preview environment for each pull request.
 
 on:
     push:
         branches:
-            - gh-pages
+            - main
     pull_request:
         types: [opened, synchronize, reopened, closed]
         branches:
-            - gh-pages
+            - main
     # The scheduled data updates push with the workflow token, which doesn't start other
     # workflows, so the site is deployed again once they finish.
     workflow_run:
