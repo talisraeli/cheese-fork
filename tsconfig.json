@@ -1,0 +1,23 @@
+{
+    // The site's sources, bundled by Vite+ (tools/bundles.ts), which strips the types: tsc only
+    // checks them (pnpm typecheck).
+    "compilerOptions": {
+        "target": "es2017",
+        "lib": ["es2017", "dom", "dom.iterable"],
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "noEmit": true,
+        "allowJs": true,
+        "checkJs": false,
+        "isolatedModules": true,
+        "erasableSyntaxOnly": true,
+        "verbatimModuleSyntax": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "skipLibCheck": true,
+        "types": ["jquery", "jqueryui", "bootstrap", "selectize"]
+    },
+    "include": ["src"]
+}

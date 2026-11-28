@@ -1,0 +1,829 @@
+@media screen and (max-width: 350px) {
+    #top-navbar .navbar-brand {
+        font-size: 1rem;
+    }
+    #top-navbar .navbar-brand img {
+        height: 20px;
+        width: auto;
+    }
+}
+
+#top-navbar .navbar-brand {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+#top-navbar .navbar-nav .nav-link,
+#top-navbar .language-selector {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+#top-navbar .navbar-nav .nav-link.disabled {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+#top-navbar-supported-content.top-navbar-content-uninitialized {
+    visibility: hidden !important;
+}
+
+/* for unread count badge */
+.unread-count-badge-container {
+    position: relative;
+}
+
+/* https://stackoverflow.com/a/5748155 */
+.unread-count-badge {
+    background-color: #fa3e3e;
+    border-radius: 0.2rem;
+    color: white;
+    padding: 1px 3px;
+    font-size: 0.75rem;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* Course metadata diff */
+.course-metadata-diff-container {
+    white-space: pre-wrap;
+}
+
+.course-metadata-diff-container h5 {
+    margin-top: 0.5rem;
+}
+
+.course-metadata-diff-old {
+    background-color: #ffdce0;
+    text-decoration: line-through;
+}
+
+.course-metadata-diff-new {
+    background-color: #cdffd8;
+}
+
+#shared-schedule-title {
+    font-weight: 300;
+    line-height: 1.2;
+    text-align: center;
+}
+
+#general-info {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+#course-exam-info-wrapper {
+    /* A workaround to an Edge bug: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/18883305/ */
+    filter: brightness(1);
+}
+
+#course-exam-info {
+    position: sticky;
+    bottom: 20px;
+}
+
+/* Set selectize dropdown cursor to be pointer instead of text selection */
+.selectize-dropdown .option {
+    cursor: default;
+}
+
+.course-description-tooltip-inner {
+    min-width: 30vw;
+}
+
+/* Overrides list-group-item from Bootstrap */
+.list-group-item {
+    font-size: 0.8rem;
+    cursor: default;
+
+    /* By default, all items have margin-bottom: -1px except for the last one,
+    but that causes problems with sortable because it adds a hovered item at the
+    end; just force the last item to have the margin too */
+    margin-bottom: -1px !important;
+}
+
+/* Fixes: Scroll and focus issue with multiple modals open */
+/* https://github.com/nakupanda/bootstrap3-dialog/issues/70 */
+.modal {
+    overflow: auto !important;
+}
+
+/* intro.js - [done,prev,next] buttons order change to [prev,next,done]: https://stackoverflow.com/questions/42263288 */
+/* Also, change "done" button color from light gray to dark gray */
+.introjs-donebutton {
+    float: left;
+    color: #333;
+}
+
+/* Make z-index smaller than bootstrap4-dialog popup */
+html.os-html > .os-host > .os-scrollbar {
+    z-index: 999;
+}
+
+/* Remove Firefox invalid form glow, Bootstrap has its own */
+/* Also, Firefox's appears right after value was edited */
+/* https://stackoverflow.com/a/21198397 */
+:-moz-ui-invalid {
+    box-shadow: none;
+}
+
+/* Modeless dialog - see addBootstrapDialogModelessButton function */
+.bootstrap-dialog.cheesefork-modeless-dialog {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-right: 0;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-dialog {
+    visibility: visible;
+    filter: drop-shadow(0 0 0.75rem #000);
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-header {
+    cursor: move;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-body {
+    /* https://stackoverflow.com/a/28852473 */
+    max-height: calc(100vh - 225px);
+    overflow: auto;
+}
+
+/* Color picker dialog */
+.color-picker {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.color-picker-item {
+    height: 40px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.color-picker-item:hover,
+.color-picker-item:focus,
+.color-picker-item-selected {
+    border-color: #1565c0;
+    outline: none;
+    box-shadow: 0 0 0 2px #fff inset;
+}
+
+.color-picker-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.color-picker-custom label {
+    margin: 0;
+}
+
+.color-picker-custom-input {
+    width: 64px;
+    height: 32px;
+    padding: 0 2px;
+    cursor: pointer;
+}
+
+/* dark-mode-toggle customizations */
+footer dark-mode-toggle {
+    display: inline-block;
+    vertical-align: bottom;
+    line-height: 0;
+}
+footer dark-mode-toggle::part(fieldset) {
+    padding: 0;
+}
+/* The "remember" row is empty but still takes up height, which lifts the toggle above the text line. */
+footer dark-mode-toggle::part(aside) {
+    display: none;
+}
+
+/* Items of the "what's new" popup: the icon sits at the right edge, the title and text beside it. */
+/* The pages of the "what's new" dialog. A page scrolls, so that the dialog fits the window
+   with its title, page dots and buttons. Flex layout follows the text direction. */
+.whats-new-pages {
+    max-height: calc(100vh - 16rem);
+    overflow-y: auto;
+}
+
+.whats-new-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.25rem;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: none;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.whats-new-item:hover,
+.whats-new-item:focus {
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+.whats-new-item-text {
+    flex: 1;
+}
+
+.whats-new-icon {
+    flex: 0 0 2.5rem;
+    margin: 0 0.75rem;
+    text-align: center;
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.whats-new-page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.whats-new-page-header .whats-new-icon {
+    margin: 0 0 0 0.75rem;
+}
+
+html[dir='ltr'] .whats-new-page-header .whats-new-icon {
+    margin: 0 0.75rem 0 0;
+}
+
+.whats-new-steps li {
+    margin-bottom: 0.4rem;
+}
+
+.whats-new-note {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+.whats-new-dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.whats-new-dot {
+    width: 0.65rem;
+    height: 0.65rem;
+    margin: 0 0.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(128, 128, 128, 0.45);
+    cursor: pointer;
+}
+
+.whats-new-dot.active {
+    background-color: #ffc107;
+}
+
+/* Skip is on the far side of the footer, apart from Previous and Next. */
+.whats-new-dialog .modal-footer .whats-new-skip {
+    margin-left: auto;
+}
+
+html[dir='ltr'] .whats-new-dialog .modal-footer .whats-new-skip {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* The notice of a failed schedule save, above the page and its dialogs. */
+.save-error-alert {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1060;
+    width: max-content;
+    max-width: calc(100% - 2rem);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.save-error-alert .save-error-reload {
+    margin: 0 0.75rem;
+    flex-shrink: 0;
+}
+
+/* The dialog offering the schedule built while signed out: its three choices have long labels,
+   which don't fit side by side, so they're stacked at full width. */
+.import-local-dialog .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.import-local-dialog .modal-footer > .btn {
+    margin: 0 0 0.5rem;
+    white-space: normal;
+}
+
+.import-local-dialog .modal-footer > .btn:last-child {
+    margin-bottom: 0;
+}
+
+/* Fills the space below the selected courses. */
+#course-exam-info-wrapper {
+    flex: 1;
+}
+
+/* The Facebook page in the weekly popup. */
+.facebook-iframe-container iframe {
+    border: none;
+    overflow: hidden;
+}
+
+/* The button that makes a dialog modeless, see src/lib/modeless-dialog.ts. */
+.bootstrap-dialog-restore-icon {
+    font-size: 18px;
+}
+/* The language picker looks like the navbar's semester dropdown: a nav link with an icon and a caret. */
+.language-selector {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+    padding: 0 0.5rem;
+}
+
+/* Same gap as the space between the semester dropdown's icon and its text. */
+html[dir='ltr'] .language-selector > .fa-globe {
+    margin-right: 0.3em;
+}
+
+html[dir='rtl'] .language-selector > .fa-globe {
+    margin-left: 0.3em;
+}
+
+/* Bootstrap's dropdown caret, drawn beside the select since a select can't have one of its own. */
+.language-selector::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+html[dir='rtl'] .language-selector::after {
+    right: auto;
+    left: 0.5rem;
+}
+
+.language-switch {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    line-height: 1.5;
+    /* Fit the selected language instead of the longest one, so the caret stays next to it. */
+    field-sizing: content;
+    padding: 0.5rem 1.15em 0.5rem 0;
+}
+
+html[dir='rtl'] .language-switch {
+    padding: 0.5rem 0 0.5rem 1.15em;
+}
+
+.language-switch::-ms-expand {
+    display: none;
+}
+
+.language-switch:focus {
+    outline: none;
+}
+
+.language-switch:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.language-switch option {
+    background-color: #fff;
+    color: #212529;
+}
+
+html[dir='ltr'] body,
+html[dir='ltr'] caption,
+html[dir='ltr'] .dropdown-menu,
+html[dir='ltr'] .modal-content,
+html[dir='ltr'] .tooltip,
+html[dir='ltr'] .popover {
+    text-align: left;
+}
+
+html[dir='ltr'] dd {
+    margin-left: 0;
+}
+
+html[dir='ltr'] [dir='rtl'] {
+    text-align: right;
+}
+
+html[dir='ltr'] .navbar-brand {
+    -ms-flex-order: -1;
+    order: -1;
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+/* Keep the logo the same in both languages: the name first, then the image. */
+html[dir='ltr'] .navbar-brand {
+    direction: rtl;
+}
+
+html[dir='ltr'] .navbar-collapse {
+    -ms-flex-order: 1;
+    order: 1;
+}
+
+html[dir='ltr'] .navbar-nav {
+    padding-left: 0;
+}
+
+html[dir='ltr'] .mr-auto {
+    margin-left: 0 !important;
+    margin-right: auto !important;
+}
+
+html[dir='ltr'] .ml-auto {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+html[dir='ltr'] .float-left {
+    float: left !important;
+}
+
+html[dir='ltr'] .float-right {
+    float: right !important;
+}
+
+html[dir='ltr'] .text-left {
+    text-align: left !important;
+}
+
+html[dir='ltr'] .text-right {
+    text-align: right !important;
+}
+
+html[dir='ltr'] .dropdown-menu {
+    left: 0;
+    right: auto;
+    float: left;
+}
+
+html[dir='ltr'] .dropdown-menu-right {
+    left: auto;
+    right: 0;
+}
+
+html[dir='ltr'] .dropdown-toggle::after {
+    margin-left: 0.255em;
+    margin-right: 0;
+}
+
+html[dir='ltr'] .dropdown-toggle:empty::after {
+    margin-left: 0;
+}
+
+html[dir='ltr'] .form-check {
+    padding-left: 1.25rem;
+    padding-right: 0;
+}
+
+html[dir='ltr'] .form-check-input {
+    margin-left: -1.25rem;
+    margin-right: 0;
+}
+
+html[dir='ltr'] .form-check-inline {
+    padding-left: 0;
+    margin-left: 0;
+    margin-right: 0.75rem;
+}
+
+html[dir='ltr'] .form-check-inline .form-check-input {
+    margin-left: 0;
+    margin-right: 0.3125rem;
+}
+
+html[dir='ltr'] .custom-control {
+    padding-left: 1.5rem;
+    padding-right: 0;
+}
+
+html[dir='ltr'] .custom-control-inline {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+html[dir='ltr'] .custom-control-label::before,
+html[dir='ltr'] .custom-control-label::after {
+    left: 0;
+    right: auto;
+}
+
+html[dir='ltr'] .custom-select {
+    padding-left: 0.75rem;
+    padding-right: 1.75rem;
+    background-position: right 0.75rem center;
+}
+
+html[dir='ltr'] .custom-select[multiple],
+html[dir='ltr'] .custom-select[size]:not([size='1']) {
+    padding-right: 0.75rem;
+}
+
+html[dir='ltr'] .close {
+    float: right;
+}
+
+html[dir='ltr'] .modal-header .close {
+    margin: -1rem -1rem -1rem auto;
+}
+
+html[dir='ltr'] .modal-footer > * {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+html[dir='ltr'] .modal-footer > :not(:first-child) {
+    margin-left: 0.25rem;
+}
+
+html[dir='ltr'] .modal-footer > :not(:last-child) {
+    margin-right: 0.25rem;
+}
+
+html[dir='ltr'] .selectize-control,
+html[dir='ltr'] .selectize-dropdown,
+html[dir='ltr'] .introjs-tooltip,
+html[dir='ltr'] .course-calendar .fc-event {
+    direction: ltr;
+}
+
+html[dir='ltr'] .selectize-control.single.course-select .selectize-input::after {
+    left: auto;
+    right: calc(0.75rem + 40px);
+}
+
+html[dir='ltr'] .selectize-control.course-select .selectize-input > input {
+    padding-left: 0 !important;
+    padding-right: 60px !important;
+}
+
+html[dir='ltr'] .selectize-control.course-select .selectize-input .course-select-filter-button {
+    left: auto;
+    right: 0;
+    border-radius: 0 0.2rem 0.2rem 0;
+}
+
+html[dir='ltr'] .course-button-list-drag-handle {
+    left: 4px;
+    right: auto;
+}
+
+html[dir='ltr'] .exam-info-left-arrow {
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+html[dir='ltr'] .carousel-control-prev {
+    left: 0;
+    right: auto;
+}
+
+html[dir='ltr'] .carousel-control-next {
+    left: auto;
+    right: 0;
+}
+
+html[dir='ltr'] .carousel-control-prev-icon,
+html[dir='ltr'] .carousel-control-next-icon {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+}
+
+html[dir='ltr'] .carousel-indicators {
+    padding-left: 0;
+}
+
+html[dir='ltr'] .carousel:not(.carousel-fade) .carousel-item-next,
+html[dir='ltr'] .carousel:not(.carousel-fade) .active.carousel-item-right {
+    -webkit-transform: translateX(100%);
+    transform: translateX(100%);
+}
+
+html[dir='ltr'] .carousel:not(.carousel-fade) .carousel-item-prev,
+html[dir='ltr'] .carousel:not(.carousel-fade) .active.carousel-item-left {
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);
+}
+
+html[dir='ltr'] .carousel:not(.carousel-fade) .carousel-item-next.carousel-item-left,
+html[dir='ltr'] .carousel:not(.carousel-fade) .carousel-item-prev.carousel-item-right {
+    -webkit-transform: translateX(0);
+    transform: translateX(0);
+}
+
+html[dir='ltr'] .introjs-tooltipbuttons {
+    text-align: right;
+}
+
+html[dir='ltr'] .introjs-skipbutton {
+    margin-left: 0;
+    margin-right: 5px;
+}
+
+html[dir='ltr'] .introjs-donebutton {
+    float: right;
+}
+
+html[dir='ltr'] .introjs-prevbutton {
+    border: 1px solid #d4d4d4;
+    border-right: 0;
+    border-radius: 0.2em 0 0 0.2em;
+}
+
+html[dir='ltr'] .introjs-nextbutton {
+    border-radius: 0 0.2em 0.2em 0;
+}
+
+html[dir='ltr'] .introjs-prevbutton.introjs-fullbutton,
+html[dir='ltr'] .introjs-nextbutton.introjs-fullbutton {
+    border: 1px solid #d4d4d4;
+    border-radius: 0.2em;
+}
+
+html[dir='ltr'] .introjs-bullets ul li {
+    float: left;
+}
+
+@media (min-width: 576px) {
+    html[dir='ltr'] .form-inline .form-check {
+        padding-left: 0;
+    }
+
+    html[dir='ltr'] .form-inline .form-check-input {
+        margin-left: 0;
+        margin-right: 0.25rem;
+    }
+}
+
+@media (min-width: 768px) {
+    html[dir='ltr'] .navbar-expand-md .navbar-nav .dropdown-menu {
+        float: none;
+    }
+}
+
+@media (max-width: 767px) {
+    #top-navbar .navbar-brand {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+
+    #top-navbar .navbar-brand img {
+        height: 24px;
+        width: auto;
+    }
+
+    /* Open the hamburger menu below the logo row in both languages. */
+    #top-navbar .navbar-collapse {
+        -ms-flex-order: 1;
+        order: 1;
+    }
+
+    /* In the hamburger menu, the picker is a row like the other menu links: no side padding,
+       and sized to its content so the caret stays beside it. */
+    #top-navbar .language-selector {
+        display: -ms-inline-flexbox;
+        display: inline-flex;
+        padding: 0;
+    }
+
+    #top-navbar .language-selector::after {
+        right: 0;
+    }
+
+    html[dir='rtl'] #top-navbar .language-selector::after {
+        right: auto;
+        left: 0;
+    }
+}
+
+@media (max-width: 350px) {
+    #top-navbar .navbar-brand img {
+        height: 20px;
+    }
+}
+
+/* CheeseFork² additions */
+
+html[dir='ltr'] .course-button-list-layer-header {
+    border-right: 0;
+    border-left: 3px solid transparent;
+}
+
+html[dir='ltr'] .course-button-list-layer-active {
+    border-left-color: #007bff;
+}
+
+html[dir='ltr'] .course-button-list-layer-menu .dropdown-menu {
+    text-align: left !important;
+}
+
+/* An empty dir="auto" field is laid out left to right, so align its placeholder and caret with the interface instead. */
+html[dir='rtl'] input[dir='auto']:placeholder-shown,
+html[dir='rtl'] textarea[dir='auto']:placeholder-shown {
+    direction: rtl;
+    text-align: right;
+}
+
+html[dir='ltr'] input[dir='auto']:placeholder-shown,
+html[dir='ltr'] textarea[dir='auto']:placeholder-shown {
+    direction: ltr;
+    text-align: left;
+}
+
+/* A non-blocking card in the bottom corner, above dialogs so it can be answered at any time. */
+.cookie-consent {
+    position: fixed;
+    bottom: 1rem;
+    z-index: 1060;
+    max-width: 26rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+html[dir='ltr'] .cookie-consent {
+    left: 1rem;
+    right: 1rem;
+    margin-right: auto;
+}
+
+html[dir='rtl'] .cookie-consent {
+    right: 1rem;
+    left: 1rem;
+    margin-left: auto;
+}
+
+.cookie-consent-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.cookie-consent-message {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+html[dir='ltr'] .cookie-consent-buttons .btn + .btn {
+    margin-left: 0.5rem;
+}
+
+html[dir='rtl'] .cookie-consent-buttons .btn + .btn {
+    margin-right: 0.5rem;
+}
+
+@media print {
+    .cookie-consent {
+        display: none;
+    }
+}
+
+p {
+    margin-bottom: 0.5rem;
+}
+li {
+    margin-bottom: 1rem;
+}
+h3 {
+    margin-top: 2rem;
+}

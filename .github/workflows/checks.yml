@@ -1,22 +1,31 @@
 name: Check localization
 
 on:
-  pull_request:
-  push:
-    branches: [gh-pages]
+    pull_request:
+    push:
+        branches: [gh-pages]
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm test
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v5
+            # Installs the pnpm of packageManager in package.json.
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '24'
+                  cache: pnpm
+                  cache-dependency-path: |
+                      pnpm-lock.yaml
+                      functions/pnpm-lock.yaml
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm --dir functions install --frozen-lockfile
+            - run: pnpm lint
+            - run: pnpm fmt:check
+            - run: pnpm typecheck
+            # Also checks that the committed dist/ and share-histograms.js are up to date.
+            - run: pnpm test

@@ -1,0 +1,8 @@
+/* index.html, in the order its stylesheets had. */
+@import '../loader.css';
+@import '../../components/course-select/course-select.css';
+@import '../../components/course-button-list/course-button-list.css';
+@import '../../components/course-exam-info/course-exam-info.css';
+@import '../../components/course-calendar/course-calendar.css';
+@import '../../components/histogram-browser/histogram-browser.css';
+@import '../cheesefork.css';

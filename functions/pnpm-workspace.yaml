@@ -1,0 +1,7 @@
+# Makes the functions a project of their own, apart from the site's packages, since Firebase
+# deploys this directory alone (with its lockfile, but not this file: see firebase.json).
+
+# Install scripts that the functions don't need.
+allowBuilds:
+    '@firebase/util': false
+    protobufjs: false

@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <script src="i18n.js"></script>
+    <script src="dist/i18n.js"></script>
     <script src="locales/he.js"></script>
     <script src="locales/en.js"></script>
     <script src="locales/ar.js"></script>
@@ -11,20 +11,7 @@
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="cheesefork.css">
-    <link rel="stylesheet" href="i18n.css">
-    <link rel="stylesheet" href="cookie-consent.css">
-    <style>
-        p {
-            margin-bottom: .5rem;
-        }
-        li {
-            margin-bottom: 1rem;
-        }
-        h3 {
-            margin-top: 2rem;
-        }
-    </style>
+    <link rel="stylesheet" href="dist/share-histograms.css">
 </head>
 <body class="bg-light">
 <div class="container">
@@ -58,8 +45,8 @@
     <footer class="pt-4 text-muted text-center text-small">
         <p class="mb-1">
             <span data-i18n="sharing.footer.createdBy">תוכנת על ידי</span> <a href="https://github.com/michael-maltsev" target="_blank" rel="noopener" data-i18n="sharing.footer.author">מיכאל מלצב</a>.
-            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener" data-i18n="sharing.footer.privacy">מדיניות פרטיות</a>.
-            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/TERMS.md" target="_blank" rel="noopener" data-i18n="sharing.footer.terms">תנאי שימוש</a>.
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/PRIVACY.md" target="_blank" rel="noopener" data-i18n="sharing.footer.privacy">מדיניות פרטיות</a>.
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/TERMS.md" target="_blank" rel="noopener" data-i18n="sharing.footer.terms">תנאי שימוש</a>.
             <a href="#" data-cookie-settings data-i18n="consent.settings">הגדרות עוגיות</a>.
         </p>
         <p class="mb-1">
@@ -70,14 +57,10 @@
     </footer>
 </div>
 <!-- Google tag (Google Tag Manager), loaded only after the visitor allows analytics -->
-<script src="cookie-consent.js"></script>
+<script src="dist/cookie-consent.js"></script>
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
-<script src="components/histogram-browser/histogram-browser.js"></script>
-<script>
-    $('#share-guide').append(HistogramBrowser.createShareGuide());
-    $('#top-navbar a[href="."]').attr('href', CheeseI18n.withLocale('.'));
-</script>
+<script src="dist/share-histograms-page.js"></script>
 <!-- Negishot accessibility widget -->
 <script src="https://negishot.co.il/cdn/widget.php?code=NGS_55210E82BE0F"></script>
 </body>

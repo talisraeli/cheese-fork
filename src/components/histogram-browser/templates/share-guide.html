@@ -1,0 +1,45 @@
+<div class="histogram-modal-guide-content">
+    <div class="form-group language-selector d-inline-flex">
+        <i class="fas fa-globe" aria-hidden="true"></i>
+        <label for="histogram-guide-language" class="sr-only">{{t:sharing.language}}</label>
+        <select id="histogram-guide-language" class="language-switch" data-language-switch aria-label="{{t:sharing.language}}">
+            <option value="en" lang="en">English</option><option value="he" lang="he">עברית</option><option value="ar" lang="ar">العربية</option>
+        </select>
+    </div>
+    <p>{{t:sharing.guide.intro}}</p>
+    <p>{{t:sharing.guide.scriptIntro}} <a href="{{scriptUrl}}" target="_blank" rel="noopener">{{t:sharing.here}}</a>.</p>
+    <p>{{t:sharing.guide.repositoryIntro}} <a href="https://github.com/michael-maltsev/technion-histograms" target="_blank" rel="noopener">{{t:sharing.here}}</a>.</p>
+    <p>{{t:sharing.guide.privacy}}</p>
+    <p>{{t:sharing.guide.mobile}}</p>
+    <h3>{{t:sharing.guide.extensionTitle}} <a href="https://chromewebstore.google.com/detail/technion-plus-plus/pfhjnidbfndnjhpcpfecngcigdjebemk" target="_blank" rel="noopener">Technion Plus Plus</a></h3>
+    <ol>
+        <li class="mb-0">{{t:sharing.guide.open}} <a href="https://grades.technion.ac.il/" target="_blank" rel="noopener">{{t:sharing.guide.gradesSite}}</a> {{t:sharing.guide.signIn}}</li>
+        <li class="mb-0">{{t:sharing.guide.click}} <a href="assets/share-histograms-guide-technionplus-1.png" target="_blank" rel="noopener">{{t:sharing.guide.extensionButton}}</a>.</li>
+        <li>{{t:sharing.guide.skipToFour}}</li>
+    </ol>
+    <h3>{{t:sharing.guide.manualTitle}}</h3>
+    <ol>
+        <li>{{t:sharing.guide.copyCode}}
+            <div class="form-row mt-2"><div class="form-group mb-0 col-md-12">
+                <textarea dir="ltr" class="form-control" id="javascript-code-container" aria-label="{{t:sharing.guide.codeLabel}}" rows="4" readonly></textarea>
+                <button type="button" class="btn btn-primary mt-2" id="javascript-code-copy-button">{{t:sharing.guide.copy}}</button>
+            </div></div>
+        </li>
+        <li>{{t:sharing.guide.visitGrades}}
+            <div class="form-group"><a class="btn btn-primary mt-2" href="https://grades.technion.ac.il/" role="button" target="_blank" rel="noopener">{{t:sharing.guide.openGrades}}</a></div>
+        </li>
+        <li>
+            <p><strong>{{t:sharing.guide.chrome}}</strong> {{t:sharing.guide.chromeInstructions}}<br>
+                <img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-1.png" alt="{{t:sharing.guide.pasteImageAlt}}">
+                <img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-1.png" alt="{{t:sharing.guide.pasteImageAlt}}">
+            </p>
+            <p><strong>{{t:sharing.guide.otherBrowsers}}</strong> {{t:sharing.guide.otherBrowserInstructions}}</p>
+        </li>
+        <li><p>{{t:sharing.guide.waitForData}}<br>
+            <strong>{{t:sharing.guide.important}}</strong> {{t:sharing.guide.avoidBrowsing}}<br>
+            <img class="border border-primary mt-2 img-fluid d-none d-sm-block" src="assets/share-histograms-guide-2.png" alt="{{t:sharing.guide.shareImageAlt}}">
+            <img class="border border-primary mt-2 img-fluid d-block d-sm-none" src="assets/share-histograms-guide-mobile-2.png" alt="{{t:sharing.guide.shareImageAlt}}">
+        </p></li>
+        <li>{{t:sharing.guide.waitForCompletion}}</li>
+    </ol>
+</div>

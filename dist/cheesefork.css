@@ -1,0 +1,1325 @@
+/* index.html, in the order its stylesheets had. *//* Absolute Center CSS Overlay Spinner: https://codepen.io/MattIn4D/pen/LiKFC */
+
+/* Absolute Center Spinner */
+.loading {
+    position: fixed;
+    z-index: 999;
+    height: 2em;
+    width: 2em;
+    overflow: show;
+    margin: auto;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
+
+/* Transparent Overlay */
+.loading:before {
+    content: '';
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* :not(:required) hides these rules from IE9 and below */
+.loading:not(:required) {
+    /* hide "loading..." text */
+    font: 0/0 a;
+    color: transparent;
+    text-shadow: none;
+    background-color: transparent;
+    border: 0;
+}
+
+.loading:not(:required):after {
+    content: '';
+    display: block;
+    font-size: 10px;
+    width: 1em;
+    height: 1em;
+    margin-top: -0.5em;
+    -webkit-animation: spinner 1500ms infinite linear;
+    -moz-animation: spinner 1500ms infinite linear;
+    -ms-animation: spinner 1500ms infinite linear;
+    -o-animation: spinner 1500ms infinite linear;
+    animation: spinner 1500ms infinite linear;
+    border-radius: 0.5em;
+    -webkit-box-shadow:
+        rgba(0, 0, 0, 0.75) 1.5em 0 0 0,
+        rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0,
+        rgba(0, 0, 0, 0.75) 0 1.5em 0 0,
+        rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0,
+        rgba(0, 0, 0, 0.5) -1.5em 0 0 0,
+        rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0,
+        rgba(0, 0, 0, 0.75) 0 -1.5em 0 0,
+        rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+    box-shadow:
+        rgba(0, 0, 0, 0.75) 1.5em 0 0 0,
+        rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0,
+        rgba(0, 0, 0, 0.75) 0 1.5em 0 0,
+        rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0,
+        rgba(0, 0, 0, 0.75) -1.5em 0 0 0,
+        rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0,
+        rgba(0, 0, 0, 0.75) 0 -1.5em 0 0,
+        rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+}
+
+/* Animation */
+
+@-webkit-keyframes spinner {
+    0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+@-moz-keyframes spinner {
+    0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+@-o-keyframes spinner {
+    0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+@keyframes spinner {
+    0% {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+        -moz-transform: rotate(360deg);
+        -ms-transform: rotate(360deg);
+        -o-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
+}
+.selectize-control.course-select {
+    font-size: 0.8rem;
+}
+
+.selectize-control.course-select .selectize-input {
+    min-height: initial;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Fixups for the filter button - move arrow */
+.selectize-control.rtl.single.course-select .selectize-input:after {
+    left: calc(0.75rem + 40px);
+}
+
+/* Fixups for the filter button - shrink input box */
+.selectize-control.course-select .selectize-input > input {
+    padding-left: 60px !important;
+}
+
+/* Filter button style */
+.selectize-control.course-select .selectize-input .course-select-filter-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1;
+    border-radius: 0.2rem 0 0 0.2rem;
+}
+
+/* Filter button active color */
+.selectize-control.course-select .selectize-input .course-select-filter-button.course-select-filter-on {
+    color: rgb(0, 123, 255, 0.75);
+}
+
+/* Filter button inside focus */
+.selectize-control.course-select .selectize-input .course-select-filter-button.focus,
+.selectize-control.course-select .selectize-input .course-select-filter-button:focus {
+    box-shadow: inset 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Next two rules: selectize dropdown height based on screen height */
+/* https://stackoverflow.com/questions/46613111/selectize-dropdown-height-base-on-screen-height */
+.selectize-control.course-select .selectize-dropdown,
+.selectize-control.course-select .selectize-dropdown.form-control {
+    height: 50vh !important;
+}
+
+.selectize-control.course-select .selectize-dropdown-content {
+    max-height: 100% !important;
+    height: 100% !important;
+}
+
+.course-button-list-badge-container {
+    /* margin: 20px 0 10px 0; */
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding: 0;
+    list-style: none;
+}
+
+.course-button-list-item {
+    /* Required for absolute positioning of drag handle */
+    position: relative;
+}
+
+.course-button-list-item.active {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+    background-origin: border-box;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.course-button-list-item.active:active {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.course-button-list-item .content-wrapper {
+    position: relative;
+}
+
+.course-button-list-item .content-absolute {
+    position: absolute;
+}
+
+.course-button-list-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
+}
+
+.course-button-list-item .badge {
+    /* Prevent hovering the information badge by content-wrapper */
+    position: relative;
+    /* Prevent copying the "i" */
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    top: 1px;
+    cursor: pointer;
+}
+
+.course-button-list-item-hovered {
+    -webkit-box-shadow: inset 0 0 0 2px #cc0000;
+    -moz-box-shadow: inset 0 0 0 2px #cc0000;
+    box-shadow: inset 0 0 0 2px #cc0000;
+    border-color: #cc0000 !important;
+    font-weight: bold;
+}
+
+.course-button-list-item-conflicted .content-wrapper {
+    color: red !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.course-button-list-content-has-hidden {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    cursor: help;
+}
+
+.course-button-list-tooltip-persistent {
+    /* Push below bootstrap dialog which uses z-index 1040 for backdrop */
+    z-index: 1039;
+}
+
+.course-button-list-badge-text {
+    font-size: 125%;
+    padding: 0 0.75em;
+}
+
+/* Fix tooltip arrow direction */
+.tooltip[x-placement^='left'] .arrow-fix-placement {
+    right: 0;
+    left: auto;
+}
+
+.tooltip[x-placement^='right'] .arrow-fix-placement {
+    left: 0;
+    right: auto;
+}
+
+.tooltip[x-placement^='left'] .arrow-fix-placement::before {
+    left: 0;
+    right: auto;
+    border-width: 0.4rem 0 0.4rem 0.4rem;
+    border-left-color: #000;
+}
+
+.tooltip[x-placement^='right'] .arrow-fix-placement::before {
+    right: 0;
+    left: auto;
+    border-width: 0.4rem 0.4rem 0.4rem 0;
+    border-right-color: #000;
+}
+
+/* Drag handle for sortable badges */
+.course-button-list-drag-handle {
+    cursor: move;
+    color: rgba(0, 0, 0, 0.5);
+    transition: opacity 0.2s;
+    font-size: 12px;
+    /* Position absolutely to not affect layout */
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Hidden by default, shown on hover */
+    opacity: 0;
+    /* Prevent text selection during drag */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    /* Ensure it's above other content */
+    z-index: 10;
+}
+
+/* Show drag handle on list item hover */
+.course-button-list-item:hover .course-button-list-drag-handle {
+    opacity: 1;
+}
+
+/* No hover on touch screens, so always show the drag handle there */
+@media (hover: none) {
+    .course-button-list-drag-handle {
+        opacity: 1;
+        /* Don't scroll the page when dragging starts on the handle */
+        touch-action: none;
+    }
+
+    /* Larger touch target without moving the icon */
+    .course-button-list-drag-handle::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        bottom: -10px;
+        left: -8px;
+        right: -4px;
+    }
+}
+
+/* Keep handle visible while dragging */
+.ui-sortable-helper .course-button-list-drag-handle {
+    opacity: 1;
+}
+
+/* Hide drag handle in readonly mode */
+.course-button-list-readonly .course-button-list-drag-handle {
+    display: none;
+}
+
+/* Sortable helper styling - the element being dragged */
+.course-button-list-item.ui-sortable-helper {
+    opacity: 0.8;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000 !important;
+    cursor: move !important;
+}
+
+/* Placeholder while dragging - shows where item will drop */
+.course-button-list-item.ui-sortable-placeholder {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border: 2px dashed rgba(0, 0, 0, 0.3) !important;
+    visibility: visible !important;
+    /* Remove background gradient */
+    background-image: none !important;
+    margin-bottom: -1px; /* Same as .list-group-item */
+}
+
+/* Disable pointer cursor on UL when sorting is disabled */
+.course-button-list-readonly.ui-sortable-disabled {
+    cursor: default;
+}
+
+/* Ensure drag handle doesn't affect layout in RTL */
+.course-button-list-drag-handle .fas {
+    vertical-align: middle;
+}
+
+/* Delete area for drag-to-delete functionality */
+.course-button-list-delete-area {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: rgba(220, 53, 69, 0.6);
+    padding: 12px;
+    text-align: center;
+    border-radius: 50%;
+    margin: 10px auto;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px dashed rgba(220, 53, 69, 0.3);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-button-list-delete-area i {
+    font-size: 20px;
+}
+
+.course-button-list-delete-area.ui-droppable-hover {
+    background-color: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.8);
+    color: rgba(220, 53, 69, 1);
+    transform: scale(1.1);
+}
+
+/* Drop areas, shown while dragging */
+.course-button-list-drop-areas {
+    display: flex;
+    justify-content: center;
+}
+
+.course-button-list-drop-areas .course-button-list-delete-area,
+.course-button-list-drop-areas .course-button-list-new-layer-area {
+    margin: 10px 8px;
+}
+
+/* New layer area for moving a course to a new layer */
+.course-button-list-new-layer-area {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: rgba(0, 123, 255, 0.6);
+    padding: 12px;
+    text-align: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px dashed rgba(0, 123, 255, 0.3);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-button-list-new-layer-area i {
+    font-size: 20px;
+}
+
+.course-button-list-new-layer-area.ui-droppable-hover {
+    background-color: rgba(0, 123, 255, 0.3);
+    border-color: rgba(0, 123, 255, 0.8);
+    color: rgba(0, 123, 255, 1);
+    transform: scale(1.1);
+}
+
+/* Layers, only if layers are used */
+.course-button-list-layer-header {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    padding: 4px 0;
+    border-right: 3px solid transparent;
+    cursor: pointer;
+}
+
+.course-button-list-readonly .course-button-list-layer-header {
+    cursor: default;
+}
+
+.course-button-list-layer-header:first-child {
+    margin-top: 20px;
+}
+
+/* The layer to which new courses and events are added */
+.course-button-list-layer-active {
+    border-right-color: #007bff;
+    font-weight: bold;
+}
+
+.course-button-list-layer-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-button-list-layer-visibility,
+.course-button-list-layer-menu-button {
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+/* Collapsing a layer folds its list, it stays on the calendar */
+.course-button-list-layer-collapse {
+    cursor: pointer;
+}
+
+/* Keep the checkbox close to the caret before it */
+.course-button-list-layer-collapse + .course-button-list-layer-visibility {
+    padding-right: 2px;
+}
+
+html[dir='ltr'] .course-button-list-layer-collapse + .course-button-list-layer-visibility {
+    padding-right: 8px;
+    padding-left: 2px;
+}
+
+.course-button-list-with-layers .course-button-list-badge-container.course-button-list-layer-collapsed {
+    display: none;
+}
+
+.course-button-list-readonly .course-button-list-layer-visibility {
+    cursor: default;
+}
+
+.course-button-list-with-layers .course-button-list-badge-container {
+    margin-top: 0;
+    /* Leave room for dragging a course to an empty layer */
+    min-height: 12px;
+}
+
+.course-button-list-layer-hidden .course-button-list-item {
+    opacity: 0.5;
+}
+
+/* Custom events in the list, only if layers are used */
+.course-button-list-custom-event {
+    cursor: default;
+}
+
+.course-button-list-custom-event .content-wrapper::before {
+    /* Font Awesome calendar-alt */
+    content: '\f073';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    float: right;
+    margin-left: 6px;
+}
+
+/* The floating window with the reviews of the original CheeseFork, centered on the screen,
+   above the dialogs (1050) and below the cookie notice (1060). */
+.course-feedback-window {
+    position: fixed;
+    z-index: 1055;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    /* The size and position are set by fitOriginalFeedbackWindow: by default 60% of the screen's
+       width and 85% of its height, and always inside the visible part of it. */
+    width: 60vw;
+    max-width: 100%;
+    height: 85vh;
+    max-height: 100%;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.course-feedback-window-header {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    cursor: move;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.course-feedback-window-title {
+    -ms-flex: 1;
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-feedback-window-button {
+    margin: 0 0.5rem;
+    cursor: pointer;
+}
+
+.course-feedback-window-frame {
+    -ms-flex: 1;
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background-color: #f8f9fa;
+}
+
+.course-feedback-window-note {
+    padding: 0.25rem 0.75rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* While resizing, the iframe would swallow the mouse events. */
+.course-feedback-window-resizing .course-feedback-window-frame {
+    pointer-events: none;
+}
+
+/* The resize handles on the edges and corners, inside the window since it hides its overflow.
+   jQuery UI's own CSS isn't loaded. */
+.course-feedback-window .ui-resizable-handle {
+    position: absolute;
+    z-index: 2;
+    -ms-touch-action: none;
+    touch-action: none;
+}
+
+.course-feedback-window .ui-resizable-n,
+.course-feedback-window .ui-resizable-s {
+    left: 12px;
+    right: 12px;
+    height: 6px;
+    cursor: ns-resize;
+}
+
+.course-feedback-window .ui-resizable-n {
+    top: 0;
+}
+
+.course-feedback-window .ui-resizable-s {
+    bottom: 0;
+}
+
+.course-feedback-window .ui-resizable-e,
+.course-feedback-window .ui-resizable-w {
+    top: 12px;
+    bottom: 12px;
+    width: 6px;
+    cursor: ew-resize;
+}
+
+.course-feedback-window .ui-resizable-e {
+    right: 0;
+}
+
+.course-feedback-window .ui-resizable-w {
+    left: 0;
+}
+
+.course-feedback-window .ui-resizable-ne,
+.course-feedback-window .ui-resizable-nw,
+.course-feedback-window .ui-resizable-se,
+.course-feedback-window .ui-resizable-sw {
+    width: 16px;
+    height: 16px;
+}
+
+.course-feedback-window .ui-resizable-ne {
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+}
+
+.course-feedback-window .ui-resizable-nw {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+}
+
+.course-feedback-window .ui-resizable-se {
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+}
+
+.course-feedback-window .ui-resizable-sw {
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
+}
+
+/* A visible grip, drawn as two diagonal lines. Bigger on touch screens. */
+.course-feedback-window .course-feedback-window-grip {
+    background: linear-gradient(
+        135deg,
+        transparent 45%,
+        #adb5bd 45%,
+        #adb5bd 55%,
+        transparent 55%,
+        transparent 70%,
+        #adb5bd 70%,
+        #adb5bd 80%,
+        transparent 80%
+    );
+}
+
+.course-feedback-window .ui-resizable-sw.course-feedback-window-grip {
+    background: linear-gradient(
+        225deg,
+        transparent 45%,
+        #adb5bd 45%,
+        #adb5bd 55%,
+        transparent 55%,
+        transparent 70%,
+        #adb5bd 70%,
+        #adb5bd 80%,
+        transparent 80%
+    );
+}
+
+@media (pointer: coarse) {
+    .course-feedback-window .ui-resizable-ne,
+    .course-feedback-window .ui-resizable-nw,
+    .course-feedback-window .ui-resizable-se,
+    .course-feedback-window .ui-resizable-sw {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+@media print {
+    .course-feedback-window {
+        display: none;
+    }
+}
+
+.exam-info-item {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+    color: white;
+    padding: 3px 5px;
+    border-radius: 6px;
+    cursor: default;
+}
+
+.exam-info-item .content-absolute {
+    position: absolute;
+    /* Center the element: https://stackoverflow.com/a/23384995 */
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.exam-info-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
+}
+
+.exam-info-item-hovered,
+.exam-info-item-highlighted {
+    -webkit-box-shadow: inset 0 0 0 3px #cc0000;
+    -moz-box-shadow: inset 0 0 0 3px #cc0000;
+    box-shadow: inset 0 0 0 3px #cc0000;
+    font-weight: bold;
+}
+
+.exam-info-item-conflicted {
+    color: red;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.exam-info-item-has-extra-dates {
+    outline: dotted;
+    outline-width: 2px;
+    outline-offset: -3px;
+    outline-color: white;
+}
+
+.exam-info-item-has-extra-dates.exam-info-item-hovered,
+.exam-info-item-has-extra-dates.exam-info-item-highlighted {
+    outline-color: #cca0a0;
+}
+
+.exam-info-left-arrow {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+/* Disable touch zooming, dynamic time table height is implemented instead */
+.course-calendar {
+    touch-action: pan-x pan-y;
+}
+
+/* Dynamic calendar table height */
+.course-calendar .fc-time-grid .fc-slats td {
+    font-size: calc(-0.3em + 3.1vh);
+}
+
+/* Disable vertical scrollbar which is sometimes visible inside the calendar */
+.course-calendar .fc-time-grid-container.fc-scroller {
+    overflow: hidden !important;
+}
+
+/* Dynamic event text size, RTL direction, default cursor for IE/Edge */
+.course-calendar .fc-event {
+    font-size: calc(0.1em + 1.3vh);
+    direction: rtl;
+    cursor: default;
+}
+
+/* Remove opacity layer - https://github.com/fullcalendar/fullcalendar/issues/3684 */
+.course-calendar .fc-event .fc-bg {
+    display: none;
+}
+
+/* Keep the not-allowed cursor, which is otherwise overwritten by the above rule */
+.fc-not-allowed .fc-event {
+    cursor: not-allowed;
+}
+
+/* Center event text vertically */
+.course-calendar .fc-time-grid-event {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Center event text horizontally */
+.course-calendar .fc-content {
+    text-align: center !important;
+}
+
+/* Calendar items */
+.calendar-item-selected {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.calendar-item-selected:active {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.calendar-item-unselected {
+    background-color: #f8f9fa !important;
+    color: black !important;
+    border-color: black !important;
+}
+
+.calendar-item-unselected-hide-button {
+    display: none;
+    position: absolute;
+    /* Place above the text which has the z-index value of 2 */
+    z-index: 3;
+    top: 5px;
+    right: calc(min(5px, 20%));
+    padding: 0 3px;
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.calendar-item-unselected:hover .calendar-item-unselected-hide-button {
+    display: block;
+}
+
+.calendar-item-unselected-hide-button:hover {
+    color: white;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.calendar-item-color-button {
+    display: none;
+    position: absolute;
+    /* Place above the text which has the z-index value of 2 */
+    z-index: 3;
+    top: 5px;
+    left: calc(min(5px, 20%));
+    padding: 0 3px;
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.fc-event:hover .calendar-item-color-button {
+    display: block;
+}
+
+.calendar-item-color-button:hover {
+    color: white;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.calendar-item-previewed {
+    border: 3px solid #1565c0 !important;
+}
+
+.calendar-item-same-course-as-hovered {
+    border: 3px solid #1565c0 !important;
+}
+
+.calendar-item-same-type-as-hovered {
+    border: 3px solid #cc0000 !important;
+}
+
+.calendar-item-previewed .fc-content,
+.calendar-item-same-course-as-hovered .fc-content,
+.calendar-item-same-type-as-hovered .fc-content {
+    font-weight: bold;
+}
+
+.calendar-item-last-choice .fc-content {
+    color: #aa66cc;
+}
+
+.course-calendar .custom-event {
+    cursor: move;
+}
+
+.histogram-container.histogram-activated .histogram-overlay-message {
+    display: none;
+}
+
+.histogram-container:not(.histogram-activated) .histogram-content {
+    filter: blur(15px);
+    pointer-events: none;
+}
+
+.histogram-container .histogram-content {
+    transition: filter 0.5s;
+}
+
+.histogram-container .histogram-content select {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+}
+
+.histogram-overlay-message {
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    margin: 20px 25%;
+    text-align: center;
+}
+
+.histogram-overlay-message-button-container {
+    display: inline-block;
+    margin: 0 5px 6px;
+}
+
+.histogram-overlay-message-button-container {
+    display: inline-block;
+    margin: 0 5px 6px;
+}
+
+.histogram-image-container-outer {
+    /* Center child: https://stackoverflow.com/a/37126250 */
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+
+/* https://stackoverflow.com/a/21992458 */
+.histogram-image-container {
+    flex-shrink: 0;
+    width: 108%;
+    max-width: 800px;
+    aspect-ratio: 1.77; /* 800/450 */
+}
+
+.histogram-image {
+    display: block;
+    margin: 0 auto;
+}
+
+.histogram-modal-guide-content p {
+    margin-bottom: 0.5rem;
+}
+
+.histogram-modal-guide-content li {
+    margin-bottom: 1rem;
+}
+
+.histogram-modal-guide-content h3 {
+    margin-top: 2rem;
+}
+
+@media screen and (max-width: 350px) {
+    #top-navbar .navbar-brand {
+        font-size: 1rem;
+    }
+    #top-navbar .navbar-brand img {
+        height: 20px;
+        width: auto;
+    }
+}
+
+#top-navbar .navbar-brand {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+#top-navbar .navbar-nav .nav-link,
+#top-navbar .language-selector {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+#top-navbar .navbar-nav .nav-link.disabled {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+#top-navbar-supported-content.top-navbar-content-uninitialized {
+    visibility: hidden !important;
+}
+
+/* for unread count badge */
+.unread-count-badge-container {
+    position: relative;
+}
+
+/* https://stackoverflow.com/a/5748155 */
+.unread-count-badge {
+    background-color: #fa3e3e;
+    border-radius: 0.2rem;
+    color: white;
+    padding: 1px 3px;
+    font-size: 0.75rem;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+}
+
+/* Course metadata diff */
+.course-metadata-diff-container {
+    white-space: pre-wrap;
+}
+
+.course-metadata-diff-container h5 {
+    margin-top: 0.5rem;
+}
+
+.course-metadata-diff-old {
+    background-color: #ffdce0;
+    text-decoration: line-through;
+}
+
+.course-metadata-diff-new {
+    background-color: #cdffd8;
+}
+
+#shared-schedule-title {
+    font-weight: 300;
+    line-height: 1.2;
+    text-align: center;
+}
+
+#general-info {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+#course-exam-info-wrapper {
+    /* A workaround to an Edge bug: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/18883305/ */
+    filter: brightness(1);
+}
+
+#course-exam-info {
+    position: sticky;
+    bottom: 20px;
+}
+
+/* Set selectize dropdown cursor to be pointer instead of text selection */
+.selectize-dropdown .option {
+    cursor: default;
+}
+
+.course-description-tooltip-inner {
+    min-width: 30vw;
+}
+
+/* Overrides list-group-item from Bootstrap */
+.list-group-item {
+    font-size: 0.8rem;
+    cursor: default;
+
+    /* By default, all items have margin-bottom: -1px except for the last one,
+    but that causes problems with sortable because it adds a hovered item at the
+    end; just force the last item to have the margin too */
+    margin-bottom: -1px !important;
+}
+
+/* Fixes: Scroll and focus issue with multiple modals open */
+/* https://github.com/nakupanda/bootstrap3-dialog/issues/70 */
+.modal {
+    overflow: auto !important;
+}
+
+/* intro.js - [done,prev,next] buttons order change to [prev,next,done]: https://stackoverflow.com/questions/42263288 */
+/* Also, change "done" button color from light gray to dark gray */
+.introjs-donebutton {
+    float: left;
+    color: #333;
+}
+
+/* Make z-index smaller than bootstrap4-dialog popup */
+html.os-html > .os-host > .os-scrollbar {
+    z-index: 999;
+}
+
+/* Remove Firefox invalid form glow, Bootstrap has its own */
+/* Also, Firefox's appears right after value was edited */
+/* https://stackoverflow.com/a/21198397 */
+:-moz-ui-invalid {
+    box-shadow: none;
+}
+
+/* Modeless dialog - see addBootstrapDialogModelessButton function */
+.bootstrap-dialog.cheesefork-modeless-dialog {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding-right: 0;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-dialog {
+    visibility: visible;
+    filter: drop-shadow(0 0 0.75rem #000);
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-header {
+    cursor: move;
+}
+
+.bootstrap-dialog.cheesefork-modeless-dialog .modal-body {
+    /* https://stackoverflow.com/a/28852473 */
+    max-height: calc(100vh - 225px);
+    overflow: auto;
+}
+
+/* Color picker dialog */
+.color-picker {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.color-picker-item {
+    height: 40px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.color-picker-item:hover,
+.color-picker-item:focus,
+.color-picker-item-selected {
+    border-color: #1565c0;
+    outline: none;
+    box-shadow: 0 0 0 2px #fff inset;
+}
+
+.color-picker-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.color-picker-custom label {
+    margin: 0;
+}
+
+.color-picker-custom-input {
+    width: 64px;
+    height: 32px;
+    padding: 0 2px;
+    cursor: pointer;
+}
+
+/* dark-mode-toggle customizations */
+footer dark-mode-toggle {
+    display: inline-block;
+    vertical-align: bottom;
+    line-height: 0;
+}
+footer dark-mode-toggle::part(fieldset) {
+    padding: 0;
+}
+/* The "remember" row is empty but still takes up height, which lifts the toggle above the text line. */
+footer dark-mode-toggle::part(aside) {
+    display: none;
+}
+
+/* Items of the "what's new" popup: the icon sits at the right edge, the title and text beside it. */
+/* The pages of the "what's new" dialog. A page scrolls, so that the dialog fits the window
+   with its title, page dots and buttons. Flex layout follows the text direction. */
+.whats-new-pages {
+    max-height: calc(100vh - 16rem);
+    overflow-y: auto;
+}
+
+.whats-new-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0.25rem;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: none;
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.whats-new-item:hover,
+.whats-new-item:focus {
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+.whats-new-item-text {
+    flex: 1;
+}
+
+.whats-new-icon {
+    flex: 0 0 2.5rem;
+    margin: 0 0.75rem;
+    text-align: center;
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.whats-new-page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.whats-new-page-header .whats-new-icon {
+    margin: 0 0 0 0.75rem;
+}
+
+html[dir='ltr'] .whats-new-page-header .whats-new-icon {
+    margin: 0 0.75rem 0 0;
+}
+
+.whats-new-steps li {
+    margin-bottom: 0.4rem;
+}
+
+.whats-new-note {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+.whats-new-dots {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.whats-new-dot {
+    width: 0.65rem;
+    height: 0.65rem;
+    margin: 0 0.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background-color: rgba(128, 128, 128, 0.45);
+    cursor: pointer;
+}
+
+.whats-new-dot.active {
+    background-color: #ffc107;
+}
+
+/* Skip is on the far side of the footer, apart from Previous and Next. */
+.whats-new-dialog .modal-footer .whats-new-skip {
+    margin-left: auto;
+}
+
+html[dir='ltr'] .whats-new-dialog .modal-footer .whats-new-skip {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* The notice of a failed schedule save, above the page and its dialogs. */
+.save-error-alert {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1060;
+    width: max-content;
+    max-width: calc(100% - 2rem);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.save-error-alert .save-error-reload {
+    margin: 0 0.75rem;
+    flex-shrink: 0;
+}
+
+/* The dialog offering the schedule built while signed out: its three choices have long labels,
+   which don't fit side by side, so they're stacked at full width. */
+.import-local-dialog .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.import-local-dialog .modal-footer > .btn {
+    margin: 0 0 0.5rem;
+    white-space: normal;
+}
+
+.import-local-dialog .modal-footer > .btn:last-child {
+    margin-bottom: 0;
+}
+
+/* Fills the space below the selected courses. */
+#course-exam-info-wrapper {
+    flex: 1;
+}
+
+/* The Facebook page in the weekly popup. */
+.facebook-iframe-container iframe {
+    border: none;
+    overflow: hidden;
+}
+
+/* The button that makes a dialog modeless, see src/lib/modeless-dialog.ts. */
+.bootstrap-dialog-restore-icon {
+    font-size: 18px;
+}

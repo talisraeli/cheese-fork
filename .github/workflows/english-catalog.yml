@@ -5,30 +5,30 @@ name: Update the English course catalog
 # so this runs weekly, with about 120 requests to SAP per semester.
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '30 4 * * 0'
+    workflow_dispatch:
+    schedule:
+        - cron: '30 4 * * 0'
 
 concurrency: run
 
 jobs:
-  run:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-      - name: Fetch the English catalog
-        run: python -u ./ci/english_catalog.py
-      - name: Commit and push files
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add catalog-en
-          git diff-index --quiet --cached HEAD || git commit -m "chore(catalog): update the English course catalog"
-          git push
+    run:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.x'
+            - name: Fetch the English catalog
+              run: python -u ./ci/english_catalog.py
+            - name: Commit and push files
+              run: |
+                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
+                  git config --local user.name "github-actions[bot]"
+                  git add catalog-en
+                  git diff-index --quiet --cached HEAD || git commit -m "chore(catalog): update the English course catalog"
+                  git push

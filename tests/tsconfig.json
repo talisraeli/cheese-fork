@@ -1,0 +1,20 @@
+{
+    // The tests, run by Vitest (vp test), which strips the types, so they're only checked here,
+    // with the tools that build and serve the site. The tests drive the site's pages in jsdom,
+    // whose window has the site's globals, declared in src/types/.
+    "compilerOptions": {
+        "target": "es2022",
+        "lib": ["es2022", "dom", "dom.iterable"],
+        "module": "preserve",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "erasableSyntaxOnly": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": false,
+        "skipLibCheck": true,
+        "types": ["node", "jquery", "jqueryui", "bootstrap", "selectize"]
+    },
+    "include": [".", "../src/types", "../tools", "../vite.config.ts"]
+}
