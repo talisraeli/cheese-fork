@@ -11,18 +11,13 @@ import type { Fetch } from './types.ts';
 const CACHE_MS = 60 * 60 * 1000;
 
 // The course manager as built for the functions, dist/course-manager.js, which defines the global
-// CheeseForkCourseManager. Deployed functions get a copy of it (see predeploy in firebase.json).
+// CheeseForkCourseManager. The deploy copies it into shared/ (see predeploy in firebase.json), and
+// so does the tests' setup, from the current sources (see tests/setup.ts).
 function courseManagerSource() {
-    // The site's own build first, so a copy left by an earlier deploy is never used instead.
     // From src/lib/ when tested, or build/lib/ when deployed.
-    const dir = path.dirname(fileURLToPath(import.meta.url));
-    const candidates = [
-        path.join(dir, '..', '..', '..', 'dist', 'course-manager.js'),
-        path.join(dir, '..', '..', 'shared', 'course-manager.js')
-    ];
-    const file = candidates.find(candidate => fs.existsSync(candidate));
-    if (!file) {
-        throw new Error('course-manager.js not found');
+    const file = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'shared', 'course-manager.js');
+    if (!fs.existsSync(file)) {
+        throw new Error('course-manager.js not found: build the site first');
     }
     return fs.readFileSync(file, 'utf8');
 }

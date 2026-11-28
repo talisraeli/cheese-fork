@@ -76,7 +76,7 @@ The names "CheeseFork" and "CheeseFork²" and their logos identify this project.
 
 ## 9. Third-party services
 
-The service relies on third-party services, such as Google Firebase, Google Analytics (only if you allow it), the Negishot accessibility widget, GitHub Pages, and the Facebook Page plugin, and it links to external sites and communities. Your use of those services and sites is subject to their own terms and policies. The maintainers are not responsible for them.
+The service relies on third-party services, such as Google Firebase, Google Analytics (only if you allow it), the Negishot accessibility widget, Microsoft Azure Static Web Apps, and the Facebook Page plugin, and it links to external sites and communities. Your use of those services and sites is subject to their own terms and policies. The maintainers are not responsible for them.
 
 ## 10. Accessibility
 

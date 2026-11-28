@@ -1,9 +1,9 @@
 import { test } from 'vite-plus/test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import vm from 'node:vm';
-const source = fs.readFileSync(path.join(import.meta.dirname, '..', 'dist', 'i18n.js'), 'utf8');
+import { siteFile } from './helpers.ts';
+
+const source = siteFile('dist/i18n.js');
 
 type Listener = (this: unknown, event?: unknown) => void;
 

@@ -1,6 +1,6 @@
-// The site's bundles, built by Vite+ from src/: `vp build` writes them (see vite.config.ts),
-// `vp dev` serves them as they're requested, and the tests check that the committed ones are
-// up to date and bundle modules for themselves the same way.
+// The site's bundles, built by Vite+ from src/: `vp build` writes them with the rest of the site
+// to out/ (see tools/site.ts), `vp dev` serves them as they're requested, and the tests bundle
+// modules for themselves the same way.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +11,7 @@ const root = path.resolve(import.meta.dirname, '..');
 export interface Bundle {
     // The entry: a source file, relative to the root, or the id of a virtual module.
     input: string;
-    // Where it's published, relative to the root, such as 'dist/i18n.js'.
+    // Where it's published, relative to the root of the site, such as 'dist/i18n.js'.
     file: string;
     // The global that a script bundle sets to the entry's exports, if any.
     globalName?: string;
@@ -140,15 +140,4 @@ export async function buildBundles(): Promise<Map<string, string>> {
         built.set(entry.file, await bundle(entry));
     }
     return built;
-}
-
-// Builds the bundles and writes them, replacing dist/. Returns the files written.
-export async function writeBundles(): Promise<string[]> {
-    const built = await buildBundles();
-    fs.rmSync(path.join(root, 'dist'), { recursive: true, force: true });
-    for (const [file, text] of built) {
-        fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
-        fs.writeFileSync(path.join(root, file), text);
-    }
-    return [...built.keys()];
 }

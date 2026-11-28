@@ -1,13 +1,12 @@
 // Vite+ for the site: `vp dev`, `vp build`, `vp test`, `vp lint` and `vp fmt`.
 
 import { defineConfig } from 'vite-plus';
-import { writeBundles } from './tools/bundles.ts';
+import { OUT_DIR, writeSite } from './tools/site.ts';
 import { servedBundles } from './tools/dev-server.ts';
 
 // Built, vendored and generated files, which are neither linted nor formatted.
 const GENERATED = [
-    'dist/**',
-    'share-histograms.js',
+    'out/**',
     'modules/**',
     'catalog-en/**',
     'functions/build/**',
@@ -17,17 +16,19 @@ const GENERATED = [
 ];
 
 export default defineConfig({
-    // The pages are served as they are, from the root, as GitHub Pages serves them.
+    // The pages are served as they are, from the root, with the paths they have in out/.
     appType: 'mpa',
     publicDir: false,
     plugins: [servedBundles()],
+    // A build in out/ is a copy of the site, which the dev server doesn't serve or watch.
+    server: { watch: { ignored: ['**/out/**'] } },
     optimizeDeps: { noDiscovery: true, include: [] },
     builder: {
-        // The site isn't an app that Vite builds from its pages: the bundles that the pages load
-        // are built into dist/, which is committed, since Pages serves the repository as it is.
+        // The site isn't an app that Vite builds from its pages: they're copied to out/ as they
+        // are, with the bundles that they load and the files of the repository that they use.
         async buildApp(builder) {
-            const files = await writeBundles();
-            console.log('Built ' + files.length + ' files: ' + files.join(', '));
+            const files = await writeSite();
+            console.log('Built the site into ' + OUT_DIR + ': ' + files.length + ' files');
             // Otherwise Vite builds its environments after this, which would bundle the pages.
             for (const environment of Object.values(builder.environments)) {
                 environment.isBuilt = true;

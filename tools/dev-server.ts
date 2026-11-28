@@ -1,4 +1,4 @@
-// `vp dev`: serves the site as GitHub Pages does, except that its bundles are built from src/ as
+// `vp dev`: serves the site as it's deployed, except that its bundles are built from src/ as
 // they're requested, the way `vp build` builds them, and the page reloads when a source changes.
 // The bundles are classic scripts, so a change reloads the page rather than replacing modules.
 
@@ -44,7 +44,7 @@ function changeOf(file: string): { reload: boolean; rebuild: boolean } {
 }
 
 // The pages' scripts and stylesheets are classic scripts and plain stylesheets, which Vite would
-// transform as modules, so they're served as they are, like GitHub Pages serves them.
+// transform as modules, so they're served as they are, as the deployed site serves them.
 const AS_IS = new Map([
     ['.js', 'text/javascript'],
     ['.css', 'text/css'],
@@ -97,7 +97,7 @@ export function servedBundles(): Plugin {
                     server.ws.send({ type: 'full-reload' });
                 }
             });
-            // Before Vite's own middlewares, which would serve the committed dist/.
+            // Before Vite's own middlewares, which would transform the scripts that it serves.
             server.middlewares.use((request, response, next) => {
                 const requestPath = (request.url || '').split('?')[0];
                 const entry = entries.get(requestPath);

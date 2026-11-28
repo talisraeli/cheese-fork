@@ -1,14 +1,14 @@
 // Keeps the code in small TypeScript modules, with structure (HTML templates), style (CSS) and
-// logic (TS) apart, and the committed bundles in dist/ in step with their sources.
+// logic (TS) apart, and the bundles in ES2017.
 
-import { test } from 'vite-plus/test';
+import { test, inject } from 'vite-plus/test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import * as espree from 'espree';
 import { parseAst } from 'vite-plus';
 import type { Declaration, Expression, Node, Program, Statement } from '@oxc-project/types';
-import { buildBundles, BOOKMARKLET_FILE } from '../tools/bundles.ts';
+import { BOOKMARKLET_FILE } from '../tools/bundles.ts';
 
 const root = path.resolve(import.meta.dirname, '..');
 const MAX_MODULE_LINES = 800;
@@ -103,33 +103,14 @@ test('the sources are TypeScript', () => {
     );
 });
 
-test('the committed bundles in dist/ and the sharing script match their sources (run `pnpm build`)', async () => {
-    const built = await buildBundles();
-    assert.deepEqual(
-        fs
-            .readdirSync(path.join(root, 'dist'))
-            .map(file => 'dist/' + file)
-            .sort(),
-        [...built.keys()].filter(file => file.startsWith('dist/')).sort()
-    );
-    assert.ok(built.has(BOOKMARKLET_FILE));
-    for (const [file, text] of built) {
-        const committed = fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n');
-        assert.ok(committed === text, file + ' is out of date');
-    }
-    assert.match(built.get(BOOKMARKLET_FILE)!, /jsSHA/, 'the license of jsSHA');
-}, 120000);
-
 // The browsers of browserslist in package.json all run ES2017, the target of the build.
 test('the bundles are ES2017', () => {
-    for (const file of [...filesIn('dist', '.js'), BOOKMARKLET_FILE]) {
-        assert.doesNotThrow(
-            () => espree.parse(fs.readFileSync(path.join(root, file), 'utf8'), { ecmaVersion: 2017 }),
-            file
-        );
+    const bundles = inject('siteBundles');
+    assert.ok(bundles[BOOKMARKLET_FILE], BOOKMARKLET_FILE);
+    for (const [file, text] of Object.entries(bundles).filter(([file]) => file.endsWith('.js'))) {
+        assert.doesNotThrow(() => espree.parse(text, { ecmaVersion: 2017 }), file);
     }
 });
-
 // The app starts in start() (src/app/init.js), called by its entry once every module is loaded,
 // so a module must not run code when it's imported, other than declaring what it exports and
 // setting up its prototypes. Otherwise it could run before the modules it uses are initialized.

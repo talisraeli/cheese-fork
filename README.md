@@ -15,8 +15,9 @@ remain in their source language.
 ## Development
 
 The site is built with [Vite+](https://viteplus.dev) (`vite-plus`), with Node.js 24.11 or
-later and [pnpm](https://pnpm.io) (the version in `packageManager` of `package.json`). The sources in `src/` are strict TypeScript modules, bundled into `dist/` as classic
-scripts (IIFE) in ES2017, which the pages load with `<script>` tags. The build only strips
+later and [pnpm](https://pnpm.io) (the version in `packageManager` of `package.json`). The
+sources in `src/` are strict TypeScript modules, bundled as classic scripts (IIFE) in ES2017,
+which the pages load from `dist/` with `<script>` tags. The build only strips
 the types, so `pnpm typecheck` is what checks them, for the site, the tests and the
 functions.
 
@@ -24,25 +25,33 @@ functions.
 pnpm install
 pnpm --dir functions install
 pnpm dev        # vp dev: serves the site, and reloads it when a source changes
-pnpm build      # vp build: writes dist/ and share-histograms.js
+pnpm build      # vp build: writes the whole site to out/
 pnpm lint       # vp lint: Oxlint
 pnpm fmt        # vp fmt: Oxfmt (fmt:check only checks)
 pnpm typecheck  # tsc, for the site, the tests and the functions
 pnpm test       # vp test: Vitest
 ```
 
-`dist/` is committed, since GitHub Pages serves the repository as it is, so run the build
-after changing `src/` and commit its output with the change; the build also writes the
-bookmarklet script `share-histograms.js`. The tests fail when either is out of date. The
-bundles are listed in `tools/bundles.ts`, and `vite.config.ts` configures every command.
+`pnpm build` writes the site as it's deployed to `out/`: the pages, the files of the
+repository that they load (`assets/`, `icons/`, `locales/`, `data/`, `modules/`,
+`catalog-en/`), the bundles in `out/dist/`, the bookmarklet script `out/share-histograms.js`
+and `staticwebapp.config.json`. None of it is committed. The bundles are listed in
+`tools/bundles.ts`, the rest of the site in `tools/site.ts`, and `vite.config.ts` configures
+every command.
 
-`pnpm dev` serves the pages as they are, as Pages does, but builds each bundle from `src/`
-when it's requested, the same way the build does, so it never serves a stale `dist/`. The
+The site is hosted on [Azure Static Web Apps](https://learn.microsoft.com/azure/static-web-apps/).
+`.github/workflows/azure-deploy.yml` builds it and uploads `out/` on every push to
+`gh-pages`, after the scheduled data updates, and as a preview for each pull request.
+`staticwebapp.config.json` keeps the headers that GitHub Pages used to send, so that other
+sites can still read the site's files.
+
+`pnpm dev` serves the pages from the root, with the same paths as in `out/`, and builds
+each bundle from `src/` when it's requested, the same way the build does. The
 bundles are classic scripts, so a change reloads the page instead of replacing modules.
 
 The tests use synthetic course data without connecting to Firebase or the Technion grades
 portal. Their global setup (`tests/setup.ts`) bundles the modules that tests load on their
-own. DOM integration checks, and a test that parses the bundles as ES2017, guard the
+own, and the site's bundles, which the tests load as they're deployed. DOM integration checks, and a test that parses the bundles as ES2017, guard the
 browsers of `browserslist` in `package.json`; they do not replace visual checks in a real
 browser.
 
@@ -63,7 +72,7 @@ browser.
 - `modules/`: third-party libraries, committed as they are.
 - `functions/`: the Firebase functions behind the API, in `functions/src/`, built into
   `functions/build/` when deployed.
-- `tools/`: the build of the bundles, and the dev server's serving of them.
+- `tools/`: the build of the bundles and of the site, and the dev server's serving of them.
 - `tests/`, `ci/`: the tests and the scheduled data scripts.
 
 Markup is in HTML templates, filled by `render` (`src/lib/template.ts`): `{{name}}` is escaped,
@@ -71,7 +80,7 @@ Markup is in HTML templates, filled by `render` (`src/lib/template.ts`): `{{name
 markup out of script strings, modules under 800 lines, modules free of code that runs on
 import, and inline scripts and styles out of the pages.
 
-The HTML pages and `share-histograms.js` stay at the root because other sites, the
+The HTML pages and `share-histograms.js` are at the root of the site because other sites, the
 bookmarklet, and the browser extension load them by URL.
 
 ## Localization
@@ -142,7 +151,7 @@ firebase deploy --only functions,hosting,firestore:rules
 The API is served at `https://api.cf.talisrae.li` through Firebase Hosting, which rewrites
 every path to the `api` function (`functions/hosting-public` is intentionally empty).
 
-The deploy copies the course manager, as built in `dist/course-manager.js`, into the functions, so that the course data they
+The deploy builds the site and copies the course manager, as built in `out/dist/course-manager.js`, into the functions, so that the course data they
 save matches what the site saves. Keep the schedule layout in
 `functions/src/lib/schedule.ts` in sync with `src/app/layers.ts`, including its layer functions
 (`layerCreate`, `layerDelete`, `layerDuplicate` and the others), which the API mirrors.

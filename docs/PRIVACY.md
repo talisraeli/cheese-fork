@@ -92,7 +92,7 @@ Using CheeseFork² causes your browser to contact the following services. Each o
 - **Course catalog and data files** loaded from ug.cheesefork.cf, sap.cheesefork.cf, and michael-maltsev.github.io (hosted on GitHub Pages). These contain only public course information, histograms, and calendar data; no user data is sent to them beyond the request itself.
 - **Facebook Page plugin**. The "weekly graph" popup embeds the CheeseFork Facebook page in an iframe served by Facebook. Facebook may set cookies and collect data when that popup is displayed, according to Facebook's privacy policy. The plugin is only loaded when the popup is shown, and you can disable the popup from within it.
 - **Original CheeseFork** (cheesefork.cf). The "הצג חוות דעת" button shows course feedback from there, and the old feedback widget address redirects there. CheeseFork² sends it only the course number, in the page address. See section 6.
-- **Hosting**. The site itself is served by GitHub Pages, which may keep standard server access logs.
+- **Hosting**. The site itself is served by Microsoft Azure Static Web Apps, which may keep standard server access logs.
 
 The site also contains links to external sites and communities (Technion websites, Technion scans, WhatsApp, Telegram, Discord, Facebook groups, the Chrome Web Store). Following a link takes you to a site with its own policy, and CheeseFork² does not share your data with them.
 

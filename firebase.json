@@ -17,7 +17,7 @@
             "tsconfig.json",
             "pnpm-workspace.yaml"
         ],
-        "predeploy": ["pnpm --dir functions run build", "node functions/predeploy.js"]
+        "predeploy": ["pnpm build", "pnpm --dir functions run build", "node functions/predeploy.js"]
     },
     "hosting": {
         "public": "functions/hosting-public",

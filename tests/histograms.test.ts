@@ -2,7 +2,7 @@ import { test } from 'vite-plus/test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
-import { createPage, loadUI, read, englishContent } from './helpers.ts';
+import { createPage, loadUI, siteFile, englishContent } from './helpers.ts';
 import type { HistogramBrowserOptions } from '../src/components/histogram-browser/histogram-browser.ts';
 
 // A request of the browser, which the test answers.
@@ -376,7 +376,7 @@ function createGradesPage(scriptLanguage: string | null, pageLanguage: string = 
 }
 
 function loadSharingScript(dom: JSDOM) {
-    vm.runInContext(read('share-histograms.js'), dom.getInternalVMContext(), { filename: 'share-histograms.js' });
+    vm.runInContext(siteFile('share-histograms.js'), dom.getInternalVMContext(), { filename: 'share-histograms.js' });
 }
 
 for (const [scriptLanguage, pageLanguage, expectedLanguage] of [

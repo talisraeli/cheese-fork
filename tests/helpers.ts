@@ -18,8 +18,14 @@ function run(window: TestWindow, code: string, file: string): unknown {
     return context ? vm.runInContext(code, context, { filename: file }) : window.eval(code);
 }
 
+// A file of the site as it's deployed: a bundle as `pnpm build` builds it (see tests/setup.ts),
+// or a file of the repository, such as a locale catalog.
+function siteFile(file: string): string {
+    return inject('siteBundles')[file] ?? read(file);
+}
+
 function load(window: TestWindow, file: string): void {
-    run(window, read(file), file);
+    run(window, siteFile(file), file);
 }
 
 // A bundle of tests/setup.ts, which bundles source modules the way the build bundles them,
@@ -328,6 +334,7 @@ function pageLoaded(window: TestWindow): boolean {
 export {
     root,
     read,
+    siteFile,
     load,
     loadModule,
     loadApp,

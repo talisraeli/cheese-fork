@@ -9,6 +9,8 @@ declare module 'vitest' {
     export interface ProvidedContext {
         // The bundles, by the module they're of, each defining TEST_BUNDLE_GLOBAL.
         testBundles: Record<string, string>;
+        // The site's bundles, as `pnpm build` builds them, by the file they're published as.
+        siteBundles: Record<string, string>;
     }
 }
 
@@ -47,7 +49,14 @@ export function loadedModules(): string[] {
 
 export default async function setup(project: TestProject): Promise<void> {
     // Only here, so that the tests that import this module for its names don't load the build.
-    const { bundle, virtualModule } = await import('../tools/bundles.ts');
+    const { bundle, buildBundles, virtualModule } = await import('../tools/bundles.ts');
+    const siteBundles = await buildBundles();
+    // The functions load the course manager from where the deploy copies it (see
+    // functions/predeploy.js), so the API tests run it as built from the current sources.
+    const shared = path.join(root, 'functions', 'shared');
+    fs.mkdirSync(shared, { recursive: true });
+    fs.writeFileSync(path.join(shared, 'course-manager.js'), siteBundles.get('dist/course-manager.js')!);
+    project.provide('siteBundles', Object.fromEntries(siteBundles));
     const testBundles: Record<string, string> = {};
     for (const file of loadedModules()) {
         testBundles[file] = await bundle({ input: file, file, globalName: TEST_BUNDLE_GLOBAL });
