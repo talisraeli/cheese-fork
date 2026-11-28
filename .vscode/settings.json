@@ -26,11 +26,9 @@
         "ק": true,
         "ר": true,
         "ש": true,
-        "ת": true,
+        "ת": true
     },
-    "cSpell.ignoreRegExpList": [
-        "[א-ת]+",
-    ],
+    "cSpell.ignoreRegExpList": ["[א-ת]+"],
     "cSpell.words": [
         "autodestroy",
         "cheesefork",
@@ -47,5 +45,5 @@
         "technion",
         "unpreview",
         "unsave"
-    ],
+    ]
 }

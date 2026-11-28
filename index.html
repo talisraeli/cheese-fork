@@ -17,7 +17,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <script src="i18n.js"></script>
+    <script src="dist/i18n.js"></script>
     <script src="locales/he.js"></script>
     <script src="locales/en.js"></script>
     <script src="locales/ar.js"></script>
@@ -25,27 +25,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title data-i18n="shell.meta.title">CheeseFork² – Your Cheesy Scheduler</title>
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-    <script>
-        window.cheeseForkAlt = 0;
-        if ((function (d) { return d.getMonth() * 37 + d.getDate() - 112; })(new Date())) {
-            document.write('<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">');
-            document.write('<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">');
-        } else if (new Date().getFullYear() % 2) {
-            document.write('<link rel="icon" type="image/x-icon" href="assets/favicon-alt.ico">');
-            window.cheeseForkAlt = 1;
-        } else {
-            document.write('<link rel="icon" type="image/x-icon" href="assets/favicon-alt2.ico">');
-            window.cheeseForkAlt = 2;
-        }
-    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png" data-favicon>
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png" data-favicon>
     <link rel="manifest" href="icons/site.webmanifest">
     <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#ffc40d">
     <meta name="msapplication-config" content="icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
-    <script>
-        document.write('<link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth' + (CheeseI18n.isRTL() ? '-rtl' : '') + '.css">');
-    </script>
+    <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth-rtl.css" data-dir="rtl">
+    <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth.css" data-dir="ltr">
     <link rel="stylesheet" href="modules/bootstrap-rtl/css/bootstrap.min.css">
     <link rel="stylesheet" href="modules/bootstrap4-dialog/css/bootstrap-dialog.min.css">
     <link rel="stylesheet" href="modules/OverlayScrollbars/css/OverlayScrollbars.min.css">
@@ -53,25 +41,16 @@
     <link rel="stylesheet" href="modules/selectize/css/selectize.bootstrap4.css">
     <link rel="stylesheet" href="modules/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="modules/intro.js/introjs.min.css">
-    <script>
-        if (CheeseI18n.isRTL()) {
-            document.write('<link rel="stylesheet" href="modules/intro.js/introjs-rtl.min.css">');
-        }
-    </script>
-    <link rel="stylesheet" href="loader.css">
-    <link rel="stylesheet" href="components/course-select/course-select.css">
-    <link rel="stylesheet" href="components/course-button-list/course-button-list.css">
-    <link rel="stylesheet" href="components/course-exam-info/course-exam-info.css">
-    <link rel="stylesheet" href="components/course-calendar/course-calendar.css">
-    <link rel="stylesheet" href="components/histogram-browser/histogram-browser.css">
-    <link rel="stylesheet" href="cheesefork.css">
+    <link rel="stylesheet" href="modules/intro.js/introjs-rtl.min.css" data-dir="rtl">
+    <link rel="stylesheet" href="dist/cheesefork.css">
     <noscript id="dark-mode-toggle-stylesheets">
-        <link rel="stylesheet" href="cheesefork-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="dist/cheesefork-dark.css" media="(prefers-color-scheme: dark)">
     </noscript>
-    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
-    <link rel="stylesheet" href="cheesefork-print.css" media="print">
-    <link rel="stylesheet" href="i18n.css">
-    <link rel="stylesheet" href="cookie-consent.css">
+    <script src="modules/dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="dist/cheesefork-print.css" media="print">
+    <link rel="stylesheet" href="dist/i18n.css">
+    <link rel="stylesheet" href="dist/cookie-consent.css">
+    <script src="dist/index-head.js"></script>
 </head>
 <body class="bg-light">
 <div class="container-fluid">
@@ -185,17 +164,8 @@
             <h1 id="top-navbar-print-section-title"></h1>
         </div>
         <a class="navbar-brand" href=".">
-            <script>
-                (function (alt) {
-                    var path = 'logo.png';
-                    if (alt === 1) {
-                        path = 'assets/logo-alt.png';
-                    } else if (alt === 2) {
-                        path = 'assets/logo-alt2.png';
-                    }
-                    document.write('<img src="' + path + '" alt="CheeseFork" height="30">');
-                })(window.cheeseForkAlt);
-            </script>
+            <img id="navbar-logo" src="logo.png" alt="CheeseFork" height="30">
+            <script src="dist/navbar-logo.js"></script>
             <span class="font-weight-bold">CheeseFork²</span>
         </a>
     </nav>
@@ -220,7 +190,7 @@
 
                 <div id="course-button-list"></div>
 
-                <div id="course-exam-info-wrapper" class="d-flex flex-column" style="flex:1;">
+                <div id="course-exam-info-wrapper" class="d-flex flex-column">
                     <div id="course-exam-info" class="mt-auto"></div>
                 </div>
             </div>
@@ -357,9 +327,9 @@
         <p class="mb-1">
             <a href="https://github.com/talisraeli/cheese-fork" target="_blank" rel="noopener" data-i18n="shell.footer.source">קוד המקור ב-GitHub</a>
             <span class="mx-1" aria-hidden="true">·</span>
-            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/PRIVACY.md" target="_blank" rel="noopener" data-i18n="shell.footer.privacy">מדיניות פרטיות</a>
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/PRIVACY.md" target="_blank" rel="noopener" data-i18n="shell.footer.privacy">מדיניות פרטיות</a>
             <span class="mx-1" aria-hidden="true">·</span>
-            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/TERMS.md" target="_blank" rel="noopener" data-i18n="shell.footer.terms">תנאי שימוש</a>
+            <a href="https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/TERMS.md" target="_blank" rel="noopener" data-i18n="shell.footer.terms">תנאי שימוש</a>
             <span class="mx-1" aria-hidden="true">·</span>
             <a href="#" data-cookie-settings data-i18n="consent.settings">הגדרות עוגיות</a>
             <span class="mx-1" aria-hidden="true">·</span>
@@ -370,25 +340,21 @@
     </footer>
 </div>
 <!-- Google tag (Google Tag Manager), loaded only after the visitor allows analytics -->
-<script src="cookie-consent.js"></script>
+<script src="dist/cookie-consent.js"></script>
 <script src="modules/fullcalendar/lib/jquery.min.js"></script>
 <script src="modules/fullcalendar/lib/jquery-ui.min.js"></script>
 <script src="modules/jquery.ui.touch-punch/jquery.ui.touch-punch.min.js"></script>
 <script src="modules/popper/popper.js"></script>
 <script src="modules/bootstrap-rtl/js/bootstrap.min.js"></script>
 <script src="modules/bootstrap4-dialog/js/bootstrap-dialog.min.js"></script>
-<script src="i18n-dialogs.js"></script>
 <script src="modules/OverlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
 <script src="modules/fullcalendar/lib/moment.min.js"></script>
 <script src="modules/fullcalendar/fullcalendar.min.js"></script>
 <script src='modules/fullcalendar/locale/he.js'></script>
 <script src='modules/fullcalendar/locale/ar.js'></script>
-<script src="moment-locale.js"></script>
 <script src="modules/selectize/js/standalone/selectize.min.js"></script>
 <script src="modules/color-hash/color-hash.js"></script>
 <script src="modules/ics.js/ics.deps.min.js"></script>
-<script src="ics-text.js"></script>
-<script src="ics-import.js"></script>
 <script src="modules/jsdiff/diff.min.js"></script>
 <script src="modules/intro.js/intro.min.js"></script>
 <script src="modules/reparse.js"></script>
@@ -399,125 +365,9 @@
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-functions-compat.js"></script>
-<script>
-    document.write('<script src="https://www.gstatic.com/firebasejs/ui/3.3.0/firebase-ui-auth' + ({he: '__iw', ar: '__ar'}[CheeseI18n.getLocale()] || '') + '.js"><\/script>');
-</script>
-<script>
-    var availableSemesters = {
-        "201701": {"start": "2017-10-22", "end": "2018-01-25"},
-        "201702": {"start": "2018-03-20", "end": "2018-07-01"},
-        "201703": {"start": "2018-07-29", "end": "2018-09-17"},
-        "201801": {"start": "2018-10-21", "end": "2019-01-24"},
-        "201802": {"start": "2019-03-17", "end": "2019-06-27"},
-        "201803": {"start": "2019-07-28", "end": "2019-09-12"},
-        "201901": {"start": "2019-10-23", "end": "2020-01-26"},
-        "201902": {"start": "2020-03-18", "end": "2020-07-02"},
-        "201903": {"start": "2020-08-02", "end": "2020-09-16"},
-        "202001": {"start": "2020-10-21", "end": "2021-01-26"},
-        "202002": {"start": "2021-03-21", "end": "2021-07-01"},
-        "202003": {"start": "2021-08-01", "end": "2021-10-04"},
-        "202101": {"start": "2021-10-24", "end": "2022-01-27"},
-        "202102": {"start": "2022-03-20", "end": "2022-06-30"},
-        "202103": {"start": "2022-07-31", "end": "2022-09-15"},
-        "202201": {"start": "2022-10-24", "end": "2023-01-26"},
-        "202202": {"start": "2023-03-21", "end": "2023-07-06"},
-        "202203": {"start": "2023-08-06", "end": "2023-09-21"},
-        "202301": {"start": "2024-01-14", "end": "2024-04-08"},
-        "202302": {"start": "2024-05-27", "end": "2024-08-25"},
-        "202401": {"start": "2024-11-10", "end": "2025-02-04"},
-        "202402": {"start": "2025-03-30", "end": "2025-07-13"},
-        "202403": {"start": "2025-08-25", "end": "2025-10-28"},
-        "202501": {"start": "2025-10-29", "end": "2026-01-29"},
-        "202502": {"start": "2026-04-12", "end": "2026-07-22"},
-        "202503": {"start": "2026-08-30", "end": "2026-10-26"},
-        "202601": {"start": "2026-10-28", "end": "2027-01-28"},
-        "202602_": {"start": "2027-03-24", "end": "2027-07-08"},
-        "202603_": {"start": "2027-08-29", "end": "2027-10-25"}
-    };
-    var currentSemester;
-    var scheduleSharingUserId;
-    (function () {
-        // https://stackoverflow.com/a/901144
-        function getParameterByName(name, url) {
-            if (!url) url = window.location.href;
-            name = name.replace(/[\[\]]/g, "\\$&");
-            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-                results = regex.exec(url);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
-        }
-
-        function getUgCoursesUrl(semester) {
-            return 'https://ug.cheesefork.cf/courses_' + semester + '.min.js';
-        }
-
-        function getSapCoursesUrl(semester) {
-            var year = semester.slice(0, 4);
-            var semester = semester.slice(4);
-            var sapSemester = parseInt(semester, 10) - 1 + 200;
-            return 'https://sap.cheesefork.cf/courses_' + year + '_' + sapSemester + '.min.js';
-        }
-
-        Object.keys(availableSemesters).forEach(function (key) {
-            if (key.slice(-1) === '_') {
-                delete availableSemesters[key];
-            }
-        });
-
-        currentSemester = getParameterByName('semester');
-        if (!currentSemester || !availableSemesters[currentSemester]) {
-            try {
-                currentSemester = localStorage.getItem('lastSelectedSemester');
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
-
-            if (!currentSemester || !availableSemesters[currentSemester]) {
-                currentSemester = Object.keys(availableSemesters).sort().pop();
-            }
-        }
-
-        scheduleSharingUserId = getParameterByName('uid');
-
-        if (scheduleSharingUserId === null &&
-            getParameterByName('course') === null &&
-            getParameterByName('staff') === null &&
-            getParameterByName('room') === null
-        ) {
-            try {
-                localStorage.setItem('lastSelectedSemester', currentSemester);
-            } catch (e) {
-                // localStorage is not available in IE/Edge when running from a local file.
-            }
-        }
-
-        var script = document.createElement('script');
-        if (currentSemester < '202401') {
-            script.src = getUgCoursesUrl(currentSemester);
-        } else {
-            script.src = getSapCoursesUrl(currentSemester);
-        }
-        script.setAttribute('onerror', 'alert(CheeseI18n.t("shell.error.loadCourses"));');
-        document.write(script.outerHTML);
-
-        // The text that SAP has in English, built by ci/english_catalog.py, for the English
-        // interface only. Semesters without it keep the Hebrew text.
-        if (CheeseI18n.getLocale() === 'en' && currentSemester >= '202401') {
-            var englishScript = document.createElement('script');
-            englishScript.src = 'catalog-en/courses_' + currentSemester.slice(0, 4) + '_' +
-                (parseInt(currentSemester.slice(4), 10) - 1 + 200) + '.min.js';
-            document.write(englishScript.outerHTML);
-        }
-    })();
-</script>
-<script src="components/course-select/course-select.js"></script>
-<script src="components/course-button-list/course-button-list.js"></script>
-<script src="components/course-exam-info/course-exam-info.js"></script>
-<script src="components/course-calendar/course-calendar.js"></script>
-<script src="components/histogram-browser/histogram-browser.js"></script>
-<script src="course-manager.js"></script>
-<script src="cheesefork.js"></script>
+<script src="data/semesters.js"></script>
+<script src="dist/index-catalog.js"></script>
+<script src="dist/cheesefork.js"></script>
 <!-- Negishot accessibility widget -->
 <script src="https://negishot.co.il/cdn/widget.php?code=NGS_55210E82BE0F"></script>
 </body>

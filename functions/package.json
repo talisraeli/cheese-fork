@@ -2,10 +2,14 @@
   "name": "cheesefork-functions",
   "private": true,
   "description": "CheeseFork² schedule API",
-  "main": "index.js",
+  "type": "module",
+  "main": "build/index.js",
   "license": "GPLV3",
   "engines": {
     "node": "22"
+  },
+  "scripts": {
+    "build": "tsc -p ."
   },
   "dependencies": {
     "firebase-admin": "^14.5.1",

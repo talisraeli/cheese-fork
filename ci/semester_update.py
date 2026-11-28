@@ -46,41 +46,41 @@ def get_last_semesters():
     return last_semesters
 
 
-def get_available_semesters(index_html_path: Path):
-    index_html = index_html_path.read_text(encoding="utf-8")
+def get_available_semesters(semesters_path: Path):
+    semesters_js = semesters_path.read_text(encoding="utf-8")
 
     available_semesters = re.findall(
-        r"\bvar availableSemesters = ([^;]*);\n", index_html
+        r"\bvar availableSemesters = ([^;]*);\n", semesters_js
     )
     if len(available_semesters) != 1:
-        raise RuntimeError("Could not find availableSemesters in index.html")
+        raise RuntimeError("Could not find availableSemesters in data/semesters.js")
 
     return json.loads(available_semesters[0])
 
 
-def set_available_semesters(index_html_path: Path, available_semesters: dict):
-    index_html = index_html_path.read_text(encoding="utf-8")
+def set_available_semesters(semesters_path: Path, available_semesters: dict):
+    semesters_js = semesters_path.read_text(encoding="utf-8")
 
     available_semesters_str = json.dumps(available_semesters)
     available_semesters_str = re.sub(
-        r'\s*("\d{6}_?":)', '\n' + ' ' * 8 + r'\g<1>', available_semesters_str
+        r'\s*("\d{6}_?":)', '\n' + ' ' * 4 + r'\g<1>', available_semesters_str
     )
-    available_semesters_str = re.sub(r'\}$', r'\n    \g<0>', available_semesters_str)
+    available_semesters_str = re.sub(r'\}$', r'\n\g<0>', available_semesters_str)
 
-    index_html, number_of_subs_made = re.subn(
+    semesters_js, number_of_subs_made = re.subn(
         r"(\bvar availableSemesters = )[^;]*(;\n)",
         rf"\g<1>{available_semesters_str.replace('\\', '\\\\')}\g<2>",
-        index_html,
+        semesters_js,
     )
     if number_of_subs_made != 1:
-        raise RuntimeError("Could not set availableSemesters in index.html")
+        raise RuntimeError("Could not set availableSemesters in data/semesters.js")
 
-    index_html_path.write_text(index_html, encoding="utf-8")
+    semesters_path.write_text(semesters_js, encoding="utf-8")
 
 
 def main():
-    index_html_path = Path("index.html")
-    available_semesters = get_available_semesters(index_html_path)
+    semesters_path = Path("data/semesters.js")
+    available_semesters = get_available_semesters(semesters_path)
     last_semesters = get_last_semesters()
 
     available_semesters_original = available_semesters.copy()
@@ -109,8 +109,8 @@ def main():
     # Keep the dict sorted by key.
     available_semesters = dict(sorted(available_semesters.items()))
 
-    set_available_semesters(index_html_path, available_semesters)
-    print("Updated availableSemesters in index.html")
+    set_available_semesters(semesters_path, available_semesters)
+    print("Updated availableSemesters in data/semesters.js")
 
 
 if __name__ == "__main__":

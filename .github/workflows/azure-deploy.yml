@@ -1,0 +1,75 @@
+name: Azure Static Web Apps CI/CD
+
+# Builds the site into out/ with `pnpm build` and uploads only out/ to Azure Static Web Apps:
+# production from gh-pages, and a preview environment for each pull request.
+
+on:
+    push:
+        branches:
+            - gh-pages
+    pull_request:
+        types: [opened, synchronize, reopened, closed]
+        branches:
+            - gh-pages
+    # The scheduled data updates push with the workflow token, which doesn't start other
+    # workflows, so the site is deployed again once they finish.
+    workflow_run:
+        workflows: ['Run semester update', 'Update the English course catalog']
+        types: [completed]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    # The preview's link, commented on the pull request.
+    pull-requests: write
+
+# One deploy at a time for each environment, so an older build never replaces a newer one.
+concurrency:
+    group: azure-deploy-${{ github.event.pull_request.number || 'production' }}
+    cancel-in-progress: false
+
+jobs:
+    build_and_deploy_job:
+        if: >-
+            (github.event_name == 'pull_request' && github.event.action != 'closed') ||
+            github.event_name == 'push' || github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+        runs-on: ubuntu-latest
+        name: Build and Deploy Job
+        steps:
+            - uses: actions/checkout@v5
+            # Installs the pnpm of packageManager in package.json.
+            - uses: pnpm/action-setup@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '24'
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm build
+            - name: Deploy
+              id: builddeploy
+              uses: Azure/static-web-apps-deploy@v1
+              with:
+                  azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_RED_MUSHROOM_0559F1C03 }}
+                  repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for GitHub integrations (i.e. PR comments)
+                  action: 'upload'
+                  # The site as built, uploaded as it is: Azure's own build would install the
+                  # packages with npm and upload node_modules with the site.
+                  app_location: 'out'
+                  api_location: ''
+                  output_location: ''
+                  skip_app_build: true
+                  skip_api_build: true
+
+    close_pull_request_job:
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        runs-on: ubuntu-latest
+        name: Close Pull Request Job
+        steps:
+            - name: Close Pull Request
+              id: closepullrequest
+              uses: Azure/static-web-apps-deploy@v1
+              with:
+                  azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_RED_MUSHROOM_0559F1C03 }}
+                  action: 'close'
+                  app_location: ''

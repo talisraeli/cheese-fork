@@ -2,20 +2,39 @@
   "name": "deploy",
   "version": "1.0.0",
   "description": "",
-  "main": "cheesefork.js",
+  "type": "module",
+  "main": "src/entries/cheesefork.ts",
+  "packageManager": "pnpm@12.23.0",
   "scripts": {
-    "test": "node --test tests/*.test.cjs",
-    "lint": "eslint ."
+    "dev": "vp dev",
+    "build": "vp build",
+    "typecheck": "tsc -p . && tsc -p tests && tsc -p functions",
+    "test": "vp test",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "fmt:check": "vp fmt --check"
   },
   "author": "",
   "license": "GPLV3",
   "devDependencies": {
-    "eslint": "^10.14.0",
-    "eslint-plugin-compat": "^7.0.2",
-    "globals": "^17.14.0",
-    "jsdom": "^30.1.3"
+    "@oxc-project/types": "0.159.0",
+    "@types/bootstrap": "^4.6.6",
+    "@types/jquery": "^3.5.34",
+    "@types/jqueryui": "^1.12.26",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^26.6.11",
+    "@types/selectize": "^0.12.41",
+    "espree": "^11.2.0",
+    "firebase": "^12.19.0",
+    "jsdom": "^30.1.3",
+    "moment": "^2.31.0",
+    "typescript": "^6.0.3",
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8001",
+    "vite-plus": "^1.8.0",
+    "vitest": "5.1.1"
   },
   "browserslist": [
-    "ie 11"
+    "defaults",
+    "not op_mini all"
   ]
 }

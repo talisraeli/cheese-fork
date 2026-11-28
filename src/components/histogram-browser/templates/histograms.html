@@ -1,0 +1,67 @@
+<div class="histogram-container{{activatedClass}}">
+    <div class="histogram-overlay-message">
+        <div class="alert alert-primary" role="alert">{{t:histogram.shareRequired}}</div>
+        <div class="histogram-overlay-message-button-container">
+            <button type="button" class="btn btn-primary histogram-button-share">{{t:histogram.share}}</button>
+        </div>
+        <div class="histogram-overlay-message-button-container">
+            <button type="button" class="btn histogram-button-activate">{{t:histogram.alreadyShared}}</button>
+        </div>
+        <div class="histogram-overlay-message-button-container">
+            <button type="button" class="btn histogram-button-snooze">{{t:histogram.shareLater}}</button>
+        </div>
+    </div>
+    <div class="histogram-content">
+        <div class="form-row">
+            <div class="form-group col-{{grid}}-6 histogram-semesters"></div>
+            <div class="form-group col-{{grid}}-6 histogram-categories"></div>
+        </div>
+        <div class="histogram-data table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">{{t:histogram.students}}</th>
+                        <th scope="col">{{t:histogram.passed}}</th>
+                        <th scope="col">{{t:histogram.failed}}</th>
+                        <th scope="col">{{t:histogram.passPercent}}</th>
+                        <th scope="col">{{t:histogram.minimum}}</th>
+                        <th scope="col">{{t:histogram.maximum}}</th>
+                        <th scope="col">{{t:histogram.average}}</th>
+                        <th scope="col">{{t:histogram.median}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="histogram-value-students"></td>
+                        <td class="histogram-value-pass"></td>
+                        <td class="histogram-value-fail"></td>
+                        <td class="histogram-value-passPercent"></td>
+                        <td class="histogram-value-min"></td>
+                        <td class="histogram-value-max"></td>
+                        <td class="histogram-value-average"></td>
+                        <td class="histogram-value-median"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="histogram-image-container-outer"><div class="histogram-image-container"></div></div>
+        <p class="histogram-image-note small text-muted"></p>
+        <div class="histogram-staff-table row mt-3 d-none">
+            <div class="col-{{grid}}-6">
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">{{t:histogram.staffMember}}</th>
+                            <th scope="col">{{t:histogram.staffRole}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div>
+            <a href="{{shareUrl}}" target="_blank" class="small">{{t:histogram.share}}</a>
+        </div>
+    </div>
+</div>

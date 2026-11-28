@@ -1,0 +1,519 @@
+.course-button-list-badge-container {
+    /* margin: 20px 0 10px 0; */
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding: 0;
+    list-style: none;
+}
+
+.course-button-list-item {
+    /* Required for absolute positioning of drag handle */
+    position: relative;
+}
+
+.course-button-list-item.active {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+    background-origin: border-box;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.course-button-list-item.active:active {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+.course-button-list-item .content-wrapper {
+    position: relative;
+}
+
+.course-button-list-item .content-absolute {
+    position: absolute;
+}
+
+.course-button-list-item .content-bold-hidden {
+    font-weight: bold;
+    visibility: hidden;
+}
+
+.course-button-list-item .badge {
+    /* Prevent hovering the information badge by content-wrapper */
+    position: relative;
+    /* Prevent copying the "i" */
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    top: 1px;
+    cursor: pointer;
+}
+
+.course-button-list-item-hovered {
+    -webkit-box-shadow: inset 0 0 0 2px #cc0000;
+    -moz-box-shadow: inset 0 0 0 2px #cc0000;
+    box-shadow: inset 0 0 0 2px #cc0000;
+    border-color: #cc0000 !important;
+    font-weight: bold;
+}
+
+.course-button-list-item-conflicted .content-wrapper {
+    color: red !important;
+    font-weight: bold;
+    text-shadow: 0 0 10px black;
+}
+
+.course-button-list-content-has-hidden {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    cursor: help;
+}
+
+.course-button-list-tooltip-persistent {
+    /* Push below bootstrap dialog which uses z-index 1040 for backdrop */
+    z-index: 1039;
+}
+
+.course-button-list-badge-text {
+    font-size: 125%;
+    padding: 0 0.75em;
+}
+
+/* Fix tooltip arrow direction */
+.tooltip[x-placement^='left'] .arrow-fix-placement {
+    right: 0;
+    left: auto;
+}
+
+.tooltip[x-placement^='right'] .arrow-fix-placement {
+    left: 0;
+    right: auto;
+}
+
+.tooltip[x-placement^='left'] .arrow-fix-placement::before {
+    left: 0;
+    right: auto;
+    border-width: 0.4rem 0 0.4rem 0.4rem;
+    border-left-color: #000;
+}
+
+.tooltip[x-placement^='right'] .arrow-fix-placement::before {
+    right: 0;
+    left: auto;
+    border-width: 0.4rem 0.4rem 0.4rem 0;
+    border-right-color: #000;
+}
+
+/* Drag handle for sortable badges */
+.course-button-list-drag-handle {
+    cursor: move;
+    color: rgba(0, 0, 0, 0.5);
+    transition: opacity 0.2s;
+    font-size: 12px;
+    /* Position absolutely to not affect layout */
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Hidden by default, shown on hover */
+    opacity: 0;
+    /* Prevent text selection during drag */
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    /* Ensure it's above other content */
+    z-index: 10;
+}
+
+/* Show drag handle on list item hover */
+.course-button-list-item:hover .course-button-list-drag-handle {
+    opacity: 1;
+}
+
+/* No hover on touch screens, so always show the drag handle there */
+@media (hover: none) {
+    .course-button-list-drag-handle {
+        opacity: 1;
+        /* Don't scroll the page when dragging starts on the handle */
+        touch-action: none;
+    }
+
+    /* Larger touch target without moving the icon */
+    .course-button-list-drag-handle::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        bottom: -10px;
+        left: -8px;
+        right: -4px;
+    }
+}
+
+/* Keep handle visible while dragging */
+.ui-sortable-helper .course-button-list-drag-handle {
+    opacity: 1;
+}
+
+/* Hide drag handle in readonly mode */
+.course-button-list-readonly .course-button-list-drag-handle {
+    display: none;
+}
+
+/* Sortable helper styling - the element being dragged */
+.course-button-list-item.ui-sortable-helper {
+    opacity: 0.8;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000 !important;
+    cursor: move !important;
+}
+
+/* Placeholder while dragging - shows where item will drop */
+.course-button-list-item.ui-sortable-placeholder {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border: 2px dashed rgba(0, 0, 0, 0.3) !important;
+    visibility: visible !important;
+    /* Remove background gradient */
+    background-image: none !important;
+    margin-bottom: -1px; /* Same as .list-group-item */
+}
+
+/* Disable pointer cursor on UL when sorting is disabled */
+.course-button-list-readonly.ui-sortable-disabled {
+    cursor: default;
+}
+
+/* Ensure drag handle doesn't affect layout in RTL */
+.course-button-list-drag-handle .fas {
+    vertical-align: middle;
+}
+
+/* Delete area for drag-to-delete functionality */
+.course-button-list-delete-area {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: rgba(220, 53, 69, 0.6);
+    padding: 12px;
+    text-align: center;
+    border-radius: 50%;
+    margin: 10px auto;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px dashed rgba(220, 53, 69, 0.3);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-button-list-delete-area i {
+    font-size: 20px;
+}
+
+.course-button-list-delete-area.ui-droppable-hover {
+    background-color: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.8);
+    color: rgba(220, 53, 69, 1);
+    transform: scale(1.1);
+}
+
+/* Drop areas, shown while dragging */
+.course-button-list-drop-areas {
+    display: flex;
+    justify-content: center;
+}
+
+.course-button-list-drop-areas .course-button-list-delete-area,
+.course-button-list-drop-areas .course-button-list-new-layer-area {
+    margin: 10px 8px;
+}
+
+/* New layer area for moving a course to a new layer */
+.course-button-list-new-layer-area {
+    background-color: rgba(0, 123, 255, 0.15);
+    color: rgba(0, 123, 255, 0.6);
+    padding: 12px;
+    text-align: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px dashed rgba(0, 123, 255, 0.3);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-button-list-new-layer-area i {
+    font-size: 20px;
+}
+
+.course-button-list-new-layer-area.ui-droppable-hover {
+    background-color: rgba(0, 123, 255, 0.3);
+    border-color: rgba(0, 123, 255, 0.8);
+    color: rgba(0, 123, 255, 1);
+    transform: scale(1.1);
+}
+
+/* Layers, only if layers are used */
+.course-button-list-layer-header {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    padding: 4px 0;
+    border-right: 3px solid transparent;
+    cursor: pointer;
+}
+
+.course-button-list-readonly .course-button-list-layer-header {
+    cursor: default;
+}
+
+.course-button-list-layer-header:first-child {
+    margin-top: 20px;
+}
+
+/* The layer to which new courses and events are added */
+.course-button-list-layer-active {
+    border-right-color: #007bff;
+    font-weight: bold;
+}
+
+.course-button-list-layer-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-button-list-layer-visibility,
+.course-button-list-layer-menu-button {
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+/* Collapsing a layer folds its list, it stays on the calendar */
+.course-button-list-layer-collapse {
+    cursor: pointer;
+}
+
+/* Keep the checkbox close to the caret before it */
+.course-button-list-layer-collapse + .course-button-list-layer-visibility {
+    padding-right: 2px;
+}
+
+html[dir='ltr'] .course-button-list-layer-collapse + .course-button-list-layer-visibility {
+    padding-right: 8px;
+    padding-left: 2px;
+}
+
+.course-button-list-with-layers .course-button-list-badge-container.course-button-list-layer-collapsed {
+    display: none;
+}
+
+.course-button-list-readonly .course-button-list-layer-visibility {
+    cursor: default;
+}
+
+.course-button-list-with-layers .course-button-list-badge-container {
+    margin-top: 0;
+    /* Leave room for dragging a course to an empty layer */
+    min-height: 12px;
+}
+
+.course-button-list-layer-hidden .course-button-list-item {
+    opacity: 0.5;
+}
+
+/* Custom events in the list, only if layers are used */
+.course-button-list-custom-event {
+    cursor: default;
+}
+
+.course-button-list-custom-event .content-wrapper::before {
+    /* Font Awesome calendar-alt */
+    content: '\f073';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    float: right;
+    margin-left: 6px;
+}
+
+/* The floating window with the reviews of the original CheeseFork, centered on the screen,
+   above the dialogs (1050) and below the cookie notice (1060). */
+.course-feedback-window {
+    position: fixed;
+    z-index: 1055;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    /* The size and position are set by fitOriginalFeedbackWindow: by default 60% of the screen's
+       width and 85% of its height, and always inside the visible part of it. */
+    width: 60vw;
+    max-width: 100%;
+    height: 85vh;
+    max-height: 100%;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.course-feedback-window-header {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    cursor: move;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.course-feedback-window-title {
+    -ms-flex: 1;
+    flex: 1;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.course-feedback-window-button {
+    margin: 0 0.5rem;
+    cursor: pointer;
+}
+
+.course-feedback-window-frame {
+    -ms-flex: 1;
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background-color: #f8f9fa;
+}
+
+.course-feedback-window-note {
+    padding: 0.25rem 0.75rem;
+    border-top: 1px solid #dee2e6;
+}
+
+/* While resizing, the iframe would swallow the mouse events. */
+.course-feedback-window-resizing .course-feedback-window-frame {
+    pointer-events: none;
+}
+
+/* The resize handles on the edges and corners, inside the window since it hides its overflow.
+   jQuery UI's own CSS isn't loaded. */
+.course-feedback-window .ui-resizable-handle {
+    position: absolute;
+    z-index: 2;
+    -ms-touch-action: none;
+    touch-action: none;
+}
+
+.course-feedback-window .ui-resizable-n,
+.course-feedback-window .ui-resizable-s {
+    left: 12px;
+    right: 12px;
+    height: 6px;
+    cursor: ns-resize;
+}
+
+.course-feedback-window .ui-resizable-n {
+    top: 0;
+}
+
+.course-feedback-window .ui-resizable-s {
+    bottom: 0;
+}
+
+.course-feedback-window .ui-resizable-e,
+.course-feedback-window .ui-resizable-w {
+    top: 12px;
+    bottom: 12px;
+    width: 6px;
+    cursor: ew-resize;
+}
+
+.course-feedback-window .ui-resizable-e {
+    right: 0;
+}
+
+.course-feedback-window .ui-resizable-w {
+    left: 0;
+}
+
+.course-feedback-window .ui-resizable-ne,
+.course-feedback-window .ui-resizable-nw,
+.course-feedback-window .ui-resizable-se,
+.course-feedback-window .ui-resizable-sw {
+    width: 16px;
+    height: 16px;
+}
+
+.course-feedback-window .ui-resizable-ne {
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+}
+
+.course-feedback-window .ui-resizable-nw {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+}
+
+.course-feedback-window .ui-resizable-se {
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+}
+
+.course-feedback-window .ui-resizable-sw {
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
+}
+
+/* A visible grip, drawn as two diagonal lines. Bigger on touch screens. */
+.course-feedback-window .course-feedback-window-grip {
+    background: linear-gradient(
+        135deg,
+        transparent 45%,
+        #adb5bd 45%,
+        #adb5bd 55%,
+        transparent 55%,
+        transparent 70%,
+        #adb5bd 70%,
+        #adb5bd 80%,
+        transparent 80%
+    );
+}
+
+.course-feedback-window .ui-resizable-sw.course-feedback-window-grip {
+    background: linear-gradient(
+        225deg,
+        transparent 45%,
+        #adb5bd 45%,
+        #adb5bd 55%,
+        transparent 55%,
+        transparent 70%,
+        #adb5bd 70%,
+        #adb5bd 80%,
+        transparent 80%
+    );
+}
+
+@media (pointer: coarse) {
+    .course-feedback-window .ui-resizable-ne,
+    .course-feedback-window .ui-resizable-nw,
+    .course-feedback-window .ui-resizable-se,
+    .course-feedback-window .ui-resizable-sw {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+@media print {
+    .course-feedback-window {
+        display: none;
+    }
+}

@@ -1,36 +1,35 @@
 {
-  "firestore": {
-    "rules": "firestore.rules"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  },
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs22",
-    "ignore": [
-      "node_modules",
-      "*.local",
-      "hosting-public",
-      "predeploy.js"
-    ],
-    "predeploy": [
-      "node functions/predeploy.js"
-    ]
-  },
-  "hosting": {
-    "public": "functions/hosting-public",
-    "ignore": [
-      "**/.*"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "function": {
-          "functionId": "api",
-          "region": "us-central1"
-        }
-      }
-    ]
-  }
+    "firestore": {
+        "rules": "firestore.rules"
+    },
+    "storage": {
+        "rules": "storage.rules"
+    },
+    "functions": {
+        "source": "functions",
+        "runtime": "nodejs22",
+        "ignore": [
+            "node_modules",
+            "*.local",
+            "hosting-public",
+            "predeploy.js",
+            "src",
+            "tsconfig.json",
+            "pnpm-workspace.yaml"
+        ],
+        "predeploy": ["pnpm build", "pnpm --dir functions run build", "node functions/predeploy.js"]
+    },
+    "hosting": {
+        "public": "functions/hosting-public",
+        "ignore": ["**/.*"],
+        "rewrites": [
+            {
+                "source": "**",
+                "function": {
+                    "functionId": "api",
+                    "region": "us-central1"
+                }
+            }
+        ]
+    }
 }

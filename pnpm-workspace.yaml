@@ -1,0 +1,16 @@
+# The site's packages. The functions (functions/) are a project of their own, with their own
+# lockfile, since Firebase deploys that directory alone.
+
+# Vite+ provides Vite and Vitest, so that every package that depends on them uses its versions.
+overrides:
+    vite: npm:@voidzero-dev/vite-plus-core@8.3.8001
+    vitest: 5.1.1
+
+# Install scripts that the site doesn't need: Firebase is only installed for its types.
+allowBuilds:
+    '@firebase/util': false
+    protobufjs: false
+
+# Published more recently than pnpm's minimum release age when it was added.
+minimumReleaseAgeExclude:
+    - '@types/jqueryui@1.12.26'
