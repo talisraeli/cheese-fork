@@ -26,11 +26,11 @@ export function firebaseInit() {
 export function loginTermsNote() {
     const links = {
         terms: {
-            url: 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/TERMS.md',
+            url: 'https://github.com/talisraeli/cheese-fork/blob/main/docs/TERMS.md',
             label: CheeseI18n.t('shell.login.termsLink')
         },
         privacy: {
-            url: 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/PRIVACY.md',
+            url: 'https://github.com/talisraeli/cheese-fork/blob/main/docs/PRIVACY.md',
             label: CheeseI18n.t('shell.login.privacyLink')
         }
     };

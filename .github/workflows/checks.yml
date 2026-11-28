@@ -3,7 +3,7 @@ name: Check localization
 on:
     pull_request:
     push:
-        branches: [gh-pages]
+        branches: [main]
 
 permissions:
     contents: read

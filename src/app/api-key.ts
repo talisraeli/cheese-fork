@@ -43,8 +43,8 @@ interface ApiKeyCreated {
 // The key itself is shown only right after it's created, only its hash is stored.
 export function showApiKeyDialog() {
     const apiBaseUrl = 'https://api.cf.talisrae.li/v1';
-    const docsUrl = 'https://github.com/talisraeli/cheese-fork/blob/gh-pages/docs/API.md';
-    const docsRawUrl = 'https://raw.githubusercontent.com/talisraeli/cheese-fork/gh-pages/docs/API.md';
+    const docsUrl = 'https://github.com/talisraeli/cheese-fork/blob/main/docs/API.md';
+    const docsRawUrl = 'https://raw.githubusercontent.com/talisraeli/cheese-fork/main/docs/API.md';
     const functions = firebase.functions();
 
     const content = $('<div class="api-key-dialog">');
